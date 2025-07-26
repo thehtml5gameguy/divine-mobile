@@ -542,6 +542,13 @@ class ExploreScreenState extends ConsumerState<ExploreScreen>
           final allEditorsHashtags = hashtagService.getEditorsPicks(limit: 100); // Get more from service
           final editorsHashtags = allEditorsHashtags.take(_editorsHashtagLimit).toList();
 
+          // Batch fetch profiles for the first visible videos
+          if (editorsPicks.isNotEmpty && !_isInFeedMode) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _batchFetchProfilesAroundIndex(0, editorsPicks);
+            });
+          }
+
           // Full-screen video feed with hashtag filter at top
           return Column(
             children: [

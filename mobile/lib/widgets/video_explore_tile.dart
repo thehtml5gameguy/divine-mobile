@@ -2,13 +2,17 @@
 // ABOUTME: Shows clean thumbnail with title/hashtag overlay - full screen handled by parent
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openvine/main.dart';
 import 'package:openvine/models/video_event.dart';
+import 'package:openvine/providers/app_providers.dart';
+import 'package:openvine/utils/unified_logger.dart';
 import 'package:openvine/widgets/video_thumbnail_widget.dart';
 
 /// Video thumbnail tile for explore screen
 /// - Shows clean thumbnail with title/hashtag overlay
 /// - Parent screen handles full-screen overlay when tapped
-class VideoExploreTile extends StatelessWidget {
+class VideoExploreTile extends ConsumerWidget {
   // Not used anymore but kept for API compatibility
 
   const VideoExploreTile({
@@ -24,7 +28,7 @@ class VideoExploreTile extends StatelessWidget {
   final VoidCallback? onClose;
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
+  Widget build(BuildContext context, WidgetRef ref) => GestureDetector(
         onTap: () {
           debugPrint('🎯 VideoExploreTile tapped for video ${video.id.substring(0, 8)}...');
           onTap?.call();
@@ -72,7 +76,10 @@ class VideoExploreTile extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (video.title != null)
+                        // Username/Creator info
+                        _buildCreatorInfo(ref),
+                        const SizedBox(height: 4),
+                        if (video.title != null) ...[
                           Text(
                             video.title!,
                             style: const TextStyle(
@@ -83,6 +90,8 @@ class VideoExploreTile extends StatelessWidget {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
+                          const SizedBox(height: 2),
+                        ],
                         if (video.hashtags.isNotEmpty)
                           Text(
                             video.hashtags.map((tag) => '#$tag').join(' '),
@@ -102,4 +111,60 @@ class VideoExploreTile extends StatelessWidget {
           ),
         ),
       );
+
+  Widget _buildCreatorInfo(WidgetRef ref) {
+    final profileService = ref.watch(userProfileServiceProvider);
+    final profile = profileService.getCachedProfile(video.pubkey);
+    final displayName = profile?.displayName ??
+        profile?.name ??
+        '@${video.pubkey.substring(0, 8)}...';
+
+    return GestureDetector(
+      onTap: () {
+        Log.verbose('Navigating to profile from explore tile: ${video.pubkey}',
+            name: 'VideoExploreTile', category: LogCategory.ui);
+        // Use main navigation to switch to profile tab
+        mainNavigationKey.currentState?.navigateToProfile(video.pubkey);
+      },
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.person,
+            color: Colors.white70,
+            size: 14,
+          ),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              displayName,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                decoration: TextDecoration.underline,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          // Add NIP-05 verification badge if verified
+          if (profile?.nip05 != null && profile!.nip05!.isNotEmpty) ...[
+            const SizedBox(width: 4),
+            Container(
+              padding: const EdgeInsets.all(1),
+              decoration: const BoxDecoration(
+                color: Colors.blue,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.check,
+                color: Colors.white,
+                size: 8,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }
