@@ -69,6 +69,10 @@ class ExploreScreenState extends ConsumerState<ExploreScreen>
       // Pause any playing videos when switching tabs
       final exploreVideoManager = ref.read(exploreVideoManagerProvider);
       exploreVideoManager.pauseAllVideos();
+      
+      // Also pause all videos through the main VideoManager to ensure complete coverage
+      final videoManager = ref.read(videoManagerProvider.notifier);
+      videoManager.pauseAllVideos();
 
       // Close the currently playing video overlay if any and return to grid mode
       if (_playingVideoId != null || _isInFeedMode) {
@@ -343,6 +347,10 @@ class ExploreScreenState extends ConsumerState<ExploreScreen>
       try {
         final exploreVideoManager = ref.read(exploreVideoManagerProvider);
         exploreVideoManager.pauseAllVideos();
+        
+        // Also pause through main VideoManager for complete coverage
+        final videoManager = ref.read(videoManagerProvider.notifier);
+        videoManager.pauseAllVideos();
       } catch (e) {
         // Ignore errors when context is no longer valid
       }
@@ -625,7 +633,7 @@ class ExploreScreenState extends ConsumerState<ExploreScreen>
                           return VideoFeedItem(
                             key: ValueKey(video.id),
                             video: video,
-                            isActive: isActive,
+                            isActive: isActive && _tabController.index == 0, // Only active if on Editor's Picks tab
                           );
                         },
                       )
@@ -800,7 +808,7 @@ class ExploreScreenState extends ConsumerState<ExploreScreen>
           return VideoFeedItem(
             key: ValueKey(video.id),
             video: video,
-            isActive: isActive,
+            isActive: isActive && _tabController.index == 1, // Only active if on Popular Now tab
           );
         },
       );
@@ -1286,7 +1294,7 @@ class ExploreScreenState extends ConsumerState<ExploreScreen>
               return VideoFeedItem(
                 key: ValueKey(video.id),
                 video: video,
-                isActive: isActive,
+                isActive: isActive && _tabController.index == 2, // Only active if on Trending tab
               );
             },
           );
