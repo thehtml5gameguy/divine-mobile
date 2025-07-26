@@ -14,10 +14,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openvine/providers/app_providers.dart';
 import 'package:openvine/providers/video_events_providers.dart';
 import 'package:openvine/providers/video_manager_providers.dart';
+import 'package:openvine/providers/user_profile_providers.dart';
 
 class ExploreScreen extends ConsumerStatefulWidget {
   const ExploreScreen({super.key});
 
+  @override
   ConsumerState<ExploreScreen> createState() => ExploreScreenState();
 }
 
@@ -31,6 +33,10 @@ class ExploreScreenState extends ConsumerState<ExploreScreen>
   List<VideoEvent> _currentTabVideos = [];
   bool _isInFeedMode = false; // Track if we're in full feed mode vs grid mode
   
+  // Tab tap tracking for double-tap detection
+  DateTime? _lastTabTap;
+  int? _lastTappedIndex;
+  
   // Pagination state for grid views
   int _popularNowLimit = 50;
   int _trendingLimit = 100;
@@ -43,12 +49,13 @@ class ExploreScreenState extends ConsumerState<ExploreScreen>
   bool _isLoadingMoreEditorsHashtags = false;
   bool _isLoadingMoreTrendingHashtags = false;
 
+  @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this, initialIndex: 1);
 
     // Listen for tab changes to close video and reset state
-      // REFACTORED: Service no longer extends ChangeNotifier - use Riverpod ref.watch instead
+    _tabController.addListener(_onTabChanged);
 
     // Add lifecycle observer
     WidgetsBinding.instance.addObserver(this);
@@ -81,6 +88,47 @@ class ExploreScreenState extends ConsumerState<ExploreScreen>
       // No special fetching needed - Popular Now and Trending use videoEventService directly
     }
   }
+  
+  /// Handle tab tap to detect double-tap and already-selected tap
+  void _handleTabTap(int index) {
+    Log.debug('🔄 Tab tapped: index=$index, current=${_tabController.index}, isInFeedMode=$_isInFeedMode',
+        name: 'ExploreScreen', category: LogCategory.ui);
+    
+    // Check if tapping on the already selected tab
+    if (index == _tabController.index) {
+      // If we're in feed mode, exit to grid mode
+      if (_isInFeedMode) {
+        Log.debug('🔄 Tapping current tab while in feed mode - exiting to grid',
+            name: 'ExploreScreen', category: LogCategory.ui);
+        _exitFeedMode();
+        return;
+      }
+      
+      // Check for double-tap
+      final now = DateTime.now();
+      if (_lastTappedIndex == index && 
+          _lastTabTap != null && 
+          now.difference(_lastTabTap!).inMilliseconds < 500) {
+        // Double-tap detected on the same tab - exit feed mode if active
+        Log.debug('🔄 Double-tap detected on tab $index',
+            name: 'ExploreScreen', category: LogCategory.ui);
+        if (_isInFeedMode) {
+          _exitFeedMode();
+        }
+        _lastTabTap = null;
+        _lastTappedIndex = null;
+      } else {
+        // Single tap on already selected tab
+        _lastTabTap = now;
+        _lastTappedIndex = index;
+      }
+    } else {
+      // Switching to a different tab
+      _lastTabTap = null;
+      _lastTappedIndex = null;
+      _tabController.animateTo(index);
+    }
+  }
 
   /// Handle video tap to enter feed mode
   void _enterFeedMode(List<VideoEvent> videos, int startIndex) {
@@ -107,6 +155,9 @@ class ExploreScreenState extends ConsumerState<ExploreScreen>
           name: 'ExploreScreen', category: LogCategory.ui);
     });
     
+    // Batch fetch profiles for visible videos
+    _batchFetchProfilesAroundIndex(startIndex, videos);
+    
     setState(() {
       debugPrint('📱 Setting state: _isInFeedMode = true, _currentVideoIndex = $startIndex');
       _isInFeedMode = true;
@@ -125,6 +176,47 @@ class ExploreScreenState extends ConsumerState<ExploreScreen>
       _currentTabVideos = [];
       _selectedHashtag = null; // Clear hashtag when exiting
     });
+  }
+  
+  /// Batch fetch profiles for videos around the current position
+  void _batchFetchProfilesAroundIndex(int currentIndex, List<VideoEvent> videos) {
+    if (videos.isEmpty) return;
+
+    // Define window of videos to prefetch profiles for
+    const preloadRadius = 5; // Preload profiles for ±5 videos in grid view
+    final startIndex =
+        (currentIndex - preloadRadius).clamp(0, videos.length - 1);
+    final endIndex = (currentIndex + preloadRadius).clamp(0, videos.length - 1);
+
+    // Collect unique pubkeys that need profile fetching
+    final pubkeysToFetch = <String>{};
+    final userProfilesNotifier = ref.read(userProfileNotifierProvider.notifier);
+
+    for (var i = startIndex; i <= endIndex; i++) {
+      final video = videos[i];
+
+      // Only add pubkeys that don't have profiles yet
+      if (!userProfilesNotifier.hasProfile(video.pubkey)) {
+        pubkeysToFetch.add(video.pubkey);
+      }
+      
+      // Also fetch reposter profiles if needed
+      if (video.isRepost && video.reposterPubkey != null && 
+          !userProfilesNotifier.hasProfile(video.reposterPubkey!)) {
+        pubkeysToFetch.add(video.reposterPubkey!);
+      }
+    }
+
+    if (pubkeysToFetch.isEmpty) return;
+
+    Log.debug(
+      '🔄 Batch fetching ${pubkeysToFetch.length} profiles for videos in explore screen',
+      name: 'ExploreScreen',
+      category: LogCategory.ui,
+    );
+
+    // Batch fetch profiles using Riverpod
+    userProfilesNotifier.fetchMultipleProfiles(pubkeysToFetch.toList());
   }
 
   /// Check if currently in feed mode
@@ -240,9 +332,10 @@ class ExploreScreenState extends ConsumerState<ExploreScreen>
     }
   }
 
+  @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-      // REFACTORED: Service no longer needs manual listener cleanup
+    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
 
     // Pause any playing videos - but only if context is still mounted
@@ -259,6 +352,7 @@ class ExploreScreenState extends ConsumerState<ExploreScreen>
     super.dispose();
   }
 
+  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
 
@@ -282,6 +376,7 @@ class ExploreScreenState extends ConsumerState<ExploreScreen>
     }
   }
 
+  @override
   Widget build(BuildContext context) => Scaffold(
         backgroundColor: VineTheme.backgroundColor,
         appBar: _isInFeedMode
@@ -322,6 +417,7 @@ class ExploreScreenState extends ConsumerState<ExploreScreen>
                       VineTheme.whiteText.withValues(alpha: 0.7),
                   labelStyle: const TextStyle(
                       fontSize: 14, fontWeight: FontWeight.w600),
+                  onTap: _handleTabTap,
                   tabs: const [
                     Tab(text: "EDITOR'S PICKS"),
                     Tab(text: 'POPULAR NOW'),
@@ -361,6 +457,7 @@ class ExploreScreenState extends ConsumerState<ExploreScreen>
                       VineTheme.whiteText.withValues(alpha: 0.7),
                   labelStyle: const TextStyle(
                       fontSize: 14, fontWeight: FontWeight.w600),
+                  onTap: _handleTabTap,
                   tabs: const [
                     Tab(text: "EDITOR'S PICKS"),
                     Tab(text: 'POPULAR NOW'),
@@ -623,6 +720,11 @@ class ExploreScreenState extends ConsumerState<ExploreScreen>
         if (videos.isEmpty) {
           return _buildPopularNowEmptyState();
         }
+        
+        // Batch fetch profiles for the first visible videos
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _batchFetchProfilesAroundIndex(0, videos);
+        });
 
         return _buildPopularNowContent(videos, allVideos);
       },
@@ -1157,6 +1259,11 @@ class ExploreScreenState extends ConsumerState<ExploreScreen>
             ),
           );
         }
+        
+        // Batch fetch profiles for the first visible trending videos
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _batchFetchProfilesAroundIndex(0, videos);
+        });
 
         // Check if we should show feed mode or grid mode
         if (_isInFeedMode) {

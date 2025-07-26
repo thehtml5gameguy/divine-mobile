@@ -16,6 +16,7 @@ class Nip98AuthException implements Exception {
   final String message;
   final String? code;
 
+  @override
   String toString() => 'Nip98AuthException: $message';
 }
 
@@ -51,6 +52,7 @@ class Nip98Token {
   /// Get the authorization header value
   String get authorizationHeader => 'Nostr $token';
 
+  @override
   String toString() => 'Nip98Token(expires: ${expiresAt.toIso8601String()})';
 }
 

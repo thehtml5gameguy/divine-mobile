@@ -22,6 +22,7 @@ class VinePreviewScreen extends ConsumerStatefulWidget {
   final int frameCount;
   final String selectedApproach;
 
+  @override
   ConsumerState<VinePreviewScreen> createState() => _VinePreviewScreenState();
 }
 
@@ -35,6 +36,7 @@ class _VinePreviewScreenState extends ConsumerState<VinePreviewScreen> {
   bool _isExpiringPost = false;
   int _expirationHours = 24;
 
+  @override
   void initState() {
     super.initState();
     // Pre-populate with default hashtags
@@ -47,6 +49,7 @@ class _VinePreviewScreenState extends ConsumerState<VinePreviewScreen> {
     });
   }
 
+  @override
   void dispose() {
     _videoController?.dispose();
     _titleController.dispose();
@@ -98,6 +101,7 @@ class _VinePreviewScreenState extends ConsumerState<VinePreviewScreen> {
     }
   }
 
+  @override
   Widget build(BuildContext context) => Scaffold(
         backgroundColor: Colors.black,
         body: SafeArea(

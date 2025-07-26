@@ -12,6 +12,7 @@ import 'package:openvine/utils/unified_logger.dart';
 class KeyImportScreen extends ConsumerStatefulWidget {
   const KeyImportScreen({super.key});
 
+  @override
   ConsumerState<KeyImportScreen> createState() => _KeyImportScreenState();
 }
 
@@ -21,12 +22,14 @@ class _KeyImportScreenState extends ConsumerState<KeyImportScreen> {
   bool _isImporting = false;
   bool _obscureKey = true;
 
+  @override
   void dispose() {
     _keyController.dispose();
     
     super.dispose();
   }
 
+  @override
   Widget build(BuildContext context) => Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(

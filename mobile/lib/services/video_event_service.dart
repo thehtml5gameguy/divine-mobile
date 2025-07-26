@@ -2,7 +2,6 @@
 // ABOUTME: Handles real-time feed updates and local caching of video content
 
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/widgets.dart';
 import 'package:nostr_sdk/event.dart';
@@ -321,8 +320,7 @@ class VideoEventService  {
         Log.info('🔍 DIRECT: Creating DIRECT subscription for main video feed (bypassing SubscriptionManager)...',
             name: 'VideoEventService', category: LogCategory.video);
         
-        // Create simple filter for relay3.openvine.co (strfry relay)
-        // strfry doesn't require auth or vine tags like vine.hol.is did
+        // Create simple filter for OpenVine relays (relay1/relay2.openvine.co)
         final simpleKind22Filter = Filter(
           kinds: [22],
           limit: limit, // Use the requested limit instead of hardcoded 10
@@ -1631,5 +1629,6 @@ class VideoEventServiceException implements Exception {
   const VideoEventServiceException(this.message);
   final String message;
 
+  @override
   String toString() => 'VideoEventServiceException: $message';
 }

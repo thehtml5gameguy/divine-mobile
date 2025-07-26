@@ -4,6 +4,7 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i4;
+import 'dart:ui' as _i10;
 
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i5;
@@ -362,7 +363,7 @@ class MockSubscriptionManager extends _i1.Mock
     required List<_i7.Filter>? filters,
     required dynamic Function(_i6.Event)? onEvent,
     dynamic Function(dynamic)? onError,
-    dynamic onComplete,
+    _i10.VoidCallback? onComplete,
     Duration? timeout,
     int? priority = 5,
   }) =>

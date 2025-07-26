@@ -24,6 +24,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key, this.profilePubkey});
   final String? profilePubkey;
 
+  @override
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
@@ -34,6 +35,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   String? _targetPubkey;
   String? _playingVideoId;
 
+  @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
@@ -179,6 +181,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     userProfileService.fetchProfile(_targetPubkey!);
   }
 
+  @override
   void didUpdateWidget(ProfileScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
 
@@ -194,12 +197,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     }
   }
 
+  @override
   void dispose() {
     _tabController.dispose();
     
     super.dispose();
   }
 
+  @override
   Widget build(BuildContext context) {
     try {
       // Watch Riverpod providers
@@ -2743,10 +2748,13 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
   _StickyTabBarDelegate(this.tabBar);
   final TabBar tabBar;
 
+  @override
   double get minExtent => tabBar.preferredSize.height;
 
+  @override
   double get maxExtent => tabBar.preferredSize.height;
 
+  @override
   Widget build(
           BuildContext context, double shrinkOffset, bool overlapsContent) =>
       DecoratedBox(
@@ -2759,6 +2767,7 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
         child: tabBar,
       );
 
+  @override
   bool shouldRebuild(_StickyTabBarDelegate oldDelegate) =>
       tabBar != oldDelegate.tabBar;
 }

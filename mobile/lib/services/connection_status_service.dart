@@ -264,6 +264,7 @@ class ConnectionException implements Exception {
   final String message;
   final String? details;
 
+  @override
   String toString() =>
       'ConnectionException: $message${details != null ? ' ($details)' : ''}';
 }

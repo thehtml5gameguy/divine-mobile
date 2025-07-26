@@ -112,26 +112,6 @@ final secureKeyStorageServiceProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef SecureKeyStorageServiceRef = ProviderRef<SecureKeyStorageService>;
-String _$keyStorageServiceHash() => r'ade47ecd4c796ae74506760bf457ca9a72f114b2';
-
-/// Legacy key storage service (for migration only)
-///
-/// Copied from [keyStorageService].
-@ProviderFor(keyStorageService)
-final keyStorageServiceProvider =
-    AutoDisposeProvider<KeyStorageService>.internal(
-  keyStorageService,
-  name: r'keyStorageServiceProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$keyStorageServiceHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef KeyStorageServiceRef = AutoDisposeProviderRef<KeyStorageService>;
 String _$webAuthServiceHash() => r'53411c0f6a62bb9b59f90a0d7fc738a553a0b575';
 
 /// Web authentication service (for web platform only)

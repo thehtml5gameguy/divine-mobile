@@ -15,6 +15,7 @@ class AppLifecycleHandler extends ConsumerStatefulWidget {
   });
   final Widget child;
 
+  @override
   ConsumerState<AppLifecycleHandler> createState() => _AppLifecycleHandlerState();
 }
 
@@ -35,6 +36,7 @@ class _AppLifecycleHandlerState extends ConsumerState<AppLifecycleHandler>
     super.dispose();
   }
 
+  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
 
@@ -68,5 +70,6 @@ class _AppLifecycleHandlerState extends ConsumerState<AppLifecycleHandler>
     }
   }
 
+  @override
   Widget build(BuildContext context) => widget.child;
 }

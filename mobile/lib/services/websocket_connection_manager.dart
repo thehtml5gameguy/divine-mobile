@@ -433,6 +433,7 @@ class WebSocketConnectionPool {
 /// Default WebSocket factory using platform adapter
 /// REFACTORED: Removed ChangeNotifier - now uses pure state management via Riverpod
 class DefaultWebSocketFactory implements WebSocketFactory {
+  @override
   WebSocketInterface create(String url) {
     // Import is handled in websocket_adapter.dart
     throw UnimplementedError(

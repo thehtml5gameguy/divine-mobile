@@ -1,22 +1,26 @@
 // ABOUTME: Bulk thumbnail generation script for videos without thumbnails
-// ABOUTME: Fetches Kind 22 events from vine.hol.is and generates thumbnails via API service
+// ABOUTME: Fetches Kind 22 events from relay1.openvine.co and generates thumbnails via API service
 
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:nostr_sdk/filter.dart';
+import 'package:nostr_sdk/event.dart';
 import 'package:openvine/models/video_event.dart';
+import 'package:openvine/services/nostr_service.dart';
+import 'package:openvine/services/nostr_key_manager.dart';
 import 'package:openvine/services/thumbnail_api_service.dart';
 import 'package:openvine/utils/unified_logger.dart';
 
 /// Bulk thumbnail generation script
 ///
 /// This script:
-/// 1. Connects to vine.hol.is relay to fetch Kind 22 video events
+/// 1. Connects to relay1.openvine.co relay to fetch Kind 22 video events
 /// 2. Filters events that don't have thumbnails
-/// 3. Makes API requests to generate thumbnails for hosted videos
+/// 3. Makes API requests to generate thumbnails via api.openvine.co thumbnail service
 /// 4. Reports progress and statistics
 class BulkThumbnailGenerator {
-  static const String relayUrl = 'wss://vine.hol.is';
+  static const String relayUrl = 'wss://relay1.openvine.co';
   static const String apiBaseUrl = 'https://api.openvine.co';
   static const int batchSize =
       10; // Process videos in batches to avoid overwhelming the server
@@ -126,57 +130,57 @@ Examples:
     ''');
   }
 
-  /// Fetch video events from the relay using HTTP REST API
+  /// Fetch video events from the relay using Nostr WebSocket connection
   static Future<List<VideoEvent>> _fetchVideoEvents(int limit) async {
     final videoEvents = <VideoEvent>[];
 
     try {
-      // Use REST API to fetch events (simpler than WebSocket for batch processing)
-      final url = 'https://vine.hol.is/api/events?kinds=22&limit=$limit';
-
-      Log.info('Making HTTP request to: $url',  name: 'BulkThumbnailGenerator');
-
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'OpenVine-ThumbnailGenerator/1.0',
-        },
-      ).timeout(const Duration(seconds: 30));
-
-      if (response.statusCode != 200) {
-        throw Exception('HTTP ${response.statusCode}: ${response.body}');
-      }
-
-      final jsonData = json.decode(response.body);
-
-      if (jsonData is! List) {
-        throw Exception(
-            'Expected array of events, got: ${jsonData.runtimeType}');
-      }
-
-      Log.info('Received ${jsonData.length} events from relay',
+      Log.info('Connecting to Nostr relay to fetch Kind 22 events...',
           name: 'BulkThumbnailGenerator');
 
-      // Parse events
-      for (final eventData in jsonData) {
-        try {
-          // Convert to the format expected by VideoEvent.fromNostrEvent
-          final mockEvent = _createMockNostrEvent(eventData);
-          final videoEvent = VideoEvent.fromNostrEvent(mockEvent);
+      // Create Nostr service to connect to relay
+      final keyManager = NostrKeyManager();
+      final nostrService = NostrService(keyManager);
+      
+      // Initialize with only the relay we want to query
+      await nostrService.initialize(customRelays: [relayUrl]);
+      
+      // Create filter for Kind 22 video events
+      final filter = Filter(
+        kinds: [22],
+        limit: limit,
+      );
 
-          if (videoEvent.hasVideo) {
-            videoEvents.add(videoEvent);
-            totalVideosFound++;
+      Log.info('Subscribing to Kind 22 events with limit: $limit',
+          name: 'BulkThumbnailGenerator');
+
+      // Subscribe to events and collect them
+      final subscription = nostrService.subscribeToEvents(filters: [filter]);
+      final eventCount = <int>[0]; // Use list to allow modification in callback
+      
+      await for (final event in subscription) {
+        try {
+          final videoEvent = VideoEvent.fromNostrEvent(event);
+          videoEvents.add(videoEvent);
+          eventCount[0]++;
+          
+          Log.info('Received event ${eventCount[0]}/$limit: ${event.id}',
+              name: 'BulkThumbnailGenerator');
+          
+          // Stop when we reach the limit
+          if (eventCount[0] >= limit) {
+            break;
           }
         } catch (e) {
-          Log.debug('Skipped event ${eventData['id']}: $e',
+          Log.warning('Failed to parse event ${event.id}: $e',
               name: 'BulkThumbnailGenerator');
         }
       }
 
-      Log.info('Successfully parsed ${videoEvents.length} video events',
-          name: 'BulkThumbnailGenerator');
+      // Clean up
+      await nostrService.closeAllSubscriptions();
+      nostrService.dispose();
+
     } catch (e) {
       Log.error('Failed to fetch events from relay: $e',
           name: 'BulkThumbnailGenerator');
@@ -190,17 +194,6 @@ Examples:
     return videoEvents;
   }
 
-  /// Create a mock Nostr event from JSON data
-  static dynamic _createMockNostrEvent(Map<String, dynamic> eventData) =>
-      MockNostrEvent(
-        id: eventData['id'] ?? '',
-        pubkey: eventData['pubkey'] ?? '',
-        kind: eventData['kind'] ?? 22,
-        createdAt: eventData['created_at'] ??
-            DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        content: eventData['content'] ?? '',
-        tags: eventData['tags'] ?? [],
-      );
 
   /// Filter events that don't have thumbnails
   static List<VideoEvent> _filterEventsWithoutThumbnails(
@@ -338,22 +331,6 @@ Examples:
 }
 
 /// Mock Nostr event for testing
-class MockNostrEvent {
-  MockNostrEvent({
-    required this.id,
-    required this.pubkey,
-    required this.kind,
-    required this.createdAt,
-    required this.content,
-    required this.tags,
-  });
-  final String id;
-  final String pubkey;
-  final int kind;
-  final int createdAt;
-  final String content;
-  final List<dynamic> tags;
-}
 
 /// Entry point when run as script
 void main(List<String> args) async {

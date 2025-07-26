@@ -32,6 +32,7 @@ class RecordingSegment {
 
   double get durationInSeconds => duration.inMilliseconds / 1000.0;
 
+  @override
   String toString() => 'Segment(${duration.inMilliseconds}ms)';
 }
 
@@ -64,6 +65,7 @@ class MobileCameraInterface extends CameraPlatformInterface {
   int _currentCameraIndex = 0;
   bool _isRecording = false;
 
+  @override
   Future<void> initialize() async {
     _availableCameras = await availableCameras();
     if (_availableCameras.isEmpty) {
@@ -100,6 +102,7 @@ class MobileCameraInterface extends CameraPlatformInterface {
     await _controller!.prepareForVideoRecording();
   }
 
+  @override
   Future<void> startRecordingSegment(String filePath) async {
     if (_controller == null) {
       throw Exception('Camera controller not initialized');
@@ -124,6 +127,7 @@ class MobileCameraInterface extends CameraPlatformInterface {
     }
   }
 
+  @override
   Future<String?> stopRecordingSegment() async {
     if (_controller == null) {
       throw Exception('Camera controller not initialized');
@@ -151,6 +155,7 @@ class MobileCameraInterface extends CameraPlatformInterface {
     }
   }
 
+  @override
   Future<void> switchCamera() async {
     if (_availableCameras.length <= 1) return; // No other cameras to switch to
 
@@ -196,6 +201,7 @@ class MobileCameraInterface extends CameraPlatformInterface {
     }
   }
 
+  @override
   Widget get previewWidget {
     final controller = _controller;
     if (controller != null && controller.value.isInitialized) {
@@ -209,8 +215,10 @@ class MobileCameraInterface extends CameraPlatformInterface {
     );
   }
 
+  @override
   bool get canSwitchCamera => _availableCameras.length > 1;
 
+  @override
   void dispose() {
     // Stop any active recording before disposal
     if (_isRecording) {
@@ -246,6 +254,7 @@ class MacOSCameraInterface extends CameraPlatformInterface
   // Track current camera index
   int _currentCameraIndex = 0;
 
+  @override
   Future<void> initialize() async {
     startInitialization();
 
@@ -271,6 +280,7 @@ class MacOSCameraInterface extends CameraPlatformInterface
         name: 'VineRecordingController', category: LogCategory.system);
   }
 
+  @override
   Future<void> startRecordingSegment(String filePath) async {
     Log.info(
         '📱 Starting recording segment, initialized: $isInitialized, recording: $_isRecording, singleMode: $isSingleRecordingMode',
@@ -330,6 +340,7 @@ class MacOSCameraInterface extends CameraPlatformInterface
     }
   }
 
+  @override
   Future<String?> stopRecordingSegment() async {
     Log.debug(
         '📱 Stopping recording segment, recording: $_isRecording, singleMode: $isSingleRecordingMode',
@@ -387,6 +398,7 @@ class MacOSCameraInterface extends CameraPlatformInterface
   /// Get virtual segments for macOS single recording mode
   List<RecordingSegment> getVirtualSegments() => _virtualSegments;
 
+  @override
   Widget get previewWidget {
     if (!isInitialized) {
       Log.info('📱 macOS camera preview requested but not initialized yet',
@@ -395,6 +407,7 @@ class MacOSCameraInterface extends CameraPlatformInterface
     return _previewWidget;
   }
 
+  @override
   bool get canSwitchCamera {
     // For macOS, we should check if multiple cameras are available
     // For now, return false to hide the button since most Macs have only one camera
@@ -402,6 +415,7 @@ class MacOSCameraInterface extends CameraPlatformInterface
     return false;
   }
 
+  @override
   Future<void> switchCamera() async {
     try {
       // Get available cameras from native macOS
@@ -435,6 +449,7 @@ class MacOSCameraInterface extends CameraPlatformInterface
     }
   }
 
+  @override
   void dispose() {
     // Stop any active recording
     if (_isRecording) {
@@ -469,6 +484,7 @@ class WebCameraInterface extends CameraPlatformInterface {
   camera_service.WebCameraService? _webCameraService;
   Widget? _previewWidget;
 
+  @override
   Future<void> initialize() async {
     if (!kIsWeb) throw Exception('WebCameraInterface only works on web');
 
@@ -489,6 +505,7 @@ class WebCameraInterface extends CameraPlatformInterface {
     }
   }
 
+  @override
   Future<void> startRecordingSegment(String filePath) async {
     if (_webCameraService == null) {
       throw Exception('Web camera service not initialized');
@@ -497,6 +514,7 @@ class WebCameraInterface extends CameraPlatformInterface {
     await _webCameraService!.startRecording();
   }
 
+  @override
   Future<String?> stopRecordingSegment() async {
     if (_webCameraService == null) {
       throw Exception('Web camera service not initialized');
@@ -514,6 +532,7 @@ class WebCameraInterface extends CameraPlatformInterface {
     }
   }
 
+  @override
   Future<void> switchCamera() async {
     if (_webCameraService == null) {
       Log.warning('Web camera service not initialized',
@@ -531,6 +550,7 @@ class WebCameraInterface extends CameraPlatformInterface {
     }
   }
 
+  @override
   Widget get previewWidget =>
       _previewWidget ??
       const ColoredBox(
@@ -542,6 +562,7 @@ class WebCameraInterface extends CameraPlatformInterface {
         ),
       );
 
+  @override
   bool get canSwitchCamera {
     // For web, hide camera switch button as it's less common and 
     // can cause confusion. Most users have only one camera.
@@ -561,6 +582,7 @@ class WebCameraInterface extends CameraPlatformInterface {
     }
   }
 
+  @override
   void dispose() {
     _webCameraService?.dispose();
     _webCameraService = null;

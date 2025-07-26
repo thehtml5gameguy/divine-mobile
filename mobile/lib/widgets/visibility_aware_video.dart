@@ -38,6 +38,7 @@ mixin VideoVisibilityMixin<T extends ConsumerStatefulWidget> on ConsumerState<T>
     }
   }
 
+  @override
   void dispose() {
     // Clean up visibility tracking
     try {
@@ -64,17 +65,20 @@ class VisibilityAwareVideo extends ConsumerStatefulWidget {
   final Widget child;
   final Function(VisibilityInfo)? onVisibilityChanged;
 
+  @override
   ConsumerState<VisibilityAwareVideo> createState() => _VisibilityAwareVideoState();
 }
 
 class _VisibilityAwareVideoState extends ConsumerState<VisibilityAwareVideo> {
   bool _mounted = true;
 
+  @override
   void dispose() {
     _mounted = false;
     
   }
 
+  @override
   Widget build(BuildContext context) => VisibilityDetector(
         key: Key('video-visibility-${widget.videoId}'),
         onVisibilityChanged: (visibilityInfo) {
@@ -142,6 +146,7 @@ class _VisibilityContext extends InheritedWidget {
   static _VisibilityContext? of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<_VisibilityContext>();
 
+  @override
   bool updateShouldNotify(_VisibilityContext oldWidget) =>
       shouldPlay != oldWidget.shouldPlay ||
       shouldAutoPlay != oldWidget.shouldAutoPlay;

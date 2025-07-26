@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Created BlurhashDisplay widget for rendering blurhash placeholders
   - Updated VideoThumbnailWidget to show blurhash while loading thumbnails
   - Provides instant visual feedback with smooth transitions to actual thumbnails
+- **Improved Tab Navigation**: Enhanced explore screen tab bar navigation behavior
+  - Single tap on current tab now exits feed mode and returns to grid view
+  - Double-tap detection on tabs for quick navigation back to root
+  - Consistent navigation behavior across Editor's Picks, Popular Now, and Trending tabs
 
 ### Changed
 - **Relay Configuration**: Switched to using relay3.openvine.co as primary relay

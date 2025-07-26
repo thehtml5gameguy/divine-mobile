@@ -46,6 +46,7 @@ class VideoPlayerWidget extends StatefulWidget {
   /// Callback when video is tapped
   final VoidCallback? onVideoTap;
 
+  @override
   State<VideoPlayerWidget> createState() => _VideoPlayerWidgetState();
 }
 
@@ -55,11 +56,13 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   String? _errorMessage;
   bool _isInitializing = false;
 
+  @override
   void initState() {
     super.initState();
     _initializePlayer();
   }
 
+  @override
   void didUpdateWidget(VideoPlayerWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
 
@@ -75,6 +78,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     }
   }
 
+  @override
   void dispose() {
     _disposeChewieController();
     
@@ -207,6 +211,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     _initializePlayer();
   }
 
+  @override
   Widget build(BuildContext context) => GestureDetector(
         onTap: widget.onVideoTap,
         child: Container(

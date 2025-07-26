@@ -23,6 +23,7 @@ class VideoOverlayModal extends ConsumerStatefulWidget {
   final String contextTitle;
   final int? startingIndex;
 
+  @override
   ConsumerState<VideoOverlayModal> createState() => _VideoOverlayModalState();
 }
 
@@ -31,6 +32,7 @@ class _VideoOverlayModalState extends ConsumerState<VideoOverlayModal> {
   late int _currentIndex;
   VideoManager? _videoManager;
 
+  @override
   void initState() {
     super.initState();
 
@@ -74,6 +76,7 @@ class _VideoOverlayModalState extends ConsumerState<VideoOverlayModal> {
     });
   }
 
+  @override
   void dispose() {
     _pageController.dispose();
     _pauseAllVideos();
@@ -159,6 +162,7 @@ class _VideoOverlayModalState extends ConsumerState<VideoOverlayModal> {
     }
   }
 
+  @override
   Widget build(BuildContext context) {
     Log.debug(
         'VideoOverlayModal: Building with ${widget.videoList.length} videos, current index: $_currentIndex',

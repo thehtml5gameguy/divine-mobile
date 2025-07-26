@@ -610,5 +610,6 @@ class UserProfileServiceException implements Exception {
   const UserProfileServiceException(this.message);
   final String message;
 
+  @override
   String toString() => 'UserProfileServiceException: $message';
 }

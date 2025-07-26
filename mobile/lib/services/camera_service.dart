@@ -41,6 +41,7 @@ class CameraConfiguration {
     );
   }
 
+  @override
   String toString() =>
       'CameraConfiguration(duration: ${recordingDuration.inSeconds}s)';
 }
@@ -502,6 +503,7 @@ class VineRecordingResult {
 
   bool get hasVideo => videoFile.existsSync();
 
+  @override
   String toString() =>
       'VineRecordingResult(file: ${videoFile.path}, duration: ${duration.inSeconds}s)';
 }

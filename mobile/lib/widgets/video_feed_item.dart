@@ -41,6 +41,7 @@ class VideoFeedItem extends ConsumerStatefulWidget {
   final bool isActive;
   final Function(String)? onVideoError;
 
+  @override
   ConsumerState<VideoFeedItem> createState() => _VideoFeedItemState();
 }
 
@@ -60,6 +61,7 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem>
   bool _isCheckingReadiness = false;
   bool _hasScheduledPostFrameCallback = false;
 
+  @override
   void initState() {
     super.initState();
     _iconAnimationController = AnimationController(
@@ -77,6 +79,7 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem>
     }
   }
 
+  @override
   void didUpdateWidget(VideoFeedItem oldWidget) {
     super.didUpdateWidget(oldWidget);
 
@@ -101,6 +104,7 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem>
     }
   }
 
+  @override
   void dispose() {
     _iconAnimationController.dispose();
     _readinessCheckTimer?.cancel();
@@ -510,6 +514,7 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem>
     }
   }
 
+  @override
   Widget build(BuildContext context) {
     // Watch VideoManagerProvider to trigger rebuilds when state changes
     final videoManagerState = ref.watch(videoManagerProvider);
@@ -1807,6 +1812,7 @@ class VideoAccessibilityInfo extends StatelessWidget {
   final VideoEvent video;
   final VideoState? videoState;
 
+  @override
   Widget build(BuildContext context) {
     var semanticLabel = 'Video';
 

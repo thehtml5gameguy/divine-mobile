@@ -27,6 +27,7 @@ class CameraWithZoom extends StatefulWidget {
   /// Callback when camera is initialized and ready
   final VoidCallback? onCameraReady;
 
+  @override
   State<CameraWithZoom> createState() => _CameraWithZoomState();
 }
 
@@ -35,12 +36,14 @@ class _CameraWithZoomState extends State<CameraWithZoom> {
   bool _isInitialized = false;
   String? _errorMessage;
 
+  @override
   void initState() {
     super.initState();
     _cameraService = CameraService();
     _initializeCamera();
   }
 
+  @override
   void dispose() {
     _cameraService.dispose();
     
@@ -70,6 +73,7 @@ class _CameraWithZoomState extends State<CameraWithZoom> {
     widget.onZoomChanged?.call(level);
   }
 
+  @override
   Widget build(BuildContext context) {
     if (_errorMessage != null) {
       return Center(
@@ -139,6 +143,7 @@ class _CameraWithZoomState extends State<CameraWithZoom> {
 class ZoomDemoScreen extends StatelessWidget {
   const ZoomDemoScreen({super.key});
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(

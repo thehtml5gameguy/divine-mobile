@@ -30,6 +30,7 @@ class RecordingSegment {
   final Duration duration;
   final String? filePath;
 
+  @override
   String toString() => 'Segment(${duration.inMilliseconds}ms)';
 }
 
@@ -46,6 +47,7 @@ enum VineRecordingState {
 class MacOSCameraScreen extends ConsumerStatefulWidget {
   const MacOSCameraScreen({super.key});
 
+  @override
   ConsumerState<MacOSCameraScreen> createState() => _MacOSCameraScreenState();
 }
 
@@ -65,11 +67,13 @@ class _MacOSCameraScreenState extends ConsumerState<MacOSCameraScreen> {
   DateTime? _recordingStartTime;
   static const Duration _maxRecordingDuration = Duration(seconds: 6);
 
+  @override
   void initState() {
     super.initState();
     _initializeServices();
   }
 
+  @override
   void dispose() {
     
     super.dispose();
@@ -241,6 +245,7 @@ class _MacOSCameraScreenState extends ConsumerState<MacOSCameraScreen> {
         .clamp(0.0, 1.0);
   }
 
+  @override
   Widget build(BuildContext context) => Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(

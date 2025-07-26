@@ -429,6 +429,7 @@ class VideoPlaybackController
   }
 
   // App lifecycle handling
+  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (!config.handleAppLifecycle) return;
 

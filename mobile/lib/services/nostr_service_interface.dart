@@ -99,6 +99,5 @@ abstract class INostrService {
   // Primary relay for all client operations
   String get primaryRelay;
 
-  @override
   void dispose();
 }

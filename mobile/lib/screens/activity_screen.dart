@@ -16,6 +16,7 @@ import 'package:openvine/providers/app_providers.dart';
 class ActivityScreen extends ConsumerStatefulWidget {
   const ActivityScreen({super.key});
 
+  @override
   ConsumerState<ActivityScreen> createState() => _ActivityScreenState();
 }
 
@@ -23,17 +24,20 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
+  @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
   }
 
+  @override
   void dispose() {
     _tabController.dispose();
     
     super.dispose();
   }
 
+  @override
   Widget build(BuildContext context) {
     final authService = ref.watch(authServiceProvider);
     
@@ -348,6 +352,7 @@ class _NotificationItem extends ConsumerWidget {
   final NotificationModel notification;
   final VoidCallback onTap;
 
+  @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userProfileService = ref.watch(userProfileServiceProvider);
     final profile =
@@ -492,6 +497,7 @@ class _FollowingItem extends StatelessWidget {
   final models.UserProfile? profile;
   final VoidCallback onTap;
 
+  @override
   Widget build(BuildContext context) => Card(
         color: Colors.grey[900],
         child: ListTile(
@@ -564,6 +570,7 @@ class _PersonalVideoItem extends StatelessWidget {
   final VideoEvent video;
   final VoidCallback onTap;
 
+  @override
   Widget build(BuildContext context) => Card(
         color: Colors.grey[900],
         child: InkWell(

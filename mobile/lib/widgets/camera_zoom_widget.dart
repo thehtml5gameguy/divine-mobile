@@ -31,6 +31,7 @@ class CameraZoomWidget extends StatefulWidget {
   /// Callback when zoom level changes
   final ValueChanged<double>? onZoomChanged;
 
+  @override
   State<CameraZoomWidget> createState() => _CameraZoomWidgetState();
 }
 
@@ -39,6 +40,7 @@ class _CameraZoomWidgetState extends State<CameraZoomWidget> {
   double _currentScale = 1.0;
   bool _showZoomControls = false;
 
+  @override
   void initState() {
     super.initState();
     _baseZoomLevel = widget.cameraService.currentZoomLevel;
@@ -47,6 +49,7 @@ class _CameraZoomWidgetState extends State<CameraZoomWidget> {
       // REFACTORED: Service no longer extends ChangeNotifier - use Riverpod ref.watch instead
   }
 
+  @override
   void dispose() {
       // REFACTORED: Service no longer needs manual listener cleanup
     
@@ -143,6 +146,7 @@ class _CameraZoomWidgetState extends State<CameraZoomWidget> {
     }
   }
 
+  @override
   Widget build(BuildContext context) {
     return Stack(
       children: [

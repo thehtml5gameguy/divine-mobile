@@ -28,6 +28,7 @@ class ExploreVideoFeedScreen extends ConsumerStatefulWidget {
   final VideoEvent? startingVideo;
   final int startingIndex;
 
+  @override
   ConsumerState<ExploreVideoFeedScreen> createState() => _ExploreVideoFeedScreenState();
 }
 
@@ -40,6 +41,7 @@ class _ExploreVideoFeedScreenState extends ConsumerState<ExploreVideoFeedScreen>
   int _currentIndex = 0;
   bool _isInitialized = false;
 
+  @override
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: widget.startingIndex);
@@ -52,6 +54,7 @@ class _ExploreVideoFeedScreenState extends ConsumerState<ExploreVideoFeedScreen>
     });
   }
 
+  @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _pageController.dispose();
@@ -65,6 +68,7 @@ class _ExploreVideoFeedScreenState extends ConsumerState<ExploreVideoFeedScreen>
     super.dispose();
   }
 
+  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
 
@@ -184,6 +188,7 @@ class _ExploreVideoFeedScreenState extends ConsumerState<ExploreVideoFeedScreen>
     }
   }
 
+  @override
   Widget build(BuildContext context) => Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(

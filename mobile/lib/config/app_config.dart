@@ -50,7 +50,7 @@ class AppConfig {
 
   // Test relay configuration for integration testing
   static const List<String> testNostrRelays = [
-    'wss://vine.hol.is',  // Use vine.hol.is for real integration testing
+    'wss://relay1.openvine.co',  // Use relay1.openvine.co for real integration testing
   ];
 
   // Debugging

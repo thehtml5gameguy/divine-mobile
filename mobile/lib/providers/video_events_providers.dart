@@ -11,6 +11,7 @@ import 'package:openvine/providers/feed_mode_providers.dart';
 import 'package:openvine/providers/social_providers.dart';
 import 'package:openvine/services/nostr_service_interface.dart';
 import 'package:openvine/services/subscription_manager.dart';
+import 'package:openvine/services/video_event_service.dart';
 import 'package:openvine/state/video_feed_state.dart';
 import 'package:openvine/utils/unified_logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -36,14 +37,11 @@ SubscriptionManager videoEventsSubscriptionManager(
 /// Stream provider for video events from Nostr
 @riverpod
 class VideoEvents extends _$VideoEvents {
-  final List<VideoEvent> _events = [];
-  final Set<String> _seenEventIds = {};
+  StreamController<List<VideoEvent>>? _controller;
+  Timer? _refreshTimer;
 
   @override
   Stream<List<VideoEvent>> build() {
-    _events.clear();
-    _seenEventIds.clear();
-
     // Use existing VideoEventService instead of duplicating subscription logic
     final videoEventService = ref.watch(videoEventServiceProvider);
 
@@ -53,51 +51,72 @@ class VideoEvents extends _$VideoEvents {
       category: LogCategory.video,
     );
 
-    // CRITICAL: Start video event subscription if not already subscribed
-    if (!videoEventService.isSubscribed) {
-      Log.info(
-        'VideoEvents: Starting video feed subscription',
-        name: 'VideoEventsProvider', 
-        category: LogCategory.video,
-      );
-      // Start subscription for general video feed
-      videoEventService.subscribeToVideoFeed(
-        limit: 100,
-        includeReposts: true,
-      );
-    }
-
-    // Create stream controller to transform VideoEventService data
-    final controller = StreamController<List<VideoEvent>>.broadcast();
+    // Subscribe based on current feed mode
+    _subscribeBasedOnFeedMode(videoEventService);
     
-    // Add current events immediately
-    final currentEvents = List<VideoEvent>.from(videoEventService.videoEvents);
-    _events.addAll(currentEvents);
-    controller.add(currentEvents);
-
-    // Listen for new events from VideoEventService  
-    void onVideoEventServiceChange() {
-      final newEvents = videoEventService.videoEvents;
-      if (newEvents.length != _events.length) {
-        Log.debug(
-          'VideoEvents: VideoEventService updated (${newEvents.length} events)',
+    // Watch for feed mode changes
+    ref.listen(feedModeNotifierProvider, (previous, next) {
+      if (previous != next) {
+        Log.info(
+          'VideoEvents: Feed mode changed from $previous to $next',
           name: 'VideoEventsProvider',
           category: LogCategory.video,
         );
-        _events.clear();
-        _events.addAll(newEvents);
-        controller.add(List<VideoEvent>.from(_events));
+        _subscribeBasedOnFeedMode(videoEventService);
       }
-    }
-
-    // REFACTORED: Service no longer extends ChangeNotifier
-    // Instead, we should use proper Riverpod state management
-    // For now, just close controller on dispose
-    ref.onDispose(() {
-      controller.close();
+    });
+    
+    // Watch for feed context changes (for hashtag/profile modes)
+    ref.listen(feedContextProvider, (previous, next) {
+      final feedMode = ref.read(feedModeNotifierProvider);
+      if ((feedMode == FeedMode.hashtag || feedMode == FeedMode.profile) && previous != next) {
+        Log.info(
+          'VideoEvents: Feed context changed from $previous to $next',
+          name: 'VideoEventsProvider',
+          category: LogCategory.video,
+        );
+        _subscribeBasedOnFeedMode(videoEventService);
+      }
     });
 
-    return controller.stream;
+    // Create a new stream controller
+    _controller = StreamController<List<VideoEvent>>.broadcast();
+    
+    // Emit current events immediately
+    final currentEvents = List<VideoEvent>.from(videoEventService.videoEvents);
+    _controller!.add(currentEvents);
+
+    // Since VideoEventService no longer extends ChangeNotifier,
+    // we need to periodically check for updates
+    // This is a more efficient approach that only rebuilds when data actually changes
+    int lastEventCount = currentEvents.length;
+    String? lastEventId = currentEvents.isNotEmpty ? currentEvents.first.id : null;
+    
+    _refreshTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
+      final newEvents = videoEventService.videoEvents;
+      final newEventCount = newEvents.length;
+      final newLastEventId = newEvents.isNotEmpty ? newEvents.first.id : null;
+      
+      // Only emit if there's an actual change
+      if (newEventCount != lastEventCount || newLastEventId != lastEventId) {
+        Log.debug(
+          'VideoEvents: Detected change - count: $lastEventCount → $newEventCount, latest: ${lastEventId?.substring(0, 8)} → ${newLastEventId?.substring(0, 8)}',
+          name: 'VideoEventsProvider',
+          category: LogCategory.video,
+        );
+        lastEventCount = newEventCount;
+        lastEventId = newLastEventId;
+        _controller!.add(List<VideoEvent>.from(newEvents));
+      }
+    });
+
+    // Clean up on dispose
+    ref.onDispose(() {
+      _refreshTimer?.cancel();
+      _controller?.close();
+    });
+
+    return _controller!.stream;
   }
 
   /// Create filter based on current feed mode
@@ -183,68 +202,51 @@ class VideoEvents extends _$VideoEvents {
 
     return filter;
   }
-
-  /// Load more historical events
-  Future<void> loadMoreEvents() async {
-    final nostrService = ref.read(videoEventsNostrServiceProvider);
-    if (!nostrService.isInitialized) return;
-
-    // Get oldest event timestamp
-    final oldestTimestamp = _events.isEmpty
-        ? DateTime.now().millisecondsSinceEpoch ~/ 1000
-        : _events.map((e) => e.createdAt).reduce((a, b) => a < b ? a : b);
-
-    // Create filter for older events
+  
+  /// Subscribe to video feed based on current feed mode
+  void _subscribeBasedOnFeedMode(VideoEventService videoEventService) {
     final filter = _createFilter();
-    if (filter == null) return;
-
-    filter.until = oldestTimestamp - 1;
-    filter.limit = 50;
-
-    Log.info(
-      'VideoEvents: Loading more events before timestamp $oldestTimestamp',
-      name: 'VideoEventsProvider',
-      category: LogCategory.video,
-    );
-
-    try {
-      final stream = nostrService.subscribeToEvents(filters: [filter]);
-
-      await for (final event in stream) {
-        if (event.kind == 22 && !_seenEventIds.contains(event.id)) {
-          try {
-            final videoEvent = VideoEvent.fromNostrEvent(event);
-            _events.add(videoEvent);
-            _seenEventIds.add(event.id);
-          } catch (e) {
-            Log.error(
-              'VideoEvents: Failed to parse historical event: $e',
-              name: 'VideoEventsProvider',
-              category: LogCategory.video,
-            );
-          }
-        }
-      }
-
-      // Sort events by timestamp (newest first)
-      _events.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
-      // Notify listeners with updated list
-      ref.notifyListeners();
-    } catch (e) {
-      Log.error(
-        'VideoEvents: Error loading more: $e',
+    if (filter == null) {
+      Log.warning(
+        'VideoEvents: Cannot create filter for current feed mode',
         name: 'VideoEventsProvider',
         category: LogCategory.video,
       );
+      return;
     }
+    
+    Log.info(
+      'VideoEvents: Subscribing with filter: ${filter.toJson()}',
+      name: 'VideoEventsProvider',
+      category: LogCategory.video,
+    );
+    
+    // Subscribe with the appropriate parameters
+    videoEventService.subscribeToVideoFeed(
+      authors: filter.authors,
+      hashtags: filter.t,
+      limit: filter.limit ?? 100,
+      includeReposts: true,
+      replace: true, // Replace existing subscription when mode changes
+    );
+  }
+
+  /// Load more historical events
+  Future<void> loadMoreEvents() async {
+    final videoEventService = ref.read(videoEventServiceProvider);
+    
+    // Delegate to VideoEventService which already has this functionality
+    await videoEventService.loadMoreEvents(limit: 50);
+    
+    // The periodic timer will automatically pick up the new events
+    // and emit them through the stream
   }
 
   /// Clear all events and refresh
   Future<void> refresh() async {
-    _events.clear();
-    _seenEventIds.clear();
-    ref.invalidateSelf();
+    final videoEventService = ref.read(videoEventServiceProvider);
+    await videoEventService.refreshVideoFeed();
+    // The stream will automatically emit the refreshed events
   }
 }
 

@@ -24,10 +24,12 @@ class ShareVideoMenu extends ConsumerStatefulWidget {
   final VideoEvent video;
   final VoidCallback? onDismiss;
 
+  @override
   ConsumerState<ShareVideoMenu> createState() => _ShareVideoMenuState();
 }
 
 class _ShareVideoMenuState extends ConsumerState<ShareVideoMenu> {
+  @override
   Widget build(BuildContext context) => DecoratedBox(
         decoration: const BoxDecoration(
           color: VineTheme.backgroundColor,
@@ -546,6 +548,7 @@ class _SendToUserDialog extends ConsumerStatefulWidget {
   const _SendToUserDialog({required this.video});
   final VideoEvent video;
 
+  @override
   ConsumerState<_SendToUserDialog> createState() => _SendToUserDialogState();
 }
 
@@ -557,11 +560,13 @@ class _SendToUserDialogState extends ConsumerState<_SendToUserDialog> {
   List<ShareableUser> _contacts = [];
   bool _contactsLoaded = false;
 
+  @override
   void initState() {
     super.initState();
     _loadUserContacts();
   }
 
+  @override
   Widget build(BuildContext context) => AlertDialog(
         backgroundColor: VineTheme.cardBackground,
         title: const Text('Send to Viner',
@@ -884,6 +889,7 @@ class _CreateListDialog extends ConsumerStatefulWidget {
   const _CreateListDialog({required this.video});
   final VideoEvent video;
 
+  @override
   ConsumerState<_CreateListDialog> createState() => _CreateListDialogState();
 }
 
@@ -892,6 +898,7 @@ class _CreateListDialogState extends ConsumerState<_CreateListDialog> {
   final TextEditingController _descriptionController = TextEditingController();
   bool _isPublic = true;
 
+  @override
   Widget build(BuildContext context) => AlertDialog(
         backgroundColor: VineTheme.cardBackground,
         title: const Text('Create New List',
@@ -988,6 +995,7 @@ class _SelectListDialog extends StatelessWidget {
   const _SelectListDialog({required this.video});
   final VideoEvent video;
 
+  @override
   Widget build(BuildContext context) => Consumer(
         builder: (context, ref, child) {
           final listService = ref.watch(curatedListServiceProvider);
@@ -1073,6 +1081,7 @@ class _ReportContentDialog extends ConsumerStatefulWidget {
   const _ReportContentDialog({required this.video});
   final VideoEvent video;
 
+  @override
   ConsumerState<_ReportContentDialog> createState() => _ReportContentDialogState();
 }
 
@@ -1080,6 +1089,7 @@ class _ReportContentDialogState extends ConsumerState<_ReportContentDialog> {
   ContentFilterReason? _selectedReason;
   final TextEditingController _detailsController = TextEditingController();
 
+  @override
   Widget build(BuildContext context) => AlertDialog(
         backgroundColor: VineTheme.cardBackground,
         title: const Text('Report Content',

@@ -609,5 +609,6 @@ class DirectUploadException implements Exception {
   final String? code;
   final dynamic originalError;
 
+  @override
   String toString() => 'DirectUploadException: $message';
 }

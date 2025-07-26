@@ -25,6 +25,7 @@ class VideoOverlayModalCompact extends ConsumerStatefulWidget {
   final String contextTitle;
   final int? startingIndex;
 
+  @override
   ConsumerState<VideoOverlayModalCompact> createState() =>
       _VideoOverlayModalCompactState();
 }
@@ -36,6 +37,7 @@ class _VideoOverlayModalCompactState extends ConsumerState<VideoOverlayModalComp
   late AnimationController _slideController;
   late Animation<double> _slideAnimation;
 
+  @override
   void initState() {
     super.initState();
 
@@ -80,6 +82,7 @@ class _VideoOverlayModalCompactState extends ConsumerState<VideoOverlayModalComp
     });
   }
 
+  @override
   void dispose() {
     _pageController.dispose();
     _slideController.dispose();
@@ -145,6 +148,7 @@ class _VideoOverlayModalCompactState extends ConsumerState<VideoOverlayModalComp
     });
   }
 
+  @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final modalHeight = screenHeight * 0.8; // 80% of screen height

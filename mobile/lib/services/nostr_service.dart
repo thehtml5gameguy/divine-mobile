@@ -32,6 +32,7 @@ class NostrServiceException implements Exception {
   NostrServiceException(this.message);
   final String message;
 
+  @override
   String toString() => 'NostrServiceException: $message';
 }
 
@@ -42,13 +43,11 @@ class NostrService  implements INostrService, BackgroundAwareService {
 
   NostrService(this._keyManager);
   static const List<String> defaultRelays = [
-    'wss://relay3.openvine.co',  // strfry - all client operations (no auth needed)
-    'wss://vine.hol.is',         // original relay with existing video content
+    'wss://relay3.openvine.co',  // Primary OpenVine relay
   ];
 
   // Relay selection constants  
   static const String primaryRelayUrl = 'wss://relay3.openvine.co';
-  // Note: relay1.openvine.co is backend-only for search indexing
 
   static const String _relaysPrefsKey = 'custom_relays';
   static const String _authStatePrefsKey = 'auth_states';
@@ -85,23 +84,33 @@ class NostrService  implements INostrService, BackgroundAwareService {
       StreamController<Map<String, bool>>.broadcast();
 
   // INostrService implementation
+  @override
   bool get isInitialized => _isInitialized && !_isDisposed;
 
+  @override
   bool get isDisposed => _isDisposed;
 
+  @override
   List<String> get connectedRelays => List.unmodifiable(_connectedRelays);
 
+  @override
   String? get publicKey => _isDisposed ? null : _keyManager.publicKey;
 
+  @override
   bool get hasKeys => _isDisposed ? false : _keyManager.hasKeys;
 
+  @override
   NostrKeyManager get keyManager => _keyManager;
 
+  @override
   int get relayCount => _connectedRelays.length;
 
+  @override
   int get connectedRelayCount => _connectedRelays.length;
 
+  @override
   List<String> get relays => List.unmodifiable(_relays);
+  @override
   Map<String, dynamic> get relayStatuses {
     final statuses = <String, dynamic>{};
     for (final url in _relays) {
@@ -119,12 +128,15 @@ class NostrService  implements INostrService, BackgroundAwareService {
   }
 
   /// Get AUTH states for all relays
+  @override
   Map<String, bool> get relayAuthStates => Map.unmodifiable(_relayAuthStates);
 
   /// Stream of AUTH state changes
+  @override
   Stream<Map<String, bool>> get authStateStream => _authStateController.stream;
 
   /// Check if a specific relay is authenticated
+  @override
   bool isRelayAuthenticated(String relayUrl) {
     final authState = _relayAuthStates[relayUrl];
     final authTime = _relayAuthTimestamps[relayUrl];
@@ -139,15 +151,18 @@ class NostrService  implements INostrService, BackgroundAwareService {
   }
 
   /// Check if primary relay is authenticated (not needed for strfry but kept for compatibility)
+  @override
   bool get isVineRelayAuthenticated => isRelayAuthenticated(primaryRelayUrl);
 
   /// Set configurable AUTH timeout
+  @override
   void setAuthTimeout(Duration timeout) {
     _authTimeout = timeout;
     Log.info('AUTH timeout set to ${timeout.inSeconds}s',
         name: 'NostrService', category: LogCategory.relay);
   }
 
+  @override
   Future<void> initialize({List<String>? customRelays}) async {
     if (_isInitialized) {
       Log.warning('⚠️ NostrService already initialized',
@@ -388,6 +403,7 @@ class NostrService  implements INostrService, BackgroundAwareService {
     return true;
   }
 
+  @override
   Stream<Event> subscribeToEvents({
     required List<Filter> filters,
     bool bypassLimits = false, // Not needed in v2 - SDK handles limits
@@ -475,6 +491,7 @@ class NostrService  implements INostrService, BackgroundAwareService {
     return controller.stream;
   }
 
+  @override
   Future<NostrBroadcastResult> broadcastEvent(Event event) async {
     if (!_isInitialized || !hasKeys) {
       throw NostrServiceException(
@@ -640,6 +657,7 @@ class NostrService  implements INostrService, BackgroundAwareService {
     }
   }
 
+  @override
   Future<NostrBroadcastResult> publishFileMetadata({
     required NIP94Metadata metadata,
     required String content,
@@ -689,6 +707,7 @@ class NostrService  implements INostrService, BackgroundAwareService {
     return broadcastEvent(event);
   }
 
+  @override
   Future<NostrBroadcastResult> publishVideoEvent({
     required String videoUrl,
     required String content,
@@ -747,6 +766,7 @@ class NostrService  implements INostrService, BackgroundAwareService {
   }
 
   /// Add a new relay
+  @override
   Future<bool> addRelay(String relayUrl) async {
     if (_relays.contains(relayUrl)) {
       return true; // Already in list
@@ -787,6 +807,7 @@ class NostrService  implements INostrService, BackgroundAwareService {
   }
 
   /// Remove a relay
+  @override
   Future<void> removeRelay(String relayUrl) async {
     try {
       // Remove from SDK
@@ -814,6 +835,7 @@ class NostrService  implements INostrService, BackgroundAwareService {
   }
 
   /// Get connection status for all relays
+  @override
   Map<String, bool> getRelayStatus() {
     final status = <String, bool>{};
     for (final relayUrl in _relays) {
@@ -823,6 +845,7 @@ class NostrService  implements INostrService, BackgroundAwareService {
   }
 
   /// Reconnect to all configured relays
+  @override
   Future<void> reconnectAll() async {
     Log.debug('Reconnecting to all relays...',
         name: 'NostrService', category: LogCategory.relay);
@@ -903,6 +926,7 @@ class NostrService  implements INostrService, BackgroundAwareService {
     }
   }
 
+  @override
   Future<void> closeAllSubscriptions() async {
     Log.info(
         '🧹 Closing all active subscriptions (${_activeSubscriptions.length} total)',
@@ -1018,11 +1042,14 @@ class NostrService  implements INostrService, BackgroundAwareService {
   }
 
   // Primary relay getter
+  @override
   String get primaryRelay => primaryRelayUrl;
 
   // BackgroundAwareService implementation
+  @override
   String get serviceName => 'NostrService';
 
+  @override
   void onAppBackgrounded() {
     if (_isDisposed) return;
     
@@ -1035,6 +1062,7 @@ class NostrService  implements INostrService, BackgroundAwareService {
     _reconnectionTimer?.cancel();
   }
 
+  @override
   void onExtendedBackground() {
     if (_isDisposed || _isBackgroundSuspended) return;
     
@@ -1058,6 +1086,7 @@ class NostrService  implements INostrService, BackgroundAwareService {
     }
   }
 
+  @override
   void onAppResumed() {
     if (_isDisposed) return;
     
@@ -1078,6 +1107,7 @@ class NostrService  implements INostrService, BackgroundAwareService {
     }
   }
 
+  @override
   void onPeriodicCleanup() {
     if (_isDisposed || _isInBackground) return;
     
@@ -1141,6 +1171,7 @@ class NostrService  implements INostrService, BackgroundAwareService {
     }
   }
 
+  @override
   void dispose() {
     if (_isDisposed) return;
 

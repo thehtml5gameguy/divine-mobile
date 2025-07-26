@@ -312,5 +312,6 @@ class CloudinaryUploadException implements Exception {
   final String? code;
   final dynamic originalError;
 
+  @override
   String toString() => 'CloudinaryUploadException: $message';
 }

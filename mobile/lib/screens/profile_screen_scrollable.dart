@@ -22,6 +22,7 @@ class ProfileScreenScrollable extends ConsumerStatefulWidget {
   const ProfileScreenScrollable({super.key, this.profilePubkey});
   final String? profilePubkey;
 
+  @override
   ConsumerState<ProfileScreenScrollable> createState() =>
       _ProfileScreenScrollableState();
 }
@@ -34,6 +35,7 @@ class _ProfileScreenScrollableState extends ConsumerState<ProfileScreenScrollabl
   String? _playingVideoId;
   final ScrollController _scrollController = ScrollController();
 
+  @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
@@ -111,6 +113,7 @@ class _ProfileScreenScrollableState extends ConsumerState<ProfileScreenScrollabl
     userProfileService.fetchProfile(_targetPubkey!);
   }
 
+  @override
   void dispose() {
     _tabController.dispose();
     _scrollController.dispose();
@@ -118,6 +121,7 @@ class _ProfileScreenScrollableState extends ConsumerState<ProfileScreenScrollabl
     super.dispose();
   }
 
+  @override
   Widget build(BuildContext context) {
     final authService = ref.watch(authServiceProvider);
     final userProfileService = ref.watch(userProfileServiceProvider);
@@ -1155,9 +1159,12 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
 
   final TabBar _tabBar;
 
+  @override
   double get minExtent => _tabBar.preferredSize.height;
+  @override
   double get maxExtent => _tabBar.preferredSize.height;
 
+  @override
   Widget build(
           BuildContext context, double shrinkOffset, bool overlapsContent) =>
       ColoredBox(
@@ -1165,5 +1172,6 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
         child: _tabBar,
       );
 
+  @override
   bool shouldRebuild(_SliverAppBarDelegate oldDelegate) => false;
 }

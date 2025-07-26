@@ -1,18 +1,13 @@
 // ABOUTME: Secure key storage service using hardware-backed security and memory-safe containers
 // ABOUTME: Replaces the vulnerable KeyStorageService with production-grade cryptographic key protection
 
-import 'package:flutter/foundation.dart';
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'dart:io' if (dart.library.html) 'stubs/platform_stub.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:openvine/services/platform_secure_storage.dart';
-import 'package:flutter/foundation.dart';
 import 'package:openvine/utils/nostr_encoding.dart';
-import 'package:flutter/foundation.dart';
 import 'package:openvine/utils/secure_key_container.dart';
-import 'package:flutter/foundation.dart';
 import 'package:openvine/utils/unified_logger.dart';
 
 /// Exception thrown by secure key storage operations
@@ -22,6 +17,7 @@ class SecureKeyStorageException implements Exception {
   final String message;
   final String? code;
 
+  @override
   String toString() => 'SecureKeyStorageException: $message';
 }
 

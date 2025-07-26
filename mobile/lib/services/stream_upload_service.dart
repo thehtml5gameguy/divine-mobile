@@ -1,19 +1,14 @@
 // ABOUTME: Cloudflare Stream upload service for video hosting and transcoding
 // ABOUTME: Handles video uploads to Stream CDN with NIP-98 authentication
 
-import 'package:flutter/foundation.dart';
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter/foundation.dart';
 import 'package:openvine/config/app_config.dart';
-import 'package:flutter/foundation.dart';
 import 'package:openvine/services/nip98_auth_service.dart';
-import 'package:flutter/foundation.dart';
 import 'package:openvine/utils/unified_logger.dart';
 
 /// Result of a Stream upload operation
@@ -524,5 +519,6 @@ class StreamUploadException implements Exception {
   final String? code;
   final dynamic originalError;
 
+  @override
   String toString() => 'StreamUploadException: $message';
 }

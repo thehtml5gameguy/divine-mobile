@@ -56,11 +56,13 @@ class Nip07Signer implements WebSigner {
   Nip07Signer(this._service);
   final Nip07Service _service;
 
+  @override
   Future<Map<String, dynamic>?> signEvent(Map<String, dynamic> event) async {
     final result = await _service.signEvent(event);
     return result.success ? result.signedEvent : null;
   }
 
+  @override
   void dispose() {
     _service.disconnect();
   }
@@ -71,6 +73,7 @@ class Nip07Signer implements WebSigner {
 class BunkerSigner implements WebSigner {
   BunkerSigner();
 
+  @override
   Future<Map<String, dynamic>?> signEvent(Map<String, dynamic> event) async {
     // Temporarily return null - bunker not implemented yet
     Log.warning('Bunker signing temporarily unavailable',
@@ -78,6 +81,7 @@ class BunkerSigner implements WebSigner {
     return null;
   }
 
+  @override
   void dispose() {
     // No-op for now
   }

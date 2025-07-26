@@ -3,9 +3,7 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
-import 'package:flutter/foundation.dart';
 import 'package:openvine/models/user_profile.dart';
-import 'package:flutter/foundation.dart';
 import 'package:openvine/utils/unified_logger.dart';
 
 /// Service for persistent caching of user profiles

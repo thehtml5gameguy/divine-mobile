@@ -10,6 +10,7 @@ import 'package:openvine/theme/app_theme.dart';
 class RelaySettingsScreen extends ConsumerStatefulWidget {
   const RelaySettingsScreen({super.key});
 
+  @override
   ConsumerState<RelaySettingsScreen> createState() => _RelaySettingsScreenState();
 }
 
@@ -18,6 +19,7 @@ class _RelaySettingsScreenState extends ConsumerState<RelaySettingsScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isAddingRelay = false;
 
+  @override
   void dispose() {
     _relayController.dispose();
     
@@ -149,6 +151,7 @@ class _RelaySettingsScreenState extends ConsumerState<RelaySettingsScreen> {
     );
   }
 
+  @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final iNostrService = ref.read(nostrServiceProvider);
@@ -479,7 +482,7 @@ class _RelaySettingsScreenState extends ConsumerState<RelaySettingsScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Relays are servers that store and distribute Nostr events. OpenVine uses a high-performance relay for all operations:\n\n• wss://relay3.openvine.co (primary relay)\n\nSearch functionality is handled by backend synchronization. You can add additional relays to improve reach and redundancy.',
+                'Relays are servers that store and distribute Nostr events. OpenVine uses high-performance relays for all operations:\n\n• wss://relay1.openvine.co (primary relay)\n• wss://relay2.openvine.co (secondary relay)\n\nYou can add additional relays to improve reach and redundancy.',
                 style: TextStyle(
                   fontSize: 13,
                   color: isDarkMode ? Colors.grey[400] : Colors.grey[600],

@@ -12,6 +12,7 @@ import 'package:openvine/widgets/notification_list_item.dart';
 class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
+  @override
   ConsumerState<NotificationsScreen> createState() => _NotificationsScreenState();
 }
 
@@ -20,17 +21,20 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
   late TabController _tabController;
   NotificationType? _selectedFilter;
 
+  @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
   }
 
+  @override
   void dispose() {
     _tabController.dispose();
     
     super.dispose();
   }
 
+  @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 

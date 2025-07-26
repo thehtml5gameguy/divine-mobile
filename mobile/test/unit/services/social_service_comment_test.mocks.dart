@@ -4,6 +4,7 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i5;
+import 'dart:ui' as _i12;
 
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i6;
@@ -386,12 +387,6 @@ class MockAuthService extends _i1.Mock implements _i4.AuthService {
       ) as _i5.Stream<_i4.UserProfile?>);
 
   @override
-  bool get migrationRequired => (super.noSuchMethod(
-        Invocation.getter(#migrationRequired),
-        returnValue: false,
-      ) as bool);
-
-  @override
   bool get isAuthenticated => (super.noSuchMethod(
         Invocation.getter(#isAuthenticated),
         returnValue: false,
@@ -402,17 +397,6 @@ class MockAuthService extends _i1.Mock implements _i4.AuthService {
         Invocation.getter(#userStats),
         returnValue: <String, dynamic>{},
       ) as Map<String, dynamic>);
-
-  @override
-  _i5.Future<bool> performMigrationIfNeeded({String? biometricPrompt}) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #performMigrationIfNeeded,
-          [],
-          {#biometricPrompt: biometricPrompt},
-        ),
-        returnValue: _i5.Future<bool>.value(false),
-      ) as _i5.Future<bool>);
 
   @override
   _i5.Future<void> initialize() => (super.noSuchMethod(
@@ -551,17 +535,6 @@ class MockAuthService extends _i1.Mock implements _i4.AuthService {
       ) as _i5.Future<_i7.Event?>);
 
   @override
-  _i5.Future<void> setWebAuthenticationKey(String? publicKeyHex) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #setWebAuthenticationKey,
-          [publicKeyHex],
-        ),
-        returnValue: _i5.Future<void>.value(),
-        returnValueForMissingStub: _i5.Future<void>.value(),
-      ) as _i5.Future<void>);
-
-  @override
   void dispose() => super.noSuchMethod(
         Invocation.method(
           #dispose,
@@ -586,7 +559,7 @@ class MockSubscriptionManager extends _i1.Mock
     required List<_i8.Filter>? filters,
     required dynamic Function(_i7.Event)? onEvent,
     dynamic Function(dynamic)? onError,
-    dynamic onComplete,
+    _i12.VoidCallback? onComplete,
     Duration? timeout,
     int? priority = 5,
   }) =>

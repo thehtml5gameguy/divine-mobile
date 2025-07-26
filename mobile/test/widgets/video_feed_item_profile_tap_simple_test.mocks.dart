@@ -481,12 +481,6 @@ class MockAuthService extends _i1.Mock implements _i2.AuthService {
       ) as _i5.Stream<_i2.UserProfile?>);
 
   @override
-  bool get migrationRequired => (super.noSuchMethod(
-        Invocation.getter(#migrationRequired),
-        returnValue: false,
-      ) as bool);
-
-  @override
   bool get isAuthenticated => (super.noSuchMethod(
         Invocation.getter(#isAuthenticated),
         returnValue: false,
@@ -497,17 +491,6 @@ class MockAuthService extends _i1.Mock implements _i2.AuthService {
         Invocation.getter(#userStats),
         returnValue: <String, dynamic>{},
       ) as Map<String, dynamic>);
-
-  @override
-  _i5.Future<bool> performMigrationIfNeeded({String? biometricPrompt}) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #performMigrationIfNeeded,
-          [],
-          {#biometricPrompt: biometricPrompt},
-        ),
-        returnValue: _i5.Future<bool>.value(false),
-      ) as _i5.Future<bool>);
 
   @override
   _i5.Future<void> initialize() => (super.noSuchMethod(
@@ -644,17 +627,6 @@ class MockAuthService extends _i1.Mock implements _i2.AuthService {
         ),
         returnValue: _i5.Future<_i9.Event?>.value(),
       ) as _i5.Future<_i9.Event?>);
-
-  @override
-  _i5.Future<void> setWebAuthenticationKey(String? publicKeyHex) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #setWebAuthenticationKey,
-          [publicKeyHex],
-        ),
-        returnValue: _i5.Future<void>.value(),
-        returnValueForMissingStub: _i5.Future<void>.value(),
-      ) as _i5.Future<void>);
 
   @override
   void dispose() => super.noSuchMethod(

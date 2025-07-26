@@ -319,7 +319,6 @@ class AnalyticsService  implements BackgroundAwareService {
     }
   }
 
-  @override
   void dispose() {
     _cleanupTimer?.cancel();
     _client.close();
