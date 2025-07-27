@@ -1241,6 +1241,8 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem>
                 onTap: () {
                   Log.verbose('Navigating to profile: ${widget.video.pubkey}',
                       name: 'VideoFeedItem', category: LogCategory.ui);
+                  // Pause video before navigating
+                  _pauseVideo();
                   // Use main navigation to switch to profile tab
                   mainNavigationKey.currentState?.navigateToProfile(widget.video.pubkey);
                 },
@@ -1350,6 +1352,8 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem>
                       'Navigating to reposter profile: ${widget.video.reposterPubkey}',
                       name: 'VideoFeedItem',
                       category: LogCategory.ui);
+                  // Pause video before navigating
+                  _pauseVideo();
                   // Use main navigation to switch to profile tab
                   mainNavigationKey.currentState?.navigateToProfile(widget.video.reposterPubkey);
                 },

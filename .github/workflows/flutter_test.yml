@@ -20,6 +20,12 @@ jobs:
         flutter-version: '3.27.4'
         channel: 'stable'
     
+    - name: Setup nostr_sdk dependency
+      run: |
+        # The nostr_sdk directory is now included in the repository
+        echo "✅ nostr_sdk dependency found at $(pwd)/nostr_sdk"
+        ls -la nostr_sdk/
+    
     - name: Install dependencies
       run: |
         cd mobile

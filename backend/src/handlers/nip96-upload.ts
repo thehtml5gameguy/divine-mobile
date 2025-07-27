@@ -687,9 +687,16 @@ export async function handleMediaServing(
     });
 
     if (!listResult.objects || listResult.objects.length === 0) {
-      return new Response('File not found', {
+      return new Response(JSON.stringify({ 
+        error: 'File not found',
+        fileId: fileId,
+        message: `No media file found with ID: ${fileId}`
+      }), {
         status: 404,
-        headers: { 'Access-Control-Allow-Origin': '*' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*' 
+        }
       });
     }
 

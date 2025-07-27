@@ -60,6 +60,10 @@ import {
 // Cleanup script
 import { handleCleanupRequest } from './scripts/cleanup-duplicates';
 
+// Admin cleanup handler
+import { handleAdminCleanup, handleAdminCleanupOptions } from './handlers/admin-cleanup';
+import { handleAdminCleanupSimple, handleAdminCleanupSimpleOptions } from './handlers/admin-cleanup-simple';
+
 // File check API
 import { handleFileCheckBySha256, handleBatchFileCheck, handleFileCheckOptions } from './handlers/file-check';
 
@@ -386,12 +390,6 @@ export default {
 				return handleVideoMetadataOptions();
 			}
 
-			// Media serving endpoint
-			if (pathname.startsWith('/media/')) {
-				if (method === 'GET') {
-					return wrapResponse(handleMediaServing(pathname.substring(7), request, env));
-				}
-			}
 
 			// Releases download endpoint
 			if (pathname.startsWith('/releases/')) {
@@ -606,6 +604,24 @@ export default {
 				return wrapResponse(handleCleanupRequest(request, env));
 			}
 
+			// Admin cleanup for corrupted HTML files
+			if (pathname === '/admin/cleanup-html' && method === 'GET') {
+				return wrapResponse(handleAdminCleanup(request, env));
+			}
+			
+			if (pathname === '/admin/cleanup-html' && method === 'OPTIONS') {
+				return wrapResponse(Promise.resolve(handleAdminCleanupOptions()));
+			}
+
+			// Simple admin cleanup (by file size)
+			if (pathname === '/admin/cleanup-simple' && method === 'GET') {
+				return wrapResponse(handleAdminCleanupSimple(request, env));
+			}
+			
+			if (pathname === '/admin/cleanup-simple' && method === 'OPTIONS') {
+				return wrapResponse(Promise.resolve(handleAdminCleanupSimpleOptions()));
+			}
+
 			// Health check endpoint with analytics
 			if (pathname === '/health' && method === 'GET') {
 				const analytics = new VideoAnalyticsService(env, ctx);
@@ -709,6 +725,8 @@ export default {
 					'/api/check-hash/{sha256} (Check if file exists by hash)',
 					'/api/set-vine-mapping (Set mapping from original Vine URL to fileId)',
 					'/admin/cleanup-duplicates (Admin: Clean up duplicate files)',
+					'/admin/cleanup-html?mode=scan (Admin: Scan for corrupted HTML files)',
+					'/admin/cleanup-html?mode=delete (Admin: Delete corrupted HTML files)',
 					'/r/videos_h264high/{vineId}, /r/videos/{vineId}, /v/{vineId}, /t/{vineId} (Vine URL compatibility)',
 					'/thumbnail/{videoId} (Get/generate thumbnail)',
 					'/thumbnail/{videoId}/upload (Upload custom thumbnail)',
