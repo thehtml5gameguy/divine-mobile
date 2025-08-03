@@ -94,6 +94,10 @@ dependencies:
   nostr_sdk:
     path: ../nostr_sdk
   
+  # Embedded Nostr Relay - Local embedded relay replacing external relay infrastructure
+  flutter_embedded_nostr_relay:
+    path: ../flutter_embedded_nostr_relay/flutter_embedded_nostr_relay
+  
   # Missing dependencies required by nostr_sdk
   equatable: ^2.0.5
   
