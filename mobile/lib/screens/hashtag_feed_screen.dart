@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openvine/providers/app_providers.dart';
 import 'package:openvine/models/video_event.dart';
-import 'package:openvine/screens/pure/explore_video_screen_pure.dart';
+import 'package:openvine/router/nav_extensions.dart';
 import 'package:openvine/services/video_event_service.dart';
 import 'package:openvine/theme/vine_theme.dart';
 import 'package:openvine/widgets/video_feed_item.dart';
@@ -26,22 +26,8 @@ class _HashtagFeedScreenState extends ConsumerState<HashtagFeedScreen> {
   Widget _buildVideoTile(VideoEvent video, int index, List<VideoEvent> videos, BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // If embedded, use callback to tell parent to enter feed mode
-        // Otherwise, navigate to full-screen video player
-        if (widget.embedded && widget.onVideoTap != null) {
-          widget.onVideoTap!(videos, index);
-        } else {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => ExploreVideoScreenPure(
-                startingVideo: video,
-                videoList: videos,
-                contextTitle: '#${widget.hashtag}',
-                startingIndex: index,
-              ),
-            ),
-          );
-        }
+        // Navigate to hashtag feed mode using GoRouter
+        context.goHashtag(widget.hashtag, index);
       },
       child: Container(
         decoration: BoxDecoration(
@@ -290,22 +276,8 @@ class _HashtagFeedScreenState extends ConsumerState<HashtagFeedScreen> {
                 final video = videos[index];
                 return GestureDetector(
                   onTap: () {
-                    // If embedded, use callback to tell parent to enter feed mode
-                    // Otherwise, navigate to inline video player
-                    if (widget.embedded && widget.onVideoTap != null) {
-                      widget.onVideoTap!(videos, index);
-                    } else {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => ExploreVideoScreenPure(
-                            startingVideo: video,
-                            videoList: videos,
-                            contextTitle: '#${widget.hashtag}',
-                            startingIndex: index,
-                          ),
-                        ),
-                      );
-                    }
+                    // Navigate to hashtag feed mode using GoRouter
+                    context.goHashtag(widget.hashtag, index);
                   },
                   child: SizedBox(
                     height: MediaQuery.of(context).size.height,

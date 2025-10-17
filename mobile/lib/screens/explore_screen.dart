@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:openvine/models/video_event.dart';
 import 'package:openvine/providers/app_providers.dart';
 import 'package:openvine/providers/video_events_providers.dart';
@@ -106,6 +107,10 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
         _hashtagMode = null;
       });
       setCustomTitle(null);  // Clear custom title
+
+      // Navigate back to grid mode (no videoIndex) - stops video playback
+      context.go('/explore');
+
       Log.info('🎯 ExploreScreenPure: Reset to default state',
           category: LogCategory.video);
     }
@@ -141,8 +146,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
       _feedVideos = null;
     });
 
-    // Navigate back to grid mode - URL navigation handles state cleanup
-    context.goExplore(0);
+    // Navigate back to grid mode (no videoIndex) - stops video playback
+    context.go('/explore');
 
     Log.info('🎯 ExploreScreenPure: Exited feed mode via URL navigation',
         category: LogCategory.video);
@@ -436,7 +441,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
                       padding: const EdgeInsets.only(right: 8),
                       child: GestureDetector(
                         onTap: () {
-                          _enterHashtagMode(hashtag);
+                          context.goHashtag(hashtag);
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

@@ -8,7 +8,6 @@ import 'package:openvine/models/video_event.dart';
 import 'package:openvine/providers/app_providers.dart';
 import 'package:openvine/providers/video_events_providers.dart';
 import 'package:openvine/router/nav_extensions.dart';
-import 'package:openvine/screens/hashtag_feed_screen.dart';
 import 'package:openvine/theme/vine_theme.dart';
 import 'package:openvine/widgets/pure/video_grid_widget.dart';
 import 'package:openvine/utils/unified_logger.dart';
@@ -473,11 +472,7 @@ class _SearchScreenPureState extends ConsumerState<SearchScreenPure>
             ),
             onTap: () {
               Log.info('🔍 SearchScreenPure: Tapped hashtag: $hashtag', category: LogCategory.video);
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => HashtagFeedScreen(hashtag: hashtag),
-                ),
-              );
+              context.goHashtag(hashtag);
             },
           ),
         );
