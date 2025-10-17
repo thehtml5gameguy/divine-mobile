@@ -24,12 +24,12 @@ class LastTabPosition extends Notifier<Map<RouteType, int>> {
       }
     });
 
-    // Default to index 0 for all tabs
+    // Default to index 0 for tabs that always have an index (home, profile)
+    // For tabs with grid/feed modes (explore, search, hashtag), start with no index (grid mode)
     return {
       RouteType.home: 0,
-      RouteType.explore: 0,
-      RouteType.hashtag: 0,
       RouteType.profile: 0,
+      // explore, search, hashtag not included - will default to null (grid mode)
     };
   }
 
