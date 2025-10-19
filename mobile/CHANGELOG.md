@@ -7,6 +7,79 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Comprehensive Log Export and Persistent Logging (2025-10-20)
+
+#### Features
+- **Added manual log export feature** - Users can now save comprehensive diagnostic logs to file and share manually
+  - New "Save Logs" option in Settings menu and navigation drawer
+  - Exports ALL logs from persistent storage (hundreds of thousands of entries)
+  - Includes comprehensive header with app version, device info, and log statistics
+  - Opens native share dialog for easy email/messaging attachment
+  - Automatically sanitizes sensitive data (nsec keys, passwords, auth tokens)
+
+- **Redesigned log storage architecture** - Replaced in-memory buffer with persistent file-based logging
+  - Logs written continuously to rotating files (10 files × 1MB each = 10MB total)
+  - Supports hundreds of thousands of log entries per session
+  - Small 1,000-entry memory buffer for fast access to recent logs
+  - Automatic file rotation when files exceed 1MB
+  - Automatic cleanup of old files when exceeding 10 file limit
+  - Platform-appropriate storage locations:
+    - macOS: `~/Library/Application Support/openvine/logs/` (hidden)
+    - iOS: App's private support directory
+    - Android: App-specific internal storage
+    - Linux: `~/.local/share/openvine/logs/`
+    - Windows: `%APPDATA%\openvine\logs\`
+
+#### Bug Fixes
+- **Fixed videos playing during hamburger menu navigation** - Videos now pause when drawer opens
+  - Added `VideoVisibilityManager.pauseAllVideos()` call when menu button pressed
+  - Prevents audio/video interference during navigation
+
+- **Fixed Firebase test failures in ErrorAnalyticsTracker** - Implemented lazy initialization
+  - Firebase Analytics no longer initialized during singleton construction
+  - Uses nullable field + getter pattern for deferred initialization
+  - All 10 BugReportService tests now pass
+  - All 10 LogCaptureService tests pass
+
+#### Technical Details
+- Created `lib/services/log_capture_service.dart`:
+  - Persistent file-based logging with rotating files
+  - `getAllLogsAsText()` returns complete log history from all files
+  - `getLogStatistics()` provides storage metrics
+  - Fire-and-forget async writes with periodic flush
+  - Graceful fallback to memory-only on file system errors
+
+- Modified `lib/services/bug_report_service.dart`:
+  - Added `exportLogsToFile()` method
+  - Exports comprehensive logs with detailed header
+  - Sanitizes sensitive data before export
+  - Uses SharePlus for native file sharing
+
+- Modified `lib/router/app_shell.dart`:
+  - Added video pause when hamburger menu opens
+  - Integrated with VideoVisibilityManager
+
+- Modified `lib/services/error_analytics_tracker.dart`:
+  - Changed from eager to lazy Firebase Analytics initialization
+  - Updated all 7 `logEvent()` calls to use lazy getter
+  - Prevents Firebase dependency during construction
+
+- Modified `lib/widgets/vine_drawer.dart` and `lib/screens/settings_screen.dart`:
+  - Added "Save Logs" menu items with export functionality
+
+- Modified `lib/utils/unified_logger.dart`:
+  - Added `unawaited()` for non-blocking log writes
+  - Log capture no longer blocks main thread
+
+- Updated `test/unit/services/log_capture_service_test.dart`:
+  - Updated tests for new file-based API
+  - Changed `clearBuffer()` to `clearAllLogs()`
+
+#### Test Coverage
+- BugReportService: 10/10 tests pass
+- LogCaptureService: 10/10 tests pass
+- All code passes flutter analyze with no issues
+
 ### Fixed - Hashtag Navigation and Event Deduplication (2025-10-17)
 
 #### Bug Fixes

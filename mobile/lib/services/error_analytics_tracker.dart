@@ -41,7 +41,7 @@ class ErrorAnalyticsTracker {
     );
 
     // Log to Firebase Analytics
-    _analytics.logEvent(
+    analytics.logEvent(
       name: 'app_error',
       parameters: {
         'error_type': errorType,
@@ -82,7 +82,7 @@ class ErrorAnalyticsTracker {
       name: 'ErrorAnalytics',
     );
 
-    _analytics.logEvent(
+    analytics.logEvent(
       name: 'feed_load_error',
       parameters: {
         'feed_type': feedType,
@@ -108,7 +108,7 @@ class ErrorAnalyticsTracker {
       name: 'ErrorAnalytics',
     );
 
-    _analytics.logEvent(
+    analytics.logEvent(
       name: 'operation_timeout',
       parameters: {
         'operation': operation,
@@ -133,7 +133,7 @@ class ErrorAnalyticsTracker {
       name: 'ErrorAnalytics',
     );
 
-    _analytics.logEvent(
+    analytics.logEvent(
       name: 'network_error',
       parameters: {
         'operation': operation,
@@ -158,7 +158,7 @@ class ErrorAnalyticsTracker {
       name: 'ErrorAnalytics',
     );
 
-    _analytics.logEvent(
+    analytics.logEvent(
       name: 'relay_error',
       parameters: {
         'relay_url': Uri.tryParse(relayUrl)?.host ?? 'unknown',
@@ -178,7 +178,7 @@ class ErrorAnalyticsTracker {
     String? videoUrl,
     int? attemptTimeMs,
   }) {
-    _analytics.logEvent(
+    analytics.logEvent(
       name: 'video_playback_error',
       parameters: {
         'video_id': videoId,
@@ -203,7 +203,7 @@ class ErrorAnalyticsTracker {
       name: 'ErrorAnalytics',
     );
 
-    _analytics.logEvent(
+    analytics.logEvent(
       name: 'slow_operation',
       parameters: {
         'operation': operation,
@@ -223,7 +223,7 @@ class ErrorAnalyticsTracker {
     required String location,
     String? actionTaken, // 'retry_shown', 'dismissed', 'error_page'
   }) {
-    _analytics.logEvent(
+    analytics.logEvent(
       name: 'user_facing_error',
       parameters: {
         'error_type': errorType,
