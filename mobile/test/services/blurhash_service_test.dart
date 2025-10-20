@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openvine/services/blurhash_service.dart';
@@ -5,7 +6,13 @@ import 'package:openvine/services/blurhash_service.dart';
 void main() {
   group('BlurhashService', () {
     test('generates deterministic blurhash from image bytes', () async {
-      final testBytes = Uint8List.fromList(List.generate(500, (i) => i % 256));
+      // Use real thumbnail image from test fixtures
+      final thumbnailFile = File('test/fixtures/test_thumbnail.jpg');
+      if (!thumbnailFile.existsSync()) {
+        fail(
+            'Test thumbnail not found at test/fixtures/test_thumbnail.jpg. Run test/fixtures/generate_test_blurhash.dart to generate it.');
+      }
+      final testBytes = await thumbnailFile.readAsBytes();
 
       final blurhash1 = await BlurhashService.generateBlurhash(testBytes);
       final blurhash2 = await BlurhashService.generateBlurhash(testBytes);

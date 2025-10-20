@@ -4,6 +4,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
+import 'package:nostr_sdk/event.dart';
 import 'package:openvine/constants/app_constants.dart';
 import 'package:openvine/models/curation_set.dart';
 import 'package:openvine/models/video_event.dart';
@@ -31,6 +32,11 @@ void main() {
 
       // Mock the getCachedLikeCount method to return 0 for all videos
       when(mockSocialService.getCachedLikeCount(any)).thenReturn(0);
+      // Mock discoveryVideos to avoid MissingStubError during CurationService initialization
+      when(mockVideoEventService.discoveryVideos).thenReturn([]);
+      // Mock subscribeToEvents to avoid MissingStubError when fetching Editor's Picks list
+      when(mockNostrService.subscribeToEvents(filters: anyNamed('filters')))
+          .thenAnswer((_) => Stream<Event>.empty());
     });
 
     test("should show videos from Classic Vines pubkey in Editor's Picks", () {

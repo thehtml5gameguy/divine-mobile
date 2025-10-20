@@ -37,10 +37,15 @@ void main() {
 
     // Setup default mocks
     when(mockVideoEventService.videoEvents).thenReturn([]);
+    when(mockVideoEventService.discoveryVideos).thenReturn([]);
     when(mockSocialService.getCachedLikeCount(any)).thenReturn(0);
 
     // Mock the addListener call
     when(mockVideoEventService.addListener(any)).thenReturn(null);
+
+    // Mock subscribeToEvents to avoid MissingStubError when fetching Editor's Picks list
+    when(mockNostrService.subscribeToEvents(filters: anyNamed('filters')))
+        .thenAnswer((_) => Stream<Event>.empty());
 
     curationService = CurationService(
       nostrService: mockNostrService,

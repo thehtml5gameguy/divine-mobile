@@ -667,8 +667,8 @@ class VideoEventService extends ChangeNotifier {
               Log.warning('⚠️ EOSE received but NO EVENTS for $subscriptionType - feed will be empty!',
                   name: 'VideoEventService', category: LogCategory.video);
 
-              // TODO: Re-implement automatic diagnostics for debugging empty feeds
-              // _runAutoDiagnostics(subscriptionType, filters);
+              // Run automatic diagnostics for debugging empty feeds
+              _runAutoDiagnostics(subscriptionType, filters);
             }
           },
         );

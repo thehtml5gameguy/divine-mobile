@@ -35,6 +35,7 @@ void main() {
 
     // Setup default mocks
     when(mockVideoEventService.videoEvents).thenReturn([]);
+    when(mockVideoEventService.discoveryVideos).thenReturn([]);
     when(mockSocialService.getCachedLikeCount(any)).thenReturn(0);
     // Note: addListener removed after ChangeNotifier refactor
     when(mockVideoEventService.addVideoEvent(any)).thenReturn(null);

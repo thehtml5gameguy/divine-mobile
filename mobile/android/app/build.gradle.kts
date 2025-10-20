@@ -58,6 +58,13 @@ flutter {
     source = "../.."
 }
 
+// Exclude FFmpeg native libraries on Android (not needed - using continuous recording)
+configurations.all {
+    exclude(group = "com.arthenica.ffmpegkit", module = "flutter")
+    exclude(group = "com.arthenica.ffmpegkit", module = "ffmpeg-kit-android")
+    exclude(group = "com.arthenica.ffmpegkit", module = "ffmpeg-kit-android-min")
+}
+
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

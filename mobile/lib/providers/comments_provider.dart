@@ -300,6 +300,9 @@ class CommentsNotifier extends _$CommentsNotifier {
         replyToAuthorPubkey: replyToAuthorPubkey,
       );
 
+      // Check if provider is still mounted after async operation
+      if (!ref.mounted) return;
+
       // Reload comments to get the real event ID
       await _loadComments();
     } catch (e) {

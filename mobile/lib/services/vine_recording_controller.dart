@@ -1095,6 +1095,7 @@ class VineRecordingController {
   }
 
   /// Concatenate multiple video segments using FFmpeg (mobile/desktop only)
+  /// NOTE: Android currently uses continuous recording (no segmentation) due to FFmpeg build issues
   Future<File?> _concatenateSegments(List<RecordingSegment> segments) async {
     if (kIsWeb) {
       throw Exception('FFmpeg concatenation not supported on web platform');
@@ -1104,8 +1105,19 @@ class VineRecordingController {
       throw Exception('No segments to concatenate');
     }
 
+    // ANDROID TEMPORARY: Return single video file without FFmpeg processing
+    if (Platform.isAndroid) {
+      Log.info('📹 Android: Returning recorded video without concat (continuous recording mode)',
+          name: 'VineRecordingController', category: LogCategory.system);
+
+      if (segments.isNotEmpty && segments.first.filePath != null) {
+        return File(segments.first.filePath!);
+      }
+      throw Exception('No video file available on Android');
+    }
+
+    // Single segment - apply square cropping via FFmpeg (iOS/macOS only)
     if (segments.length == 1 && segments.first.filePath != null) {
-      // Single segment - apply square cropping via FFmpeg
       Log.info('📹 Applying square cropping to single segment',
           name: 'VineRecordingController', category: LogCategory.system);
 
@@ -1114,8 +1126,6 @@ class VineRecordingController {
       final outputPath =
           '${tempDir.path}/vine_final_${DateTime.now().millisecondsSinceEpoch}.mp4';
 
-      // Apply square CENTER crop: crop=w:h:x:y where w=h=min(width,height), x=(width-w)/2, y=(height-h)/2
-      // This ensures the crop is centered, not from top-left corner
       final command = '-i "$inputPath" -vf "crop=min(iw\\,ih):min(iw\\,ih):(iw-min(iw\\,ih))/2:(ih-min(iw\\,ih))/2" -c:a copy "$outputPath"';
 
       Log.info('📹 Executing FFmpeg square crop command: $command',

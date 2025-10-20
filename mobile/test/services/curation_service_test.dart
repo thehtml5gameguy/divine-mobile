@@ -4,6 +4,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
+import 'package:nostr_sdk/event.dart';
 import 'package:openvine/models/curation_set.dart';
 import 'package:openvine/models/video_event.dart';
 import 'package:openvine/services/auth_service.dart';
@@ -39,6 +40,11 @@ void main() {
           timestamp: DateTime.now(),
         ),
       ]);
+      // Mock discoveryVideos to avoid MissingStubError during CurationService initialization
+      when(mockVideoEventService.discoveryVideos).thenReturn([]);
+      // Mock subscribeToEvents to avoid MissingStubError when fetching Editor's Picks list
+      when(mockNostrService.subscribeToEvents(filters: anyNamed('filters')))
+          .thenAnswer((_) => Stream<Event>.empty());
 
       curationService = CurationService(
         nostrService: mockNostrService,
@@ -87,6 +93,7 @@ void main() {
     test('should handle empty video events gracefully', () {
       // Given: No video events
       when(mockVideoEventService.videoEvents).thenReturn([]);
+      when(mockVideoEventService.discoveryVideos).thenReturn([]);
 
       final service = CurationService(
         nostrService: mockNostrService,
