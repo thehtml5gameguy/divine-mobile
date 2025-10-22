@@ -194,9 +194,17 @@ class VideoEventService extends ChangeNotifier {
     if (_hasScheduledFrameUpdate) return;
     _hasScheduledFrameUpdate = true;
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    Log.debug('🔔 Scheduling frame update callback',
+        name: 'VideoEventService', category: LogCategory.video);
+
+    // Use Future.microtask instead of WidgetsBinding.addPostFrameCallback
+    // This is more reliable on web and avoids "disposed view" errors
+    Future.microtask(() {
+      if (!_hasScheduledFrameUpdate) return; // Already processed
       _hasScheduledFrameUpdate = false;
       _totalUiUpdates++;
+      Log.debug('🔔 Frame callback fired - calling notifyListeners() on instance ${hashCode} (update #$_totalUiUpdates, hasListeners=$hasListeners)',
+          name: 'VideoEventService', category: LogCategory.video);
       notifyListeners();
 
       // Log metrics periodically (every 10 updates)
@@ -2551,8 +2559,8 @@ class VideoEventService extends ChangeNotifier {
 
     // VideoManager integration removed - using pure Riverpod architecture
 
-    Log.verbose(
-        'Added $subscriptionType video: ${videoEvent.title ?? videoEvent.id.substring(0, 8)} (total: ${eventList.length})',
+    Log.debug(
+        '✅ Added $subscriptionType video: ${videoEvent.title ?? videoEvent.id.substring(0, 8)} (total: ${eventList.length})',
         name: 'VideoEventService',
         category: LogCategory.video);
 

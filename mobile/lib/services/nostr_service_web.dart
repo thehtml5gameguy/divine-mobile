@@ -322,6 +322,18 @@ abstract class NostrServiceWeb implements INostrService {
       ? _configuredRelays.first
       : 'wss://relay3.openvine.co';
 
+  @override
+  Future<Map<String, dynamic>?> getRelayStats() async {
+    if (!_isInitialized) return null;
+
+    return {
+      'connected_relays': _relayConnections.length,
+      'configured_relays': _configuredRelays.length,
+      'active_subscriptions': _activeSubscriptions.length,
+      'web_implementation': true,
+    };
+  }
+
   Map<String, dynamic> getRelayStatistics() {
     return {
       'connectedRelays': connectedRelays.length,
