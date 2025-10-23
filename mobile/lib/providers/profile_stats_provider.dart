@@ -59,7 +59,7 @@ Future<ProfileStats?> _getCachedProfileStats(String pubkey) async {
   if (stats != null) {
     final age = DateTime.now().difference(stats.lastUpdated);
     Log.debug(
-        '📱 Using cached stats for ${pubkey.substring(0, 8)} (age: ${age.inMinutes}min)',
+        '📱 Using cached stats for ${pubkey} (age: ${age.inMinutes}min)',
         name: 'ProfileStatsProvider',
         category: LogCategory.ui);
   }
@@ -70,7 +70,7 @@ Future<ProfileStats?> _getCachedProfileStats(String pubkey) async {
 /// Cache stats for a user
 Future<void> _cacheProfileStats(String pubkey, ProfileStats stats) async {
   await _cacheService.saveStats(pubkey, stats);
-  Log.debug('📱 Cached stats for ${pubkey.substring(0, 8)}',
+  Log.debug('📱 Cached stats for ${pubkey}',
       name: 'ProfileStatsProvider', category: LogCategory.ui);
 }
 
@@ -93,7 +93,7 @@ Future<ProfileStats> fetchProfileStats(Ref ref, String pubkey) async {
   // Get the social service from app providers
   final socialService = ref.read(socialServiceProvider);
 
-  Log.debug('Loading profile stats for: ${pubkey.substring(0, 8)}...',
+  Log.debug('Loading profile stats for: ${pubkey}...',
       name: 'ProfileStatsProvider', category: LogCategory.ui);
 
   try {

@@ -65,14 +65,14 @@ class VideoCacheService {
 
       _videoEvents.insert(insertIndex, videoEvent);
       Log.verbose(
-          'Added CLASSIC VINE at random position $insertIndex: ${videoEvent.title ?? videoEvent.id.substring(0, 8)}',
+          'Added CLASSIC VINE at random position $insertIndex: ${videoEvent.title ?? videoEvent.id}',
           name: 'VideoCacheService',
           category: LogCategory.video);
     } else {
       // Regular video - add to the end
       _videoEvents.add(videoEvent);
       Log.verbose(
-          'Added regular video to cache: ${videoEvent.title ?? videoEvent.id.substring(0, 8)}',
+          'Added regular video to cache: ${videoEvent.title ?? videoEvent.id}',
           name: 'VideoCacheService',
           category: LogCategory.video);
     }

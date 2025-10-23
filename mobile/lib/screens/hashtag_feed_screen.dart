@@ -54,7 +54,7 @@ class _HashtagFeedScreenState extends ConsumerState<HashtagFeedScreen> {
 
             print('[HASHTAG] 📊 Found ${videos.length} videos for #${widget.hashtag}');
             if (videos.isNotEmpty) {
-              print('[HASHTAG] 📹 First 3 video IDs: ${videos.take(3).map((v) => v.id.substring(0, 8)).join(', ')}');
+              print('[HASHTAG] 📹 First 3 video IDs: ${videos.take(3).map((v) => v.id).join(', ')}');
             }
 
             // Use per-subscription loading state for hashtag feed

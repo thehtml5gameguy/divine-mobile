@@ -82,7 +82,7 @@ class _ExploreVideoScreenPureState extends ConsumerState<ExploreVideoScreenPure>
           controller: PageController(initialPage: _initialIndex),
           scrollDirection: Axis.vertical,
           onPageChanged: (index) {
-            Log.debug('📄 Page changed to index $index (${videos[index].id.substring(0, 8)}...)',
+            Log.debug('📄 Page changed to index $index (${videos[index].id}...)',
                 name: 'ExploreVideoScreen', category: LogCategory.video);
 
             // Update URL to trigger reactive video playback via router

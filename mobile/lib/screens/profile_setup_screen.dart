@@ -770,7 +770,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
             name: 'ProfileSetupScreen', category: LogCategory.ui);
       } else {
         Log.info(
-            '📋 No existing profile found for ${currentPubkey.substring(0, 8)}...',
+            '📋 No existing profile found for ${currentPubkey}...',
             name: 'ProfileSetupScreen',
             category: LogCategory.ui);
       }

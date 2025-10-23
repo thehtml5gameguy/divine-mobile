@@ -440,7 +440,7 @@ class NostrService implements INostrService {
           // Debug log for home feed events
           if (id.contains('homeFeed')) {
             Log.debug(
-                'Received home feed event - kind: ${event.kind}, author: ${event.pubkey.substring(0, 8)}...',
+                'Received home feed event - kind: ${event.kind}, author: ${event.pubkey}...',
                 name: 'NostrService',
                 category: LogCategory.relay);
           }

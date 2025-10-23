@@ -148,7 +148,7 @@ class UserProfile {
   /// Get shortened pubkey for display
   String get shortPubkey {
     if (pubkey.length <= 16) return pubkey;
-    return '${pubkey.substring(0, 8)}...${pubkey.substring(pubkey.length - 8)}';
+    return pubkey;
   }
 
   /// Get npub encoding of pubkey

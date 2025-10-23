@@ -51,7 +51,7 @@ class VideoEvent {
     }
 
     developer.log(
-        '🔍 DEBUG: Parsing Kind ${event.kind} event ${event.id.substring(0, 8)}...',
+        '🔍 DEBUG: Parsing Kind ${event.kind} event ${event.id}',
         name: 'VideoEvent');
     developer.log('🔍 DEBUG: Event has ${event.tags.length} tags',
         name: 'VideoEvent');
@@ -670,11 +670,9 @@ class VideoEvent {
     }
   }
 
-  /// Get shortened pubkey for display (first 8 characters + npub prefix)
+  /// Get pubkey for display
   String get displayPubkey {
-    // In a real implementation, convert to npub format
-    // For now, just show first 8 chars
-    return pubkey.length > 8 ? pubkey.substring(0, 8) : pubkey;
+    return pubkey;
   }
 
   /// Check if this event has video content
@@ -816,7 +814,7 @@ class VideoEvent {
 
   @override
   String toString() => 'VideoEvent('
-      'id: ${id.substring(0, 8)}..., '
+      'id: $id, '
       'pubkey: $displayPubkey, '
       'title: $title, '
       'duration: $formattedDuration, '

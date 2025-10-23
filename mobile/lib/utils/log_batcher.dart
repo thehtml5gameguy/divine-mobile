@@ -140,20 +140,14 @@ class _BatchedMessage {
     for (final field in priorityFields) {
       if (data.containsKey(field)) {
         final value = data[field].toString();
-        final displayValue = value.length > 12
-            ? '${value.substring(0, 8)}...'
-            : value;
-        parts.add('$field:$displayValue');
+        parts.add('$field:$value');
       }
     }
 
     // Add any remaining fields not in priority list
     data.forEach((key, value) {
       if (!priorityFields.contains(key) && parts.length < 4) {
-        final displayValue = value.toString().length > 12
-            ? '${value.toString().substring(0, 8)}...'
-            : value.toString();
-        parts.add('$key:$displayValue');
+        parts.add('$key:${value.toString()}');
       }
     });
 
@@ -174,8 +168,8 @@ extension VideoEventLogBatcher on LogBatcher {
       category: LogCategory.video,
       name: 'VideoEventService',
       data: {
-        'id': eventId.length > 8 ? eventId.substring(0, 8) : eventId,
-        'author': authorPubkey.length > 8 ? authorPubkey.substring(0, 8) : authorPubkey,
+        'id': eventId,
+        'author': authorPubkey,
         'subscription': subscriptionType,
         if (kind != null) 'kind': kind,
       },
@@ -191,7 +185,7 @@ extension VideoEventLogBatcher on LogBatcher {
       category: LogCategory.video,
       name: 'VideoEventService',
       data: {
-        'id': eventId.length > 8 ? eventId.substring(0, 8) : eventId,
+        'id': eventId,
         'subscription': subscriptionType,
       },
     );
@@ -222,7 +216,7 @@ extension RelayEventLogBatcher on LogBatcher {
       category: LogCategory.relay,
       name: 'NostrService',
       data: {
-        'id': eventId.length > 8 ? eventId.substring(0, 8) : eventId,
+        'id': eventId,
         'subscription': subscriptionId,
       },
     );

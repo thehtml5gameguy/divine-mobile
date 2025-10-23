@@ -15,7 +15,7 @@ part 'user_profile_providers.g.dart';
 
 // Helper function for safe pubkey truncation in logs
 String _safePubkeyTrunc(String pubkey) =>
-    pubkey.length > 8 ? pubkey.substring(0, 8) : pubkey;
+    pubkey.length > 8 ? pubkey : pubkey;
 
 // Cache for user profiles
 final Map<String, UserProfile> _userProfileCache = {};

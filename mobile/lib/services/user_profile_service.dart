@@ -111,7 +111,7 @@ class UserProfileService {
     _missingProfileRetryAfter[pubkey] =
         DateTime.now().add(const Duration(minutes: 10));
     Log.debug(
-      'Marked profile as missing: ${pubkey.substring(0, 8)}... (retry after 10 minutes)',
+      'Marked profile as missing: ${pubkey}... (retry after 10 minutes)',
       name: 'UserProfileService',
       category: LogCategory.system,
     );
@@ -131,7 +131,7 @@ class UserProfileService {
     }
 
     Log.debug(
-        'Updated cached profile for ${profile.pubkey.substring(0, 8)}: ${profile.bestDisplayName}',
+        'Updated cached profile for ${profile.pubkey}: ${profile.bestDisplayName}',
         name: 'UserProfileService',
         category: LogCategory.system);
   }
@@ -170,7 +170,7 @@ class UserProfileService {
     // If forcing refresh, clean up existing state first
     if (forceRefresh) {
       Log.debug(
-          '🔄 Force refresh requested for ${pubkey.substring(0, 8)}... - clearing cache and subscriptions',
+          '🔄 Force refresh requested for ${pubkey}... - clearing cache and subscriptions',
           name: 'UserProfileService',
           category: LogCategory.system);
 
@@ -192,14 +192,14 @@ class UserProfileService {
       if (cachedProfile != null &&
           _persistentCache?.shouldRefreshProfile(pubkey) == true) {
         Log.debug(
-            'Profile cached but stale for ${pubkey.substring(0, 8)}... - will refresh in background',
+            'Profile cached but stale for ${pubkey}... - will refresh in background',
             name: 'UserProfileService',
             category: LogCategory.system);
         // Do a background refresh without blocking the UI
         Future.microtask(() => _backgroundRefreshProfile(pubkey));
       }
 
-      Log.verbose('Returning cached profile for ${pubkey.substring(0, 8)}...',
+      Log.verbose('Returning cached profile for ${pubkey}...',
           name: 'UserProfileService', category: LogCategory.system);
       return cachedProfile;
     }
@@ -214,7 +214,7 @@ class UserProfileService {
     // (Note: forceRefresh already cleaned up existing subscriptions above)
     if (_activeSubscriptionIds.containsKey(pubkey)) {
       Log.warning(
-          'Active subscription already exists for ${pubkey.substring(0, 8)}... (skipping duplicate)',
+          'Active subscription already exists for ${pubkey}... (skipping duplicate)',
           name: 'UserProfileService',
           category: LogCategory.system);
       return null;
@@ -223,7 +223,7 @@ class UserProfileService {
     // Check connection
     if (!_connectionService.isOnline) {
       Log.debug(
-          'Offline - cannot fetch profile for ${pubkey.substring(0, 8)}...',
+          'Offline - cannot fetch profile for ${pubkey}...',
           name: 'UserProfileService',
           category: LogCategory.system);
       return null;
@@ -243,7 +243,7 @@ class UserProfileService {
 
       return null; // Profile will be available in cache once batch loaded
     } catch (e) {
-      Log.error('Failed to fetch profile for ${pubkey.substring(0, 8)}: $e',
+      Log.error('Failed to fetch profile for ${pubkey}: $e',
           name: 'UserProfileService', category: LogCategory.system);
       _pendingRequests.remove(pubkey);
       _pendingBatchPubkeys.remove(pubkey);
@@ -295,7 +295,7 @@ class UserProfileService {
   /*
   /// Handle profile fetch error
   void _handleProfileError(String pubkey, dynamic error) {
-    Log.error('Profile fetch error for ${pubkey.substring(0, 8)}: $error',
+    Log.error('Profile fetch error for ${pubkey}: $error',
         name: 'UserProfileService', category: LogCategory.system);
     _cleanupProfileRequest(pubkey);
   }
@@ -493,7 +493,7 @@ class UserProfileService {
     Log.debug('🔄 Executing batch fetch for ${batchPubkeys.length} profiles...',
         name: 'UserProfileService', category: LogCategory.system);
     Log.debug(
-        '📋 Sample pubkeys: ${batchPubkeys.take(3).map((p) => p.substring(0, 8)).join(", ")}...',
+        '📋 Sample pubkeys: ${batchPubkeys.take(3).map((p) => p).join(", ")}...',
         name: 'UserProfileService',
         category: LogCategory.system);
 
@@ -609,7 +609,7 @@ class UserProfileService {
   /// Remove specific profile from cache
   void removeProfile(String pubkey) {
     if (_profileCache.remove(pubkey) != null) {
-      Log.debug('📱️ Removed profile from cache: ${pubkey.substring(0, 8)}...',
+      Log.debug('📱️ Removed profile from cache: ${pubkey}...',
           name: 'UserProfileService', category: LogCategory.system);
     }
   }
@@ -627,7 +627,7 @@ class UserProfileService {
     if (_lastBackgroundRefresh != null &&
         now.difference(_lastBackgroundRefresh!).inSeconds < 30) {
       Log.debug(
-          'Rate limiting background refresh for ${pubkey.substring(0, 8)}...',
+          'Rate limiting background refresh for ${pubkey}...',
           name: 'UserProfileService',
           category: LogCategory.system);
       return;
@@ -635,7 +635,7 @@ class UserProfileService {
 
     try {
       Log.debug(
-          'Background refresh for stale profile ${pubkey.substring(0, 8)}...',
+          'Background refresh for stale profile ${pubkey}...',
           name: 'UserProfileService',
           category: LogCategory.system);
 
@@ -644,7 +644,7 @@ class UserProfileService {
       // Use a longer timeout for background refreshes to reduce urgency
       await fetchProfile(pubkey, forceRefresh: true);
     } catch (e) {
-      Log.error('Background refresh failed for ${pubkey.substring(0, 8)}: $e',
+      Log.error('Background refresh failed for ${pubkey}: $e',
           name: 'UserProfileService', category: LogCategory.system);
     }
   }

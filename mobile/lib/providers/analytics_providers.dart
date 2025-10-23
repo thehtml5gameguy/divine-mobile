@@ -196,7 +196,7 @@ class Analytics extends _$Analytics {
         );
 
         Log.debug(
-          '✅ Successfully tracked view for video ${video.id.length > 8 ? video.id.substring(0, 8) : video.id}...',
+          '✅ Successfully tracked view for video ${video.id.length > 8 ? video.id : video.id}...',
           name: 'AnalyticsProvider',
           category: LogCategory.system,
         );

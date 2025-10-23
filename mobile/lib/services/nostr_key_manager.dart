@@ -639,7 +639,7 @@ class NostrKeyManager {
       'hasIdentity': true,
       'publicKey': publicKey,
       'publicKeyShort':
-          '${publicKey!.substring(0, 8)}...${publicKey!.substring(publicKey!.length - 8)}',
+          publicKey!,
       'hasBackup': hasBackup,
       'isInitialized': isInitialized,
     };

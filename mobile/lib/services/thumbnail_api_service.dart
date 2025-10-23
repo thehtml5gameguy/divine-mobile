@@ -129,7 +129,7 @@ class ThumbnailApiService {
   }) async {
     try {
       Log.debug(
-        '🚀 getThumbnailWithFallback called for video ${videoId.substring(0, 8)} (timeSeconds: $timeSeconds, size: $size)',
+        '🚀 getThumbnailWithFallback called for video ${videoId} (timeSeconds: $timeSeconds, size: $size)',
         name: 'ThumbnailApiService',
         category: LogCategory.video,
       );
@@ -138,7 +138,7 @@ class ThumbnailApiService {
       final thumbnailUrl =
           getThumbnailUrl(videoId, timeSeconds: timeSeconds, size: size);
       Log.info(
-        '✅ Returning thumbnail URL for ${videoId.substring(0, 8)}: $thumbnailUrl',
+        '✅ Returning thumbnail URL for ${videoId}: $thumbnailUrl',
         name: 'ThumbnailApiService',
         category: LogCategory.video,
       );
@@ -146,7 +146,7 @@ class ThumbnailApiService {
       return thumbnailUrl;
     } catch (e) {
       Log.error(
-        '❌ Error in getThumbnailWithFallback for ${videoId.substring(0, 8)}: $e',
+        '❌ Error in getThumbnailWithFallback for ${videoId}: $e',
         name: 'ThumbnailApiService',
         category: LogCategory.video,
       );

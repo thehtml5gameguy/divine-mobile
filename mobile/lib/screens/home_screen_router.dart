@@ -143,7 +143,7 @@ class _HomeScreenRouterState extends ConsumerState<HomeScreenRouter> {
                     ref.read(homePaginationControllerProvider).maybeLoadMore();
                   }
 
-                  Log.debug('📄 Page changed to index $newIndex (${videos[newIndex].id.substring(0, 8)}...)',
+                  Log.debug('📄 Page changed to index $newIndex (${videos[newIndex].id}...)',
                       name: 'HomeScreenRouter', category: LogCategory.video);
                 },
                 itemBuilder: (context, index) {

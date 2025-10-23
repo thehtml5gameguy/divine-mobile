@@ -527,7 +527,7 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
           onLoadMore: () => ref.read(homeFeedProvider.notifier).loadMore(),
         );
 
-        Log.debug('📄 Page changed to index $index (${videos[index].id.substring(0, 8)}...)',
+        Log.debug('📄 Page changed to index $index (${videos[index].id}...)',
             name: 'VideoFeedScreen', category: LogCategory.video);
       },
       itemBuilder: (context, index) {

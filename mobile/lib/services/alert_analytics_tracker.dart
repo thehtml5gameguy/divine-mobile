@@ -132,7 +132,7 @@ class AlertAnalyticsTracker {
     _analytics.logEvent(
       name: 'video_playback_alert',
       parameters: {
-        'video_id': videoId.substring(0, 8),
+        'video_id': videoId,
         'alert_type': alertType,
         'user_message': userMessage.substring(0, userMessage.length > 100 ? 100 : userMessage.length),
         if (technicalError != null) 'technical_error': technicalError.substring(0, technicalError.length > 150 ? 150 : technicalError.length),
@@ -141,7 +141,7 @@ class AlertAnalyticsTracker {
     );
 
     UnifiedLogger.warning(
-      '📹 Video playback alert: $alertType for video ${videoId.substring(0, 8)}',
+      '📹 Video playback alert: $alertType for video ${videoId}',
       name: 'AlertAnalytics',
     );
   }

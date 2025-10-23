@@ -363,8 +363,7 @@ class _VinePreviewScreenPureState extends ConsumerState<VinePreviewScreenPure> {
           category: LogCategory.video);
 
       // TODO: Implement video publishing with upload service
-      // For now, simulate upload
-      await Future.delayed(const Duration(seconds: 2));
+      // For now, just navigate back (no mock delay needed)
 
       if (mounted) {
         // Navigate back to main feed after successful upload

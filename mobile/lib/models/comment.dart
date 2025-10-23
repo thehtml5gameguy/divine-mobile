@@ -69,8 +69,8 @@ class Comment {
   /// Whether this is a reply to another comment
   bool get isReply => !isTopLevel;
 
-  /// Get a shortened version of the author's public key for display
-  String get shortAuthorPubkey => '${authorPubkey.substring(0, 8)}...';
+  /// Get the author's public key for display
+  String get shortAuthorPubkey => authorPubkey;
 
   /// Get relative time string (e.g., "2h ago", "1d ago")
   String get relativeTime {
@@ -132,5 +132,5 @@ class Comment {
 
   @override
   String toString() =>
-      'Comment(id: ${id.substring(0, 8)}..., content: ${content.length > 50 ? '${content.substring(0, 50)}...' : content}, author: $shortAuthorPubkey)';
+      'Comment(id: $id, content: ${content.length > 50 ? '${content.substring(0, 50)}...' : content}, author: $shortAuthorPubkey)';
 }

@@ -65,7 +65,7 @@ class VideoEventCacheService {
       for (final video in defaultVideos) {
         _videoEvents.add(video);
         Log.info(
-          'Added default video: ${video.title ?? video.id.substring(0, 8)}',
+          'Added default video: ${video.title ?? video.id}',
           name: 'VideoEventCacheService',
           category: LogCategory.video,
         );
@@ -138,7 +138,7 @@ class VideoEventCacheService {
 
     _videoEvents.insert(insertIndex, videoEvent);
     Log.verbose(
-      'Added CLASSIC VINE at position $insertIndex: ${videoEvent.title ?? videoEvent.id.substring(0, 8)}',
+      'Added CLASSIC VINE at position $insertIndex: ${videoEvent.title ?? videoEvent.id}',
       name: 'VideoEventCacheService',
       category: LogCategory.video,
     );
@@ -166,7 +166,7 @@ class VideoEventCacheService {
     }
 
     Log.verbose(
-      'Added REGULAR VIDEO at position $insertIndex: ${videoEvent.title ?? videoEvent.id.substring(0, 8)}',
+      'Added REGULAR VIDEO at position $insertIndex: ${videoEvent.title ?? videoEvent.id}',
       name: 'VideoEventCacheService',
       category: LogCategory.video,
     );

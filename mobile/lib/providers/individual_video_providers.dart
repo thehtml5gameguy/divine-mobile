@@ -119,14 +119,14 @@ VideoPlayerController individualVideoController(
     cacheTimer?.cancel();
   });
 
-  Log.info('🎬 Creating VideoPlayerController for video ${params.videoId.length > 8 ? params.videoId.substring(0, 8) : params.videoId}...',
+  Log.info('🎬 Creating VideoPlayerController for video ${params.videoId.length > 8 ? params.videoId : params.videoId}...',
       name: 'IndividualVideoController', category: LogCategory.system);
 
   final VideoPlayerController controller;
 
   // On web, skip file caching entirely and always use network URL
   if (kIsWeb) {
-    Log.debug('🌐 Web platform - using NETWORK URL for video ${params.videoId.length > 8 ? params.videoId.substring(0, 8) : params.videoId}...',
+    Log.debug('🌐 Web platform - using NETWORK URL for video ${params.videoId.length > 8 ? params.videoId : params.videoId}...',
         name: 'IndividualVideoController', category: LogCategory.video);
 
     // Compute auth headers synchronously if possible
@@ -145,12 +145,12 @@ VideoPlayerController individualVideoController(
 
     if (cachedFile != null && cachedFile.existsSync()) {
       // Use cached file!
-      Log.info('✅ Using CACHED FILE for video ${params.videoId.length > 8 ? params.videoId.substring(0, 8) : params.videoId}...: ${cachedFile.path}',
+      Log.info('✅ Using CACHED FILE for video ${params.videoId.length > 8 ? params.videoId : params.videoId}...: ${cachedFile.path}',
           name: 'IndividualVideoController', category: LogCategory.video);
       controller = VideoPlayerController.file(cachedFile);
     } else {
       // Use network URL and start caching
-      Log.debug('📡 Using NETWORK URL for video ${params.videoId.length > 8 ? params.videoId.substring(0, 8) : params.videoId}...',
+      Log.debug('📡 Using NETWORK URL for video ${params.videoId.length > 8 ? params.videoId : params.videoId}...',
           name: 'IndividualVideoController', category: LogCategory.video);
 
       // Compute auth headers synchronously if possible
@@ -181,17 +181,17 @@ VideoPlayerController individualVideoController(
   );
 
   initFuture.then((_) {
-    Log.info('✅ VideoPlayerController initialized for video ${params.videoId.length > 8 ? params.videoId.substring(0, 8) : params.videoId}...',
+    Log.info('✅ VideoPlayerController initialized for video ${params.videoId.length > 8 ? params.videoId : params.videoId}...',
         name: 'IndividualVideoController', category: LogCategory.system);
 
     // Set looping for Vine-like behavior
     controller.setLooping(true);
 
     // Controller is initialized and paused - widget will control playback
-    Log.debug('⏸️ Video ${params.videoId.length > 8 ? params.videoId.substring(0, 8) : params.videoId}... initialized and paused (widget controls playback)',
+    Log.debug('⏸️ Video ${params.videoId.length > 8 ? params.videoId : params.videoId}... initialized and paused (widget controls playback)',
         name: 'IndividualVideoController', category: LogCategory.system);
   }).catchError((error) {
-    final videoIdDisplay = params.videoId.length > 8 ? params.videoId.substring(0, 8) : params.videoId;
+    final videoIdDisplay = params.videoId.length > 8 ? params.videoId : params.videoId;
 
     // Enhanced error logging with full Nostr event details
     final errorMessage = error.toString();
@@ -273,7 +273,7 @@ VideoPlayerController individualVideoController(
   // AutoDispose: Cleanup controller when provider is disposed
   ref.onDispose(() {
     cacheTimer?.cancel();
-    Log.info('🧹 Disposing VideoPlayerController for video ${params.videoId.length > 8 ? params.videoId.substring(0, 8) : params.videoId}...',
+    Log.info('🧹 Disposing VideoPlayerController for video ${params.videoId.length > 8 ? params.videoId : params.videoId}...',
         name: 'IndividualVideoController', category: LogCategory.system);
     // Defer controller disposal to avoid triggering listener callbacks during lifecycle
     // This prevents "Cannot use Ref inside life-cycles" errors when listeners try to access providers
@@ -316,7 +316,7 @@ Map<String, String>? _computeAuthHeadersSync(Ref ref, VideoControllerParams para
   final cachedHeaders = cache[params.videoId];
 
   if (cachedHeaders != null) {
-    Log.debug('✅ Using cached auth headers for video ${params.videoId.substring(0, 8)}',
+    Log.debug('✅ Using cached auth headers for video ${params.videoId}',
         name: 'IndividualVideoController', category: LogCategory.video);
     return cachedHeaders;
   }
@@ -363,7 +363,7 @@ Future<void> _generateAuthHeadersAsync(Ref ref, VideoControllerParams params) as
       cache[params.videoId] = {'Authorization': authHeader};
       ref.read(authHeadersCacheProvider.notifier).state = cache;
 
-      Log.info('✅ Cached auth header for video ${params.videoId.substring(0, 8)}',
+      Log.info('✅ Cached auth header for video ${params.videoId}',
           name: 'IndividualVideoController', category: LogCategory.video);
     }
   } catch (error) {

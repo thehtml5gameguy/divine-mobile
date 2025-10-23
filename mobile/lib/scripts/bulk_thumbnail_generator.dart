@@ -261,7 +261,7 @@ Examples:
       VideoEvent event, double timeOffset) async {
     try {
       Log.info(
-        'Generating thumbnail for video ${event.id.substring(0, 8)}...',
+        'Generating thumbnail for video ${event.id}...',
         name: 'BulkThumbnailGenerator',
       );
 
@@ -274,20 +274,20 @@ Examples:
       if (thumbnailUrl != null) {
         thumbnailsGenerated++;
         Log.info(
-            '✅ Generated thumbnail for ${event.id.substring(0, 8)}: $thumbnailUrl');
+            '✅ Generated thumbnail for ${event.id}: $thumbnailUrl');
       } else {
         thumbnailsFailed++;
         Log.info(
-            '❌ Failed to generate thumbnail for ${event.id.substring(0, 8)}');
+            '❌ Failed to generate thumbnail for ${event.id}');
       }
     } catch (e) {
       thumbnailsFailed++;
       Log.error(
-        'Failed to generate thumbnail for ${event.id.substring(0, 8)}: $e',
+        'Failed to generate thumbnail for ${event.id}: $e',
         name: 'BulkThumbnailGenerator',
       );
       Log.info(
-          '❌ Error generating thumbnail for ${event.id.substring(0, 8)}: $e');
+          '❌ Error generating thumbnail for ${event.id}: $e');
     }
   }
 

@@ -556,7 +556,7 @@ class AnalyticsApiService {
             _videoEventService.addVideoEvent(video); // Cache it
 
             Log.info(
-                '📹 Fetched video from relay: ${video.title ?? video.id.substring(0, 8)}',
+                '📹 Fetched video from relay: ${video.title ?? video.id}',
                 name: 'AnalyticsApiService',
                 category: LogCategory.video);
             Log.info('   Event ID: ${video.id}',

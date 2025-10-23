@@ -176,11 +176,8 @@ class _SearchScreenPureState extends ConsumerState<SearchScreenPure>
 
       Log.info('🔍 SearchScreenPure: Starting remote relay search', category: LogCategory.video);
 
-      // Start remote search (non-blocking)
+      // Start remote search and wait for completion (uses Completer internally)
       await videoEventService.searchVideos(query, limit: 50);
-
-      // Wait briefly for remote results to arrive
-      await Future.delayed(const Duration(milliseconds: 800));
 
       // Combine local + remote results
       final remoteResults = videoEventService.searchResults;
@@ -447,7 +444,7 @@ class _SearchScreenPureState extends ConsumerState<SearchScreenPure>
         final profile = profileService.getCachedProfile(userPubkey);
         final displayName = profile?.displayName ??
                            profile?.name ??
-                           '@${userPubkey.substring(0, 8)}...';
+                           '@${userPubkey}...';
 
         return Card(
           color: VineTheme.cardBackground,

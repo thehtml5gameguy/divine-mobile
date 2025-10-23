@@ -859,7 +859,7 @@ class CuratedListService {
         (event) {
           receivedEvents.add(event);
           Log.debug(
-              'Received list event from relay: ${event.id.substring(0, 8)}...',
+              'Received list event from relay: ${event.id}...',
               name: 'CuratedListService',
               category: LogCategory.system);
         },

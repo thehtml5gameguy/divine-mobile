@@ -130,7 +130,7 @@ class LatestVideos extends _$LatestVideos {
               videoEventService.addVideoEvent(video);
 
               Log.verbose(
-                  '📹 Found video $receivedCount: ${video.title ?? video.id.substring(0, 8)}',
+                  '📹 Found video $receivedCount: ${video.title ?? video.id}',
                   name: 'LatestVideosProvider',
                   category: LogCategory.system);
 

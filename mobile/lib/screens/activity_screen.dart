@@ -287,7 +287,7 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen>
   }
 
   void _openVideo(VideoEvent video, VideoEventService videoEventService) {
-    Log.debug('Opening video from Activity: ${video.id.substring(0, 8)}...',
+    Log.debug('Opening video from Activity: ${video.id}...',
         name: 'ActivityScreen', category: LogCategory.ui);
     Log.debug('📱 Video URL: ${video.videoUrl}',
         name: 'ActivityScreen', category: LogCategory.ui);

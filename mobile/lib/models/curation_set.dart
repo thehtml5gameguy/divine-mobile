@@ -115,7 +115,7 @@ class CurationSet {
 
   @override
   String toString() =>
-      'CurationSet(id: $id, title: $title, curator: ${curatorPubkey.substring(0, 8)}..., videos: ${videoIds.length})';
+      'CurationSet(id: $id, title: $title, curator: $curatorPubkey, videos: ${videoIds.length})';
 
   @override
   bool operator ==(Object other) {

@@ -47,13 +47,10 @@ final performSearchProvider = Provider<Future<void> Function(String)>((ref) {
       // Clear previous results
       videoEventService.clearSearchResults();
 
-      // Start search
+      // Start search (waits for completion via Completer)
       await videoEventService.searchVideos(query);
 
-      // Wait a moment for results to populate
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      // Get results
+      // Get results (search is already complete)
       final results = videoEventService.searchResults;
 
       searchNotifier.state = SearchState.success(results, query);
@@ -106,13 +103,10 @@ class SearchNotifier extends _$SearchNotifier {
       // Clear previous results
       videoEventService.clearSearchResults();
 
-      // Start search
+      // Start search (waits for completion via Completer)
       await videoEventService.searchVideos(query);
 
-      // Wait for results to populate
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      // Get results
+      // Get results (search is already complete)
       final results = videoEventService.searchResults;
 
       state = SearchState.success(results, query);
@@ -166,7 +160,7 @@ class SearchNotifier extends _$SearchNotifier {
       // Clear previous results
       videoEventService.clearSearchResults();
 
-      // Start filtered search
+      // Start filtered search (waits for completion via Completer)
       await videoEventService.searchVideosWithFilters(
         query: query,
         authors: authors,
@@ -175,10 +169,7 @@ class SearchNotifier extends _$SearchNotifier {
         limit: limit,
       );
 
-      // Wait for results to populate
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      // Get results
+      // Get results (search is already complete)
       final results = videoEventService.searchResults;
 
       state = SearchState.success(results, query);

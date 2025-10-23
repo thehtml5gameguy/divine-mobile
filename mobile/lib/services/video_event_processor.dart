@@ -31,7 +31,7 @@ class VideoEventProcessor {
         final videoEvent = VideoEvent.fromNostrEvent(event);
         _videoEventController.add(videoEvent);
         Log.debug(
-          'Processed video event: ${event.id.substring(0, 8)}',
+          'Processed video event: ${event.id}',
           name: 'VideoEventProcessor',
           category: LogCategory.video,
         );
@@ -86,7 +86,7 @@ class VideoEventProcessor {
 
       if (originalEventJson.isEmpty) {
         Log.warning(
-          'Repost event ${repostEvent.id.substring(0, 8)} has no content',
+          'Repost event ${repostEvent.id} has no content',
           name: 'VideoEventProcessor',
           category: LogCategory.video,
         );
@@ -126,7 +126,7 @@ class VideoEventProcessor {
       _videoEventController.add(repostVideoEvent);
 
       Log.debug(
-        'Processed repost ${repostEvent.id.substring(0, 8)} of video ${originalEvent.id.substring(0, 8)}',
+        'Processed repost ${repostEvent.id} of video ${originalEvent.id}',
         name: 'VideoEventProcessor',
         category: LogCategory.video,
       );

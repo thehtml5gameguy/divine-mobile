@@ -92,7 +92,7 @@ class BrokenVideoTracker {
 
       await _saveBrokenVideos();
 
-      Log.warning('🚫 Marked video as broken: ${videoId.substring(0, 8)}... (reason: $reason)',
+      Log.warning('🚫 Marked video as broken: ${videoId}... (reason: $reason)',
           name: 'BrokenVideoTracker', category: LogCategory.system);
     }
   }
@@ -108,7 +108,7 @@ class BrokenVideoTracker {
       _brokenTimestamps.remove(videoId);
       await _saveBrokenVideos();
 
-      Log.info('✅ Unmarked video as broken: ${videoId.substring(0, 8)}...',
+      Log.info('✅ Unmarked video as broken: ${videoId}...',
           name: 'BrokenVideoTracker', category: LogCategory.system);
     }
   }

@@ -1,6 +1,24 @@
 // ABOUTME: Service for subscribing to and managing video events (NIP-71 kinds 22, 34236)
 // ABOUTME: Handles real-time feed updates and local caching of video content
 
+/// VideoEventService - Central service for video event management
+///
+/// RESPONSIBILITIES (9 distinct concerns):
+/// 1. Subscription Management - Creating/cancelling subscriptions for 8 feed types
+/// 2. Event Reception & Routing - Real-time event streaming from Nostr relay
+/// 3. Event Processing - Converting Nostr events to VideoEvent objects
+/// 4. Filtering - Blocklist, hashtags, groups, URL validation
+/// 5. Caching - Managing 8 separate event lists per subscription type
+/// 6. Pagination - Historical data loading, cursor tracking
+/// 7. Sorting - Engagement-based, chronological, special handling
+/// 8. Retry & Recovery - Connection error detection, automatic retry
+/// 9. Search - NIP-50 video search implementation
+///
+/// TODO: This class violates Single Responsibility Principle
+/// TODO: Planned refactoring into 7 focused services (see docs/REFACTORING_ROADMAP.md)
+///
+/// Current size: 3,277 lines, 71 methods, 48 state fields
+
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';
@@ -349,7 +367,7 @@ class VideoEventService extends ChangeNotifier {
   List<VideoEvent> getVideosByAuthor(String pubkey) {
     final result = <VideoEvent>[];
     Log.debug(
-        '🔍 Searching for videos by author ${pubkey.substring(0, 8)} across ${_eventLists.length} subscription types',
+        '🔍 Searching for videos by author ${pubkey} across ${_eventLists.length} subscription types',
         name: 'VideoEventService',
         category: LogCategory.video);
     for (final entry in _eventLists.entries) {
@@ -371,7 +389,7 @@ class VideoEventService extends ChangeNotifier {
       result.addAll(matchingVideos);
     }
     Log.debug(
-        '✅ Total videos found for ${pubkey.substring(0, 8)}: ${result.length}',
+        '✅ Total videos found for ${pubkey}: ${result.length}',
         name: 'VideoEventService',
         category: LogCategory.video);
     return result;
@@ -540,7 +558,7 @@ class VideoEventService extends ChangeNotifier {
       Log.info('  - Subscription Type: $subscriptionType',
           name: 'VideoEventService', category: LogCategory.video);
       Log.info(
-          '  - Authors: ${authors?.length ?? 'all'} ${authors?.isNotEmpty == true ? "(first: ${authors!.first.substring(0, 8)}...)" : ""}',
+          '  - Authors: ${authors?.length ?? 'all'} ${authors?.isNotEmpty == true ? "(first: ${authors!.first}...)" : ""}',
           name: 'VideoEventService',
           category: LogCategory.video);
       Log.info('  - Hashtags: ${hashtags?.join(', ') ?? 'none'}',
@@ -779,7 +797,7 @@ class VideoEventService extends ChangeNotifier {
 
             if (subscriptionType == SubscriptionType.homeFeed) {
               Log.info(
-                  '🏠📥 HOME FEED EVENT #$eventCount RECEIVED: kind=${event.kind}, author=${event.pubkey.substring(0, 8)}',
+                  '🏠📥 HOME FEED EVENT #$eventCount RECEIVED: kind=${event.kind}, author=${event.pubkey}',
                   name: 'VideoEventService',
                   category: LogCategory.video);
             }
@@ -982,7 +1000,7 @@ class VideoEventService extends ChangeNotifier {
             final profile = UserProfile.fromNostrEvent(event);
             // Fire-and-forget: cache the profile asynchronously
             _userProfileService.updateCachedProfile(profile).then((_) {
-              Log.verbose('✅ Cached profile event for ${event.pubkey.substring(0, 8)} from video subscription',
+              Log.verbose('✅ Cached profile event for ${event.pubkey} from video subscription',
                   name: 'VideoEventService', category: LogCategory.video);
             }).catchError((e) {
               Log.error('Failed to cache profile event: $e',
@@ -1002,7 +1020,7 @@ class VideoEventService extends ChangeNotifier {
       // Skip repost events if reposts are disabled
       if (event.kind == 6 && !(_includeReposts[subscriptionType] ?? false)) {
         Log.warning(
-            '⏩ Skipping repost event ${event.id.substring(0, 8)}... (reposts disabled)',
+            '⏩ Skipping repost event ${event.id}... (reposts disabled)',
             name: 'VideoEventService',
             category: LogCategory.video);
         return;
@@ -1019,7 +1037,7 @@ class VideoEventService extends ChangeNotifier {
       // Check if content is blocked
       if (_blocklistService?.shouldFilterFromFeeds(event.pubkey) == true) {
         Log.verbose(
-            'Filtering blocked content from ${event.pubkey.substring(0, 8)}...',
+            'Filtering blocked content from ${event.pubkey}...',
             name: 'VideoEventService',
             category: LogCategory.video);
         return;
@@ -1068,7 +1086,7 @@ class VideoEventService extends ChangeNotifier {
           // Debug: Special logging for Classic Vines content
           if (videoEvent.pubkey == AppConstants.classicVinesPubkey) {
             Log.info(
-                '🌟 Received Classic Vines video: ${videoEvent.title ?? videoEvent.id.substring(0, 8)}',
+                '🌟 Received Classic Vines video: ${videoEvent.title ?? videoEvent.id}',
                 name: 'VideoEventService',
                 category: LogCategory.video);
           }
@@ -1158,7 +1176,7 @@ class VideoEventService extends ChangeNotifier {
         }
       } else if (event.kind == 6) {
         // Repost event - only process if it likely references video content
-        Log.verbose('Processing repost event ${event.id.substring(0, 8)}...',
+        Log.verbose('Processing repost event ${event.id}...',
             name: 'VideoEventService', category: LogCategory.video);
 
         String? originalEventId;
@@ -1172,7 +1190,7 @@ class VideoEventService extends ChangeNotifier {
         // Smart filtering: Only process reposts that are likely video-related
         if (!_isLikelyVideoRepost(event)) {
           Log.warning(
-              '⏩ Skipping non-video repost ${event.id.substring(0, 8)}... (no video indicators)',
+              '⏩ Skipping non-video repost ${event.id}... (no video indicators)',
               name: 'VideoEventService',
               category: LogCategory.video);
           return;
@@ -1180,7 +1198,7 @@ class VideoEventService extends ChangeNotifier {
 
         if (originalEventId != null) {
           Log.verbose(
-              'Repost references event: ${originalEventId.substring(0, 8)}...',
+              'Repost references event: ${originalEventId}...',
               name: 'VideoEventService',
               category: LogCategory.video);
 
@@ -1276,7 +1294,7 @@ class VideoEventService extends ChangeNotifier {
       }
 
       Log.debug(
-          '📥 Received historical $subscriptionType event: kind=${event.kind}, author=${event.pubkey.substring(0, 8)}..., id=${event.id.substring(0, 8)}...',
+          '📥 Received historical $subscriptionType event: kind=${event.kind}, author=${event.pubkey}..., id=${event.id}...',
           name: 'VideoEventService',
           category: LogCategory.video);
 
@@ -1291,7 +1309,7 @@ class VideoEventService extends ChangeNotifier {
       // Skip repost events if reposts are disabled
       if (event.kind == 6 && !(_includeReposts[subscriptionType] ?? false)) {
         Log.warning(
-            '⏩ Skipping historical repost event ${event.id.substring(0, 8)}... (reposts disabled)',
+            '⏩ Skipping historical repost event ${event.id}... (reposts disabled)',
             name: 'VideoEventService',
             category: LogCategory.video);
         return;
@@ -1308,7 +1326,7 @@ class VideoEventService extends ChangeNotifier {
       // Check if content is blocked
       if (_blocklistService?.shouldFilterFromFeeds(event.pubkey) == true) {
         Log.verbose(
-            'Filtering blocked historical content from ${event.pubkey.substring(0, 8)}...',
+            'Filtering blocked historical content from ${event.pubkey}...',
             name: 'VideoEventService',
             category: LogCategory.video);
         return;
@@ -1318,7 +1336,7 @@ class VideoEventService extends ChangeNotifier {
       if (NIP71VideoKinds.isVideoKind(event.kind)) {
         // Direct video event
         Log.verbose(
-            'Processing historical video event ${event.id.substring(0, 8)}...',
+            'Processing historical video event ${event.id}...',
             name: 'VideoEventService',
             category: LogCategory.video);
         try {
@@ -1383,7 +1401,7 @@ class VideoEventService extends ChangeNotifier {
       } else if (event.kind == 6) {
         // Repost event - same logic as real-time but marked as historical
         Log.verbose(
-            'Processing historical repost event ${event.id.substring(0, 8)}...',
+            'Processing historical repost event ${event.id}...',
             name: 'VideoEventService',
             category: LogCategory.video);
 
@@ -1505,7 +1523,7 @@ class VideoEventService extends ChangeNotifier {
     }
 
     Log.info(
-      'Querying historical videos for user=${pubkey.substring(0, 8)}... until=${until != null ? DateTime.fromMillisecondsSinceEpoch(until * 1000) : 'none'} limit=$limit',
+      'Querying historical videos for user=${pubkey}... until=${until != null ? DateTime.fromMillisecondsSinceEpoch(until * 1000) : 'none'} limit=$limit',
       name: 'VideoEventService',
       category: LogCategory.video,
     );
@@ -1529,7 +1547,7 @@ class VideoEventService extends ChangeNotifier {
       // Set timeout for receiving events
       final timeoutTimer = Timer(const Duration(seconds: 5), () {
         Log.info(
-          'Historical query timeout for user=${pubkey.substring(0, 8)}... - received $receivedCount events',
+          'Historical query timeout for user=${pubkey}... - received $receivedCount events',
           name: 'VideoEventService',
           category: LogCategory.video,
         );
@@ -1549,7 +1567,7 @@ class VideoEventService extends ChangeNotifier {
           timeoutTimer.cancel();
           if (!completer.isCompleted) {
             Log.info(
-              'Historical query stream completed for user=${pubkey.substring(0, 8)}... - received $receivedCount events',
+              'Historical query stream completed for user=${pubkey}... - received $receivedCount events',
               name: 'VideoEventService',
               category: LogCategory.video,
             );
@@ -1560,7 +1578,7 @@ class VideoEventService extends ChangeNotifier {
           timeoutTimer.cancel();
           if (!completer.isCompleted) {
             Log.error(
-              'Historical query stream error for user=${pubkey.substring(0, 8)}...: $error',
+              'Historical query stream error for user=${pubkey}...: $error',
               name: 'VideoEventService',
               category: LogCategory.video,
             );
@@ -1574,7 +1592,7 @@ class VideoEventService extends ChangeNotifier {
       await streamSubscription.cancel();
 
       Log.info(
-        'Historical user videos query completed - received $receivedCount events for user=${pubkey.substring(0, 8)}...',
+        'Historical user videos query completed - received $receivedCount events for user=${pubkey}...',
         name: 'VideoEventService',
         category: LogCategory.video,
       );
@@ -1583,7 +1601,7 @@ class VideoEventService extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       Log.error(
-        'Failed to query historical user videos for user=${pubkey.substring(0, 8)}...: $e',
+        'Failed to query historical user videos for user=${pubkey}...: $e',
         name: 'VideoEventService',
         category: LogCategory.video,
       );
@@ -2065,7 +2083,7 @@ class VideoEventService extends ChangeNotifier {
           final videoEvent = VideoEvent.fromNostrEvent(event);
           // Since we're filtering by d tag at the relay level, this should be our video
           Log.info(
-              'Found video event for vine ID $vineId: ${event.id.substring(0, 8)}...',
+              'Found video event for vine ID $vineId: ${event.id}...',
               name: 'VideoEventService',
               category: LogCategory.video);
           foundEvent = videoEvent;
@@ -2272,7 +2290,7 @@ class VideoEventService extends ChangeNotifier {
       String originalEventId, Event repostEvent) async {
     try {
       Log.debug(
-          'Fetching original event $originalEventId for repost ${repostEvent.id.substring(0, 8)}...',
+          'Fetching original event $originalEventId for repost ${repostEvent.id}...',
           name: 'VideoEventService',
           category: LogCategory.video);
 
@@ -2290,7 +2308,7 @@ class VideoEventService extends ChangeNotifier {
       subscription = eventStream.listen(
         (originalEvent) {
           Log.debug(
-              'Retrieved original event ${originalEvent.id.substring(0, 8)}...',
+              'Retrieved original event ${originalEvent.id}...',
               name: 'VideoEventService',
               category: LogCategory.video);
           Log.debug('Event tags: ${originalEvent.tags}',
@@ -2530,7 +2548,7 @@ class VideoEventService extends ChangeNotifier {
     // CRITICAL: Filter out locally deleted videos to prevent pagination resurrection
     if (isVideoLocallyDeleted(videoEvent.id)) {
       Log.debug(
-          'Filtering out locally deleted video ${videoEvent.id.substring(0, 8)} from $subscriptionType feed',
+          'Filtering out locally deleted video ${videoEvent.id} from $subscriptionType feed',
           name: 'VideoEventService',
           category: LogCategory.video);
       return; // Don't resurrect deleted videos
@@ -2539,7 +2557,7 @@ class VideoEventService extends ChangeNotifier {
     // CRITICAL: Validate that video has an accessible URL before adding to feed
     if (!_hasValidVideoUrl(videoEvent)) {
       Log.warning(
-          'Rejecting $subscriptionType video ${videoEvent.id.substring(0, 8)} - no valid video URL (url: ${videoEvent.videoUrl})',
+          'Rejecting $subscriptionType video ${videoEvent.id} - no valid video URL (url: ${videoEvent.videoUrl})',
           name: 'VideoEventService',
           category: LogCategory.video);
       return; // Don't add videos without valid URLs
@@ -2566,7 +2584,7 @@ class VideoEventService extends ChangeNotifier {
     if (_userProfileService != null && !_userProfileService.hasProfile(videoEvent.pubkey)) {
       _userProfileService.fetchProfile(videoEvent.pubkey).catchError((error) {
         Log.warning(
-          'Failed to fetch profile for ${videoEvent.pubkey.substring(0, 8)}: $error',
+          'Failed to fetch profile for ${videoEvent.pubkey}: $error',
           name: 'VideoEventService',
           category: LogCategory.video,
         );
@@ -2672,7 +2690,7 @@ class VideoEventService extends ChangeNotifier {
     // VideoManager integration removed - using pure Riverpod architecture
 
     Log.debug(
-        '✅ Added $subscriptionType video: ${videoEvent.title ?? videoEvent.id.substring(0, 8)} (total: ${eventList.length})',
+        '✅ Added $subscriptionType video: ${videoEvent.title ?? videoEvent.id} (total: ${eventList.length})',
         name: 'VideoEventService',
         category: LogCategory.video);
 
@@ -3000,6 +3018,9 @@ class VideoEventService extends ChangeNotifier {
       Log.info('🔍 Starting video search for: "$query"',
           name: 'VideoEventService', category: LogCategory.video);
 
+      // Create completer to track search completion
+      final searchCompleter = Completer<void>();
+
       // Use the NostrService searchVideos method
       final searchStream = _nostrService.searchVideos(
         query,
@@ -3035,6 +3056,9 @@ class VideoEventService extends ChangeNotifier {
           Log.error('Search error: $error',
               name: 'VideoEventService', category: LogCategory.video);
           // Search subscriptions can fail without affecting main feeds
+          if (!searchCompleter.isCompleted) {
+            searchCompleter.completeError(error);
+          }
         },
         onDone: () {
           // Search completed naturally - this is expected behavior
@@ -3044,11 +3068,24 @@ class VideoEventService extends ChangeNotifier {
               category: LogCategory.video);
           // Search subscription clean up - remove from tracking
           _subscriptions.remove('search');
+          if (!searchCompleter.isCompleted) {
+            searchCompleter.complete();
+          }
         },
       );
 
       // Store subscription for cleanup
       _subscriptions['search'] = subscription;
+
+      // Wait for search to complete with timeout
+      await searchCompleter.future.timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          Log.warning('Search timed out after 10 seconds',
+              name: 'VideoEventService', category: LogCategory.video);
+          // Don't throw - return partial results
+        },
+      );
     } catch (e) {
       // _isSearching = false;
       Log.error('Failed to start search: $e',

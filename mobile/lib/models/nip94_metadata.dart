@@ -285,7 +285,7 @@ class NIP94Metadata {
       'type: $mimeType, '
       'size: ${fileSizeMB.toStringAsFixed(2)}MB, '
       'dimensions: $dimensions, '
-      'hash: ${sha256Hash.substring(0, 8)}...'
+      'hash: $sha256Hash'
       ')';
 }
 

@@ -148,7 +148,7 @@ class ModerationLabelService with NostrListServiceMixin {
       await _loadLabelsFromLabeler(labelerPubkey);
 
       Log.info(
-          'Subscribed to labeler: ${labelerPubkey.substring(0, 8)}... (${_allLabels.length} total labels)',
+          'Subscribed to labeler: ${labelerPubkey}... (${_allLabels.length} total labels)',
           name: 'ModerationLabelService',
           category: LogCategory.system);
     } catch (e) {
@@ -180,7 +180,7 @@ class ModerationLabelService with NostrListServiceMixin {
       await _saveSubscribedLabelers();
       await _saveLabelCache();
 
-      Log.info('Unsubscribed from labeler: ${labelerPubkey.substring(0, 8)}...',
+      Log.info('Unsubscribed from labeler: ${labelerPubkey}...',
           name: 'ModerationLabelService', category: LogCategory.system);
     } catch (e) {
       Log.error('Failed to unsubscribe from labeler: $e',
@@ -237,7 +237,7 @@ class ModerationLabelService with NostrListServiceMixin {
   /// Load labels from a specific labeler
   Future<void> _loadLabelsFromLabeler(String labelerPubkey) async {
     try {
-      Log.debug('Loading labels from: ${labelerPubkey.substring(0, 8)}...',
+      Log.debug('Loading labels from: ${labelerPubkey}...',
           name: 'ModerationLabelService', category: LogCategory.system);
 
       // Query for kind 1985 (label) events from this labeler
@@ -249,7 +249,7 @@ class ModerationLabelService with NostrListServiceMixin {
       final events = await _nostrService.getEvents(filters: [filter]);
 
       if (events.isEmpty) {
-        Log.debug('No labels found from labeler: ${labelerPubkey.substring(0, 8)}...',
+        Log.debug('No labels found from labeler: ${labelerPubkey}...',
             name: 'ModerationLabelService', category: LogCategory.system);
         return;
       }
@@ -262,7 +262,7 @@ class ModerationLabelService with NostrListServiceMixin {
       await _saveLabelCache();
 
       Log.debug(
-          'Loaded ${events.length} label events from ${labelerPubkey.substring(0, 8)}...',
+          'Loaded ${events.length} label events from ${labelerPubkey}...',
           name: 'ModerationLabelService',
           category: LogCategory.system);
     } catch (e) {
@@ -348,7 +348,7 @@ class ModerationLabelService with NostrListServiceMixin {
       }
 
       Log.debug(
-          'Parsed ${parsedLabels.length} labels from event ${event.id.substring(0, 8)}...',
+          'Parsed ${parsedLabels.length} labels from event ${event.id}...',
           name: 'ModerationLabelService',
           category: LogCategory.system);
     } catch (e) {

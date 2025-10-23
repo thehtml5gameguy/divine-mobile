@@ -220,7 +220,7 @@ class ReportAggregationService with NostrListServiceMixin {
       await _saveReportCache();
 
       Log.debug(
-          'Added report: ${reportEventId.substring(0, 8)}... for ${targetEventId ?? targetPubkey ?? "unknown"}',
+          'Added report: ${reportEventId}... for ${targetEventId ?? targetPubkey ?? "unknown"}',
           name: 'ReportAggregationService',
           category: LogCategory.system);
     } catch (e) {

@@ -72,14 +72,14 @@ class ProfileCacheService {
       if (lastFetched == null ||
           DateTime.now().difference(lastFetched) > _cacheExpiry) {
         debugPrint(
-            '🗑️ Removing expired profile for ${pubkey.substring(0, 8)}... (last fetched: ${lastFetched ?? 'never'})');
+            '🗑️ Removing expired profile for ${pubkey}... (last fetched: ${lastFetched ?? 'never'})');
         _profileBox!.delete(pubkey);
         _fetchTimestamps?.delete(pubkey);
         return null;
       }
 
       Log.debug(
-          '📱 Retrieved cached profile for ${pubkey.substring(0, 8)}... (${profile.bestDisplayName})',
+          '📱 Retrieved cached profile for ${pubkey}... (${profile.bestDisplayName})',
           name: 'ProfileCacheService',
           category: LogCategory.storage);
       return profile;
@@ -117,7 +117,7 @@ class ProfileCacheService {
       await _fetchTimestamps?.put(profile.pubkey, DateTime.now());
 
       Log.debug(
-          '📱 Cached profile for ${profile.pubkey.substring(0, 8)}... (${profile.bestDisplayName})',
+          '📱 Cached profile for ${profile.pubkey}... (${profile.bestDisplayName})',
           name: 'ProfileCacheService',
           category: LogCategory.storage);
     } catch (e) {
@@ -137,12 +137,12 @@ class ProfileCacheService {
       if (existing == null || profile.createdAt.isAfter(existing.createdAt)) {
         await _profileBox!.put(profile.pubkey, profile);
         Log.debug(
-            'Updated cached profile for ${profile.pubkey.substring(0, 8)}... (${profile.bestDisplayName})',
+            'Updated cached profile for ${profile.pubkey}... (${profile.bestDisplayName})',
             name: 'ProfileCacheService',
             category: LogCategory.storage);
       } else {
         Log.warning(
-            '⏩ Skipping update for ${profile.pubkey.substring(0, 8)}... - cached version is newer',
+            '⏩ Skipping update for ${profile.pubkey}... - cached version is newer',
             name: 'ProfileCacheService',
             category: LogCategory.storage);
       }
@@ -158,7 +158,7 @@ class ProfileCacheService {
 
     try {
       await _profileBox!.delete(pubkey);
-      Log.debug('📱️ Removed cached profile for ${pubkey.substring(0, 8)}...',
+      Log.debug('📱️ Removed cached profile for ${pubkey}...',
           name: 'ProfileCacheService', category: LogCategory.storage);
     } catch (e) {
       Log.error('Error removing cached profile for $pubkey: $e',

@@ -226,7 +226,7 @@ class SocialNotifier extends _$SocialNotifier {
 
       // Step 4: Fix misleading log to show actual auth state
       Log.info(
-          '🤝 SocialNotifier: Auth state = ${authService.authState.name}, pubkey = ${authService.currentPublicKeyHex?.substring(0, 8) ?? 'null'}',
+          '🤝 SocialNotifier: Auth state = ${authService.authState.name}, pubkey = ${authService.currentPublicKeyHex ?? 'null'}',
           name: 'SocialNotifier',
           category: LogCategory.system);
 
@@ -272,7 +272,7 @@ class SocialNotifier extends _$SocialNotifier {
       return;
     }
 
-    Log.debug('❤️ Toggling like for event: ${eventId.substring(0, 8)}...',
+    Log.debug('❤️ Toggling like for event: ${eventId}...',
         name: 'SocialNotifier', category: LogCategory.system);
 
     // Add to in-progress set
@@ -307,7 +307,7 @@ class SocialNotifier extends _$SocialNotifier {
           },
         );
 
-        Log.info('Like published for event: ${eventId.substring(0, 8)}...',
+        Log.info('Like published for event: ${eventId}...',
             name: 'SocialNotifier', category: LogCategory.system);
       } else {
         // Unlike by publishing NIP-09 deletion event
@@ -338,7 +338,7 @@ class SocialNotifier extends _$SocialNotifier {
           );
 
           Log.info(
-              'Unlike (deletion) published for event: ${eventId.substring(0, 8)}...',
+              'Unlike (deletion) published for event: ${eventId}...',
               name: 'SocialNotifier',
               category: LogCategory.system);
         } else {
@@ -579,7 +579,7 @@ class SocialNotifier extends _$SocialNotifier {
         },
       );
 
-      Log.info('Reposted event: ${eventId.substring(0, 8)}...',
+      Log.info('Reposted event: ${eventId}...',
           name: 'SocialNotifier', category: LogCategory.system);
     } catch (e) {
       Log.error('Error reposting event: $e',
@@ -658,7 +658,7 @@ class SocialNotifier extends _$SocialNotifier {
 
     try {
       Log.info(
-          '📋 Fetching current user follow list for: ${authService.currentPublicKeyHex!.substring(0, 8)}...',
+          '📋 Fetching current user follow list for: ${authService.currentPublicKeyHex!}...',
           name: 'SocialNotifier',
           category: LogCategory.system);
 
@@ -697,7 +697,7 @@ class SocialNotifier extends _$SocialNotifier {
           }
 
           Log.debug(
-              '📋 Received contact list event: ${event.id.substring(0, 8)}...',
+              '📋 Received contact list event: ${event.id}...',
               name: 'SocialNotifier',
               category: LogCategory.system);
 
@@ -1091,7 +1091,7 @@ class SocialNotifier extends _$SocialNotifier {
     }
 
     Log.info(
-        '📋 Processing contact list event: ${event.id.substring(0, 8)}... with ${event.tags.length} tags',
+        '📋 Processing contact list event: ${event.id}... with ${event.tags.length} tags',
         name: 'SocialNotifier',
         category: LogCategory.system);
 
@@ -1101,7 +1101,7 @@ class SocialNotifier extends _$SocialNotifier {
     for (final tag in event.tags) {
       if (tag.length >= 2 && tag[0] == 'p') {
         followingPubkeys.add(tag[1]);
-        Log.debug('📋 Found following: ${tag[1].substring(0, 8)}...',
+        Log.debug('📋 Found following: ${tag[1]}...',
             name: 'SocialNotifier', category: LogCategory.system);
       }
     }
@@ -1124,7 +1124,7 @@ class SocialNotifier extends _$SocialNotifier {
     // Log sample of following list
     if (followingPubkeys.isNotEmpty) {
       final sample =
-          followingPubkeys.take(5).map((p) => p.substring(0, 8)).join(', ');
+          followingPubkeys.take(5).map((p) => p).join(', ');
       Log.info(
         '👥 Following sample: $sample${followingPubkeys.length > 5 ? "..." : ""}',
         name: 'SocialNotifier',
@@ -1152,7 +1152,7 @@ class SocialNotifier extends _$SocialNotifier {
 
     try {
       Log.debug(
-          '🔍 Checking reactions for video: ${videoId.substring(0, 8)}...',
+          '🔍 Checking reactions for video: ${videoId}...',
           name: 'SocialNotifier',
           category: LogCategory.system);
 
@@ -1181,7 +1181,7 @@ class SocialNotifier extends _$SocialNotifier {
       await Future.wait(futures);
 
       Log.debug(
-          '✅ Completed reaction check for video: ${videoId.substring(0, 8)}...',
+          '✅ Completed reaction check for video: ${videoId}...',
           name: 'SocialNotifier',
           category: LogCategory.system);
     } catch (e) {
@@ -1218,7 +1218,7 @@ class SocialNotifier extends _$SocialNotifier {
             },
           );
           Log.debug(
-              'Found existing like for video: ${videoId.substring(0, 8)}... - processed immediately',
+              'Found existing like for video: ${videoId}... - processed immediately',
               name: 'SocialNotifier',
               category: LogCategory.system);
 
@@ -1279,7 +1279,7 @@ class SocialNotifier extends _$SocialNotifier {
           },
         );
         Log.debug(
-            'Found existing repost for video: ${videoId.substring(0, 8)}... - processed immediately',
+            'Found existing repost for video: ${videoId}... - processed immediately',
             name: 'SocialNotifier',
             category: LogCategory.system);
 

@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:openvine/models/pending_upload.dart';
 import 'package:openvine/utils/unified_logger.dart';
+import 'package:openvine/utils/async_utils.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
@@ -240,25 +241,19 @@ class UploadInitializationHelper {
 
   /// Wait for ongoing initialization
   static Future<Box<PendingUpload>> _waitForInitialization() async {
-    const maxWait = Duration(seconds: 30);
-    const checkInterval = Duration(milliseconds: 100);
-    final startTime = DateTime.now();
+    // Use proper async waiting instead of polling with Future.delayed
+    final success = await AsyncUtils.waitForCondition(
+      condition: () => !_isInitializing && _cachedBox != null && _cachedBox!.isOpen,
+      timeout: const Duration(seconds: 30),
+      checkInterval: const Duration(milliseconds: 100),
+      debugName: 'upload_box_initialization',
+    );
 
-    while (_isInitializing) {
-      if (DateTime.now().difference(startTime) > maxWait) {
-        throw TimeoutException('Initialization timeout after 30 seconds');
-      }
-
-      await Future.delayed(checkInterval);
-
-      // Check if initialization completed successfully
-      if (_cachedBox != null && _cachedBox!.isOpen) {
-        return _cachedBox!;
-      }
+    if (!success || _cachedBox == null || !_cachedBox!.isOpen) {
+      throw Exception('Initialization completed but box not available');
     }
 
-    // If we get here, initialization completed but failed
-    throw Exception('Initialization completed but box not available');
+    return _cachedBox!;
   }
 
   /// Attempt recovery strategies

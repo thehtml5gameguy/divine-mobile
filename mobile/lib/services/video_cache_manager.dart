@@ -194,7 +194,7 @@ class VideoCacheManager extends CacheManager {
       for (int j = i; j < end; j++) {
         // Skip if already cached
         if (await isVideoCached(videoIds[j])) {
-          Log.debug('⏭️ Skipping already cached video ${videoIds[j].substring(0, 8)}...',
+          Log.debug('⏭️ Skipping already cached video ${videoIds[j]}...',
               name: 'VideoCacheManager', category: LogCategory.video);
           continue;
         }
