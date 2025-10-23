@@ -73,15 +73,15 @@ class _BugReportDialogState extends State<BugReportDialog> {
           _isSuccess = result.success;
           if (result.success) {
             _resultMessage =
-                'Email opened! Please send the pre-filled bug report. Thank you!';
+                'File downloaded/ready! Opening email to contact@divine.video - please attach the file.';
           } else {
-            _resultMessage = 'Failed to open email: ${result.error}';
+            _resultMessage = 'Failed to create bug report: ${result.error}';
           }
         });
 
         // Close dialog after delay if successful
         if (result.success) {
-          _closeTimer = Timer(const Duration(seconds: 2), () {
+          _closeTimer = Timer(const Duration(seconds: 3), () {
             if (!_isDisposed && mounted) {
               Navigator.of(context).pop();
             }

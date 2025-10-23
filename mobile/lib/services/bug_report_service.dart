@@ -210,61 +210,190 @@ class BugReportService {
     }
   }
 
-  /// Send bug report via email using the system's default email client
+  /// Send bug report via email by creating a file attachment
   Future<BugReportResult> sendBugReportViaEmail(BugReportData data) async {
     try {
-      Log.info('Opening email client for bug report ${data.reportId}',
+      Log.info('Creating bug report file for email ${data.reportId}',
           category: LogCategory.system);
 
       // Sanitize sensitive data before sending
       final sanitizedData = sanitizeSensitiveData(data);
 
-      // Create email subject
-      final subject = Uri.encodeComponent(
-        'OpenVine Bug Report: ${sanitizedData.reportId}',
-      );
+      // Get package info for metadata
+      final packageInfo = await PackageInfo.fromPlatform();
+      final appVersion = '${packageInfo.version}+${packageInfo.buildNumber}';
 
-      // Create email body with formatted report
-      final body = Uri.encodeComponent(
-        sanitizedData.toFormattedReport(),
-      );
-
-      // Construct mailto URL
-      final emailUrl = 'mailto:${BugReportConfig.supportEmail}?subject=$subject&body=$body';
-
-      // Try to launch email client
-      final uri = Uri.parse(emailUrl);
-      final canLaunch = await canLaunchUrl(uri);
-
-      if (canLaunch) {
-        final launched = await launchUrl(uri);
-        if (launched) {
-          Log.info('Email client opened successfully', category: LogCategory.system);
-          return BugReportResult(
-            success: true,
-            reportId: data.reportId,
-            timestamp: DateTime.now(),
-          );
-        } else {
-          Log.warning('Failed to launch email client', category: LogCategory.system);
-          return BugReportResult.failure(
-            'Could not open email client',
-            reportId: data.reportId,
-          );
+      // Build bug report file content with header
+      final buffer = StringBuffer();
+      buffer.writeln('OpenVine Bug Report');
+      buffer.writeln('═' * 80);
+      buffer.writeln('Report ID: ${sanitizedData.reportId}');
+      buffer.writeln('Timestamp: ${sanitizedData.timestamp.toIso8601String()}');
+      buffer.writeln('App Version: $appVersion');
+      if (sanitizedData.currentScreen != null) {
+        buffer.writeln('Current Screen: ${sanitizedData.currentScreen}');
+      }
+      if (sanitizedData.userPubkey != null) {
+        buffer.writeln('User Pubkey: ${sanitizedData.userPubkey}');
+      }
+      buffer.writeln('═' * 80);
+      buffer.writeln();
+      buffer.writeln('User Description:');
+      buffer.writeln(sanitizedData.userDescription);
+      buffer.writeln();
+      buffer.writeln('═' * 80);
+      buffer.writeln('Device Information:');
+      buffer.writeln(const JsonEncoder.withIndent('  ').convert(sanitizedData.deviceInfo));
+      buffer.writeln();
+      buffer.writeln('═' * 80);
+      buffer.writeln('Recent Logs (${sanitizedData.recentLogs.length} entries):');
+      for (final log in sanitizedData.recentLogs) {
+        buffer.writeln('[${log.timestamp.toIso8601String()}] ${log.level.name.toUpperCase()} - ${log.message}');
+        if (log.error != null) {
+          buffer.writeln('  Error: ${log.error}');
         }
+        if (log.stackTrace != null) {
+          buffer.writeln('  Stack: ${log.stackTrace}');
+        }
+      }
+      if (sanitizedData.errorCounts.isNotEmpty) {
+        buffer.writeln();
+        buffer.writeln('═' * 80);
+        buffer.writeln('Error Counts:');
+        sanitizedData.errorCounts.forEach((key, value) {
+          buffer.writeln('  $key: $value');
+        });
+      }
+
+      final content = buffer.toString();
+      final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
+      final fileName = 'openvine_bug_report_${sanitizedData.reportId}_$timestamp.txt';
+
+      // Platform-specific sharing
+      if (kIsWeb) {
+        // Web: Download the file
+        return _sendBugReportWeb(content, fileName, data.reportId);
       } else {
-        Log.warning('No email client available on device', category: LogCategory.system);
+        // Native: Share via system dialog (user can choose email)
+        return _sendBugReportNative(content, fileName, data.reportId);
+      }
+    } catch (e, stackTrace) {
+      Log.error('Exception while creating bug report file: $e',
+          category: LogCategory.system, error: e, stackTrace: stackTrace);
+      return BugReportResult.failure(
+        'Failed to create bug report: $e',
+        reportId: data.reportId,
+      );
+    }
+  }
+
+  /// Send bug report on web platform by downloading the file
+  BugReportResult _sendBugReportWeb(String content, String fileName, String reportId) {
+    try {
+      final bytes = utf8.encode(content);
+      final blob = html.Blob([bytes], 'text/plain');
+      final url = html.Url.createObjectUrlFromBlob(blob);
+
+      html.AnchorElement(href: url)
+        ..setAttribute('download', fileName)
+        ..click();
+
+      html.Url.revokeObjectUrl(url);
+
+      final sizeMB = (bytes.length / (1024 * 1024)).toStringAsFixed(2);
+      Log.info('Bug report downloaded: $fileName ($sizeMB MB)',
+          category: LogCategory.system);
+
+      // Open mailto: link to make it easier for user
+      _openEmailClient(reportId, fileName);
+
+      return BugReportResult(
+        success: true,
+        reportId: reportId,
+        timestamp: DateTime.now(),
+      );
+    } catch (e, stackTrace) {
+      Log.error('Failed to download bug report on web: $e',
+          category: LogCategory.system, error: e, stackTrace: stackTrace);
+      return BugReportResult.failure(
+        'Failed to download bug report: $e',
+        reportId: reportId,
+      );
+    }
+  }
+
+  /// Open email client with pre-filled bug report details
+  Future<void> _openEmailClient(String reportId, String fileName) async {
+    try {
+      final subject = Uri.encodeComponent('OpenVine Bug Report $reportId');
+      final body = Uri.encodeComponent(
+        'Please attach the downloaded file: $fileName\n\n'
+        'Report ID: $reportId\n\n'
+        'Describe what happened:\n\n',
+      );
+      final mailtoUrl = 'mailto:${BugReportConfig.supportEmail}?subject=$subject&body=$body';
+      final uri = Uri.parse(mailtoUrl);
+
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+        Log.info('Opened email client', category: LogCategory.system);
+      }
+    } catch (e) {
+      Log.warning('Could not open email client: $e', category: LogCategory.system);
+    }
+  }
+
+  /// Send bug report on native platforms by sharing the file
+  Future<BugReportResult> _sendBugReportNative(String content, String fileName, String reportId) async {
+    try {
+      // Get temporary directory
+      final tempDir = await getTemporaryDirectory();
+      final filePath = '${tempDir.path}/$fileName';
+
+      // Write to file
+      final file = File(filePath);
+      await file.writeAsString(content);
+
+      final fileSizeMB = (await file.length() / (1024 * 1024)).toStringAsFixed(2);
+      Log.info('Bug report file created: $filePath ($fileSizeMB MB)',
+          category: LogCategory.system);
+
+      // Share the file with instructions
+      final result = await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(filePath)],
+          subject: 'OpenVine Bug Report',
+          text: 'Please email this bug report to ${BugReportConfig.supportEmail}\n\nReport ID: $reportId',
+        ),
+      );
+
+      if (result.status == ShareResultStatus.success) {
+        Log.info('Bug report shared successfully', category: LogCategory.system);
+        return BugReportResult(
+          success: true,
+          reportId: reportId,
+          timestamp: DateTime.now(),
+        );
+      } else if (result.status == ShareResultStatus.dismissed) {
+        Log.info('Bug report sharing was dismissed', category: LogCategory.system);
         return BugReportResult.failure(
-          'No email client found. Please install an email app.',
-          reportId: data.reportId,
+          'Sharing was cancelled',
+          reportId: reportId,
+        );
+      } else {
+        Log.warning('Bug report sharing failed: ${result.status}',
+            category: LogCategory.system);
+        return BugReportResult.failure(
+          'Failed to share bug report',
+          reportId: reportId,
         );
       }
     } catch (e, stackTrace) {
-      Log.error('Exception while opening email client: $e',
+      Log.error('Failed to share bug report on native platform: $e',
           category: LogCategory.system, error: e, stackTrace: stackTrace);
       return BugReportResult.failure(
-        'Failed to open email: $e',
-        reportId: data.reportId,
+        'Failed to share bug report: $e',
+        reportId: reportId,
       );
     }
   }

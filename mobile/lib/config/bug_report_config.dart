@@ -11,7 +11,7 @@ class BugReportConfig {
       '78a5c21b5166dc1474b64ddf7454bf79e6b5d6b4a77148593bf1e866b73c2738';
 
   /// Email address for receiving bug reports
-  static const String supportEmail = 'bugs@openvine.co';
+  static const String supportEmail = 'contact@divine.video';
 
   /// Maximum log entries to include in bug report
   static const int maxLogEntries = 5000;
