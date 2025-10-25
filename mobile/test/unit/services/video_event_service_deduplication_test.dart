@@ -77,6 +77,7 @@ void main() {
       await eventStreamController.close();
       // Don't dispose - it calls unsubscribeFromVideoFeed which notifies listeners
       // videoEventService.dispose();
+      reset(mockNostrService);
     });
 
     test('should not add duplicate events with same ID', () async {

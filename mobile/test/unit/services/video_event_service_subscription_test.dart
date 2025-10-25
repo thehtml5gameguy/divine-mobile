@@ -86,6 +86,7 @@ void main() {
 
     tearDown(() async {
       await eventStreamController.close();
+      reset(mockNostrService);
     });
 
     test('should allow different subscriptions with different parameters',

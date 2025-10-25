@@ -52,6 +52,9 @@ void main() {
 
     tearDown(() {
       socialService.dispose();
+      reset(mockNostrService);
+      reset(mockAuthService);
+      reset(mockSubscriptionManager);
     });
 
     group('postComment method', () {
