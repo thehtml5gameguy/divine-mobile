@@ -41,7 +41,6 @@ void main() {
           videoEventServiceProvider.overrideWithValue(mockVideoEventService),
         ],
       );
-      addTearDown(container.dispose);
 
       // Build widget tree with router
       await tester.pumpWidget(
@@ -93,6 +92,8 @@ void main() {
       expect(pageContext2.value?.type, RouteType.search);
       expect(pageContext2.value?.searchTerm, 'bitcoin');
       expect(pageContext2.value?.videoIndex, 1);
+
+      container.dispose();
     });
 
     testWidgets('Direct URL access to /search/bitcoin loads results', (tester) async {
@@ -102,7 +103,6 @@ void main() {
           videoEventServiceProvider.overrideWithValue(mockVideoEventService),
         ],
       );
-      addTearDown(container.dispose);
 
       await tester.pumpWidget(
         UncontrolledProviderScope(
@@ -126,6 +126,8 @@ void main() {
       final pageContext = container.read(pageContextProvider);
       expect(pageContext.value?.type, RouteType.search);
       expect(pageContext.value?.searchTerm, 'bitcoin');
+
+      container.dispose();
     });
 
     testWidgets('Direct URL access to /search/bitcoin/3 loads video feed',
@@ -136,7 +138,6 @@ void main() {
           videoEventServiceProvider.overrideWithValue(mockVideoEventService),
         ],
       );
-      addTearDown(container.dispose);
 
       await tester.pumpWidget(
         UncontrolledProviderScope(
@@ -155,6 +156,8 @@ void main() {
       expect(pageContext.value?.type, RouteType.search);
       expect(pageContext.value?.searchTerm, 'bitcoin');
       expect(pageContext.value?.videoIndex, 2);
+
+      container.dispose();
     });
 
     testWidgets('Back navigation from /search/bitcoin/1 returns to /search/bitcoin',
@@ -165,7 +168,6 @@ void main() {
           videoEventServiceProvider.overrideWithValue(mockVideoEventService),
         ],
       );
-      addTearDown(container.dispose);
 
       await tester.pumpWidget(
         UncontrolledProviderScope(
@@ -194,6 +196,8 @@ void main() {
 
       final textField = tester.widget<TextField>(find.byType(TextField));
       expect(textField.controller?.text, equals('bitcoin'));
+
+      container.dispose();
     });
 
     testWidgets('Changing search term updates URL', (tester) async {
@@ -203,7 +207,6 @@ void main() {
           videoEventServiceProvider.overrideWithValue(mockVideoEventService),
         ],
       );
-      addTearDown(container.dispose);
 
       await tester.pumpWidget(
         UncontrolledProviderScope(
@@ -239,6 +242,8 @@ void main() {
 
       final pageContext = container.read(pageContextProvider);
       expect(pageContext.value?.searchTerm, 'nostr');
+
+      container.dispose();
     });
   });
 }

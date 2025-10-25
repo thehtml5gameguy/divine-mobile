@@ -35,13 +35,14 @@ void main() {
             nostrServiceProvider.overrideWithValue(mockNostrService),
           ],
         );
-        addTearDown(container.dispose);
 
         // Act
         final isReady = container.read(nostrReadyProvider);
 
         // Assert
         expect(isReady, isTrue);
+
+        container.dispose();
       });
 
       test('should return false when Nostr service is not initialized', () {
@@ -53,13 +54,14 @@ void main() {
             nostrServiceProvider.overrideWithValue(mockNostrService),
           ],
         );
-        addTearDown(container.dispose);
 
         // Act
         final isReady = container.read(nostrReadyProvider);
 
         // Assert
         expect(isReady, isFalse);
+
+        container.dispose();
       });
 
       test('should reactively update when Nostr initialization state changes', () {
@@ -72,7 +74,6 @@ void main() {
             nostrServiceProvider.overrideWithValue(fakeNostrService),
           ],
         );
-        addTearDown(container.dispose);
 
         final states = <bool>[];
         container.listen(
@@ -92,6 +93,8 @@ void main() {
         // Assert: Should emit true
         expect(container.read(nostrReadyProvider), isTrue);
         expect(states, equals([true]));
+
+        container.dispose();
       });
     });
 
@@ -106,7 +109,6 @@ void main() {
             appForegroundProvider.overrideWith(_FakeAppForeground.new),
           ],
         );
-        addTearDown(container.dispose);
 
         // Set foreground state after initialization (default is already true)
         container.read(appForegroundProvider.notifier).setForeground(true);
@@ -116,6 +118,8 @@ void main() {
 
         // Assert
         expect(isReady, isTrue);
+
+        container.dispose();
       });
 
       test('should return false when app is backgrounded even if Nostr is ready', () {
@@ -128,7 +132,6 @@ void main() {
             appForegroundProvider.overrideWith(_FakeAppForeground.new),
           ],
         );
-        addTearDown(container.dispose);
 
         // Set background state after initialization
         container.read(appForegroundProvider.notifier).setForeground(false);
@@ -139,6 +142,8 @@ void main() {
         // Assert
         expect(isReady, isFalse,
             reason: 'App should not be ready when backgrounded');
+
+        container.dispose();
       });
 
       test('should return false when Nostr is not initialized even if foregrounded', () {
@@ -151,7 +156,6 @@ void main() {
             appForegroundProvider.overrideWith(_FakeAppForeground.new),
           ],
         );
-        addTearDown(container.dispose);
 
         // Set foreground state after initialization (default is already true)
         container.read(appForegroundProvider.notifier).setForeground(true);
@@ -162,6 +166,8 @@ void main() {
         // Assert
         expect(isReady, isFalse,
             reason: 'App should not be ready when Nostr not initialized');
+
+        container.dispose();
       });
 
       test('should return false when both are not ready', () {
@@ -174,7 +180,6 @@ void main() {
             appForegroundProvider.overrideWith(_FakeAppForeground.new),
           ],
         );
-        addTearDown(container.dispose);
 
         // Set background state after initialization
         container.read(appForegroundProvider.notifier).setForeground(false);
@@ -184,6 +189,8 @@ void main() {
 
         // Assert
         expect(isReady, isFalse);
+
+        container.dispose();
       });
 
       test('should reactively update when foreground state changes', () {
@@ -196,7 +203,6 @@ void main() {
             appForegroundProvider.overrideWith(_FakeAppForeground.new),
           ],
         );
-        addTearDown(container.dispose);
 
         // Set initial background state
         container.read(appForegroundProvider.notifier).setForeground(false);
@@ -209,6 +215,8 @@ void main() {
 
         // Assert: Should now be ready
         expect(container.read(appReadyProvider), isTrue);
+
+        container.dispose();
       });
     });
 
@@ -225,7 +233,6 @@ void main() {
             }),
           ],
         );
-        addTearDown(container.dispose);
 
         // Wait for the stream provider to get the value by reading it once
         // This forces the provider to subscribe and get the value
@@ -240,6 +247,8 @@ void main() {
         // But if still loading, that's also valid behavior (returns false)
         expect(isActive == true || container.read(pageContextProvider).isLoading, isTrue,
             reason: 'Should be true when route is explore, or still loading');
+
+        container.dispose();
       });
 
       test('should return false when route is home', () {
@@ -253,7 +262,6 @@ void main() {
             }),
           ],
         );
-        addTearDown(container.dispose);
 
         // Force provider to load
         final _ = container.read(pageContextProvider);
@@ -263,6 +271,8 @@ void main() {
 
         // Assert - should be false (either because it's home route, or because still loading)
         expect(isActive, isFalse);
+
+        container.dispose();
       });
 
       test('should return false when route is profile', () {
@@ -280,7 +290,6 @@ void main() {
             }),
           ],
         );
-        addTearDown(container.dispose);
 
         // Force provider to load
         final _ = container.read(pageContextProvider);
@@ -290,6 +299,8 @@ void main() {
 
         // Assert
         expect(isActive, isFalse);
+
+        container.dispose();
       });
 
       test('should return false when pageContext is loading', () {
@@ -299,7 +310,6 @@ void main() {
             pageContextProvider.overrideWith((ref) => const Stream.empty()),
           ],
         );
-        addTearDown(container.dispose);
 
         // Act
         final isActive = container.read(isDiscoveryTabActiveProvider);
@@ -307,6 +317,8 @@ void main() {
         // Assert
         expect(isActive, isFalse,
             reason: 'Should be false while loading route context');
+
+        container.dispose();
       });
     });
   });

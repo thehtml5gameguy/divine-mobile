@@ -74,6 +74,10 @@ void main() {
       // Clear any pending verification state
       clearInteractions(mockSocialService);
       clearInteractions(mockAuthService);
+      reset(mockSocialService);
+      reset(mockAuthService);
+      reset(mockNostrService);
+      reset(mockSubscriptionManager);
     });
 
     CommentsNotifier createNotifier() {

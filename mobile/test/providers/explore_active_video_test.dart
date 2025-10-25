@@ -64,7 +64,6 @@ void main() {
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       // Listen for page context to be emitted
       final pageContextStates = <AsyncValue<RouteContext>>[];
@@ -101,6 +100,8 @@ void main() {
 
       expect(isVideo0Active, isTrue);
       expect(isVideo1Active, isFalse);
+
+      container.dispose();
     });
 
     test('activeVideoIdProvider returns correct video at index 1', () async {
@@ -118,7 +119,6 @@ void main() {
           ),
         ],
       );
-      addTearDown(container.dispose);
 
       // Listen for streams to emit
       container.listen(pageContextProvider, (previous, next) {}, fireImmediately: true);
@@ -145,6 +145,8 @@ void main() {
       expect(isVideo0Active, isFalse);
       expect(isVideo1Active, isTrue);
       expect(isVideo2Active, isFalse);
+
+      container.dispose();
     });
 
     test('activeVideoIdProvider changes when scrolling from index 0 to 1', () async {
@@ -163,8 +165,6 @@ void main() {
           ),
         ],
       );
-      addTearDown(container.dispose);
-      addTearDown(() => locationController.close());
 
       // Listen for active video changes
       final activeVideoIds = <String?>[];
@@ -201,6 +201,9 @@ void main() {
       print('Active video IDs seen: $activeVideoIds');
       expect(container.read(activeVideoIdProvider), equals('explore-video-1'));
       expect(activeVideoIds, contains('explore-video-1'));
+
+      locationController.close();
+      container.dispose();
     });
 
     test('activeVideoIdProvider returns null in grid mode (no videoIndex)', () async {
@@ -218,8 +221,6 @@ void main() {
           ),
         ],
       );
-      addTearDown(container.dispose);
-      addTearDown(() => locationController.close());
 
       // Listen for active video changes
       final activeVideoIds = <String?>[];
@@ -247,6 +248,9 @@ void main() {
       // Active video should be null (grid mode)
       print('Active video ID in grid mode: ${container.read(activeVideoIdProvider)}');
       expect(container.read(activeVideoIdProvider), isNull);
+
+      locationController.close();
+      container.dispose();
     });
 
   });

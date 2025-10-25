@@ -36,7 +36,6 @@ void main() {
           }),
         ],
       );
-      addTearDown(container.dispose);
 
       // Get initial state - should be stable
       final initialState = await container.read(homeFeedProvider.future);
@@ -66,6 +65,8 @@ void main() {
       expect(newBuildId != initialBuildId, isTrue,
           reason:
               'HomeFeed should rebuild when following list changes, even if count stays same');
+
+      container.dispose();
     });
 
     test('should rebuild home feed when following count increases', () async {
@@ -82,7 +83,6 @@ void main() {
           }),
         ],
       );
-      addTearDown(container.dispose);
 
       // Get initial state
       final initialState = await container.read(homeFeedProvider.future);
@@ -111,6 +111,8 @@ void main() {
       // State should have been rebuilt
       expect(newBuildId != initialBuildId, isTrue,
           reason: 'HomeFeed should rebuild when following count increases');
+
+      container.dispose();
     });
 
     test('should rebuild home feed when following count decreases', () async {
@@ -128,7 +130,6 @@ void main() {
           }),
         ],
       );
-      addTearDown(container.dispose);
 
       // Get initial state
       final initialState = await container.read(homeFeedProvider.future);
@@ -156,6 +157,8 @@ void main() {
       // State should have been rebuilt
       expect(newBuildId != initialBuildId, isTrue,
           reason: 'HomeFeed should rebuild when following count decreases');
+
+      container.dispose();
     });
 
     test('should show empty feed when unfollowing everyone', () async {
@@ -172,7 +175,6 @@ void main() {
           }),
         ],
       );
-      addTearDown(container.dispose);
 
       // Get initial state
       await container.read(homeFeedProvider.future);
@@ -195,6 +197,8 @@ void main() {
       expect(newState.videos, isEmpty,
           reason: 'Home feed should be empty when not following anyone');
       expect(newState.hasMoreContent, isFalse);
+
+      container.dispose();
     });
   });
 }

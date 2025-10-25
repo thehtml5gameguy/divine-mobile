@@ -79,7 +79,6 @@ void main() {
           }),
         ],
       );
-      addTearDown(container.dispose);
 
       // Wait for initialization
       await Future.delayed(const Duration(milliseconds: 200));
@@ -115,6 +114,8 @@ void main() {
         expect(video2Index, greaterThan(video1Index));
         expect(video2Index, greaterThan(video3Index));
       }
+
+      container.dispose();
     });
 
     test('all unseen videos when none are marked seen', () async {
@@ -150,7 +151,6 @@ void main() {
           }),
         ],
       );
-      addTearDown(container.dispose);
 
       await Future.delayed(const Duration(milliseconds: 200));
 
@@ -160,6 +160,8 @@ void main() {
         final feed = feedAsync.value!;
         expect(feed.videos.length, 2);
       }
+
+      container.dispose();
     });
 
     test('all seen videos show in correct order', () async {
@@ -195,7 +197,6 @@ void main() {
           }),
         ],
       );
-      addTearDown(container.dispose);
 
       await Future.delayed(const Duration(milliseconds: 200));
 
@@ -220,6 +221,8 @@ void main() {
         expect(feed.videos[0].id, 'video2'); // More recent
         expect(feed.videos[1].id, 'video1'); // Older
       }
+
+      container.dispose();
     });
   });
 }

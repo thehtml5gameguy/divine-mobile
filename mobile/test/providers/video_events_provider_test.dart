@@ -95,6 +95,7 @@ void main() {
       when(() => mockNostrService.subscribeToEvents(
           filters: any(named: 'filters'))).thenAnswer((invocation) {
         final filters = invocation.namedArguments[#filters] as List<Filter>;
+        expect(filters, isNotEmpty, reason: 'Filters list should contain at least one filter');
         final filter = filters.first;
 
         // Verify filter has correct authors
@@ -123,6 +124,7 @@ void main() {
       when(() => mockNostrService.subscribeToEvents(
           filters: any(named: 'filters'))).thenAnswer((invocation) {
         final filters = invocation.namedArguments[#filters] as List<Filter>;
+        expect(filters, isNotEmpty, reason: 'Filters list should contain at least one filter for classic vines fallback');
         final filter = filters.first;
 
         // Should use classic vines pubkey as fallback

@@ -611,72 +611,51 @@ class _ProfileScreenRouterState extends ConsumerState<ProfileScreenRouter>
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            Column(
-              children: [
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: profileStatsAsync.isLoading
-                      ? const Text(
-                          '—',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        )
-                      : Text(
-                          _formatCount(
-                              profileStatsAsync.value?.totalViews ?? 0),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                ),
-                Text(
-                  'Total Views',
-                  style: TextStyle(
-                    color: Colors.grey.shade300,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
+            _buildStatValue(
+              profileStatsAsync.value?.totalViews ?? 0,
+              'Total Views',
+              profileStatsAsync.isLoading,
             ),
-            Column(
-              children: [
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: profileStatsAsync.isLoading
-                      ? const Text(
-                          '—',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        )
-                      : Text(
-                          _formatCount(
-                              profileStatsAsync.value?.totalLikes ?? 0),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                ),
-                Text(
-                  'Total Likes',
-                  style: TextStyle(
-                    color: Colors.grey.shade300,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
+            _buildStatValue(
+              profileStatsAsync.value?.totalLikes ?? 0,
+              'Total Likes',
+              profileStatsAsync.isLoading,
             ),
           ],
         ),
+      );
+
+  /// Helper to build a stat value column with animated loading state
+  Widget _buildStatValue(int count, String label, bool isLoading) => Column(
+        children: [
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: isLoading
+                ? const Text(
+                    '—',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  )
+                : Text(
+                    _formatCount(count),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey.shade300,
+              fontSize: 12,
+            ),
+          ),
+        ],
       );
 
   Widget _buildActionButtons(

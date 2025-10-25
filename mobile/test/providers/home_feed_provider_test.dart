@@ -144,7 +144,6 @@ void main() {
           }),
         ],
       );
-      addTearDown(testContainer.dispose);
 
       // Act: Get initial feed
       final initialFeed = await testContainer.read(homeFeedProvider.future);
@@ -172,7 +171,6 @@ void main() {
           }),
         ],
       );
-      addTearDown(updatedContainer.dispose);
 
       final updatedFeed = await updatedContainer.read(homeFeedProvider.future);
 
@@ -186,6 +184,9 @@ void main() {
         any,
         limit: anyNamed('limit'),
       ));
+
+      updatedContainer.dispose();
+      testContainer.dispose();
     });
 
     test('should subscribe to videos from followed authors', () async {
@@ -233,7 +234,6 @@ void main() {
           }),
         ],
       );
-      addTearDown(testContainer.dispose);
 
       // Act
       final result = await testContainer.read(homeFeedProvider.future);
@@ -248,6 +248,8 @@ void main() {
         followingPubkeys,
         limit: 100,
       )).called(1);
+
+      testContainer.dispose();
     });
 
     test('should sort videos by creation time (newest first)', () async {
@@ -292,7 +294,6 @@ void main() {
           }),
         ],
       );
-      addTearDown(testContainer.dispose);
 
       // Act
       final result = await testContainer.read(homeFeedProvider.future);
@@ -303,6 +304,8 @@ void main() {
           result.videos[0].createdAt, greaterThan(result.videos[1].createdAt));
       expect(result.videos[0].content, equals('Newer video'));
       expect(result.videos[1].content, equals('Older video'));
+
+      testContainer.dispose();
     });
 
     test('should handle load more when user is following people', () async {
@@ -341,7 +344,6 @@ void main() {
           }),
         ],
       );
-      addTearDown(testContainer.dispose);
 
       // Act
       final result = await testContainer.read(homeFeedProvider.future);
@@ -356,6 +358,8 @@ void main() {
         followingPubkeys,
         limit: 100,
       )).called(1);
+
+      testContainer.dispose();
     });
 
     test('should handle refresh functionality', () async {
@@ -379,7 +383,6 @@ void main() {
           }),
         ],
       );
-      addTearDown(testContainer.dispose);
 
       // Act
       await testContainer.read(homeFeedProvider.future);
@@ -390,6 +393,8 @@ void main() {
         followingPubkeys,
         limit: 100,
       )).called(2); // Once on initial load, once on refresh
+
+      testContainer.dispose();
     });
 
     test('should handle empty video list correctly', () async {

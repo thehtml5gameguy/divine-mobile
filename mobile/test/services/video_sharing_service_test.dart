@@ -145,6 +145,7 @@ void main() {
       final result = await service.getShareableUsers(limit: 20);
 
       // Assert
+      expect(result, isNotEmpty, reason: 'Should return at least one shareable user from following list');
       // Recently shared should appear first
       expect(result.first.pubkey, followingPubkeys[0]);
     });

@@ -380,12 +380,14 @@ void main() {
       fakeNostrService.injectEvent(followEvent);
       await Future.delayed(Duration(milliseconds: 200));
 
+      expect(service.notifications, isNotEmpty, reason: 'Should have at least one notification after follow event');
       final notificationId = service.notifications.first.id;
 
       // Act
       await service.markAsRead(notificationId);
 
       // Assert
+      expect(service.notifications, isNotEmpty, reason: 'Notifications should still exist after marking as read');
       expect(service.notifications.first.isRead, isTrue);
       expect(service.unreadCount, 0);
     });
@@ -495,6 +497,7 @@ void main() {
       fakeNostrService.injectEvent(followEvent1);
       await Future.delayed(Duration(milliseconds: 200));
 
+      expect(service.notifications, isNotEmpty, reason: 'Should have notification for first follow event');
       expect(service.notifications.last.actorName, 'NameValue');
 
       // Test 2: displayName is used when name is missing

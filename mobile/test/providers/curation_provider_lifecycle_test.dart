@@ -80,7 +80,6 @@ void main() {
           analyticsApiServiceProvider.overrideWithValue(mockAnalyticsApiService),
         ],
       );
-      addTearDown(container.dispose);
 
       // ACT: Read curation provider
       final curationState = container.read(curationProvider);
@@ -96,6 +95,8 @@ void main() {
 
       // This test verifies the annotation is present and provider is marked as keepAlive
       // In production, this prevents the "0 videos" bug when navigating back to Editor's Pick
+
+      container.dispose();
     });
 
     test(
@@ -111,7 +112,6 @@ void main() {
           analyticsApiServiceProvider.overrideWithValue(mockAnalyticsApiService),
         ],
       );
-      addTearDown(container.dispose);
 
       // ACT: Read initial state
       final initialState = container.read(curationProvider);
@@ -131,6 +131,8 @@ void main() {
       // ASSERT: Should be loaded with videos
       expect(loadedState.isLoading, isFalse);
       expect(editorsPicks.length, greaterThan(0));
+
+      container.dispose();
     });
 
     test('curation service initializes with sample data', () {

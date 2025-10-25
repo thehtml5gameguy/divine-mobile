@@ -57,7 +57,6 @@ void main() {
         ),
       ],
     );
-    addTearDown(container.dispose);
 
     // Wait for pageContext to emit using proper listener
     await waitForPageContext(container);
@@ -69,6 +68,8 @@ void main() {
     expect(result.hasValue, isTrue, reason: 'Provider should have data');
     expect(result.value!.videos.length, 1, reason: 'Should select 1 video from author');
     expect(result.value!.videos.first.id, 'test-video-1', reason: 'Should select correct video');
+
+    container.dispose();
   });
 
   test('returns empty when npub not in route', () async {
@@ -79,7 +80,6 @@ void main() {
         ),
       ],
     );
-    addTearDown(container.dispose);
 
     // Wait for pageContext to emit using proper listener
     await waitForPageContext(container);
@@ -88,6 +88,8 @@ void main() {
 
     expect(result.hasValue, isTrue);
     expect(result.value!.videos, isEmpty, reason: 'Should return empty for non-profile routes');
+
+    container.dispose();
   });
 }
 

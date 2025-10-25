@@ -291,6 +291,7 @@ void main() {
       await analyticsService.trackVideoView(video, source: 'unit_test');
 
       // Assert
+      expect(capturedRequests, isNotEmpty, reason: 'Should have captured at least one analytics request');
       final request = capturedRequests.first;
       final bodyData = jsonDecode(request.body);
 

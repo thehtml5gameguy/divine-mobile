@@ -15,7 +15,6 @@ void main() {
     test('loads initial page of videos', () async {
       // ARRANGE: Create provider container
       final container = ProviderContainer();
-      addTearDown(container.dispose);
 
       // ACT: Read the profile feed provider (this should trigger initial load)
       final asyncValue = await container.read(profileFeedProvider(testUserId).future);
@@ -24,12 +23,13 @@ void main() {
       expect(asyncValue, isA<VideoFeedState>());
       expect(asyncValue.videos, isA<List<VideoEvent>>());
       expect(asyncValue.isLoadingMore, isFalse);
+
+      container.dispose();
     });
 
     test('loadMore() fetches next page with cursor', () async {
       // ARRANGE: Setup container
       final container = ProviderContainer();
-      addTearDown(container.dispose);
 
       // Load initial page
       final initialState = await container.read(profileFeedProvider(testUserId).future);
@@ -43,12 +43,13 @@ void main() {
       // Either we loaded more videos, or we're at the end (hasMoreContent = false)
       expect(newState.videos.length >= initialCount, isTrue);
       expect(newState.isLoadingMore, isFalse);
+
+      container.dispose();
     });
 
     test('loadMore() appends to existing video list', () async {
       // ARRANGE
       final container = ProviderContainer();
-      addTearDown(container.dispose);
 
       // Load initial page and capture video IDs
       final initialState = await container.read(profileFeedProvider(testUserId).future);
@@ -65,12 +66,13 @@ void main() {
       for (final id in initialVideoIds) {
         expect(newVideoIds.contains(id), isTrue, reason: 'Initial video $id missing after loadMore');
       }
+
+      container.dispose();
     });
 
     test('hasMoreContent flag prevents redundant loads when false', () async {
       // ARRANGE
       final container = ProviderContainer();
-      addTearDown(container.dispose);
 
       // Load initial page
       var state = await container.read(profileFeedProvider(testUserId).future);
@@ -92,12 +94,13 @@ void main() {
         // ASSERT: Should not have loaded more videos
         expect(state.videos.length, equals(videoCountBefore));
       }
+
+      container.dispose();
     });
 
     test('prevents duplicate loads while loading', () async {
       // ARRANGE
       final container = ProviderContainer();
-      addTearDown(container.dispose);
 
       await container.read(profileFeedProvider(testUserId).future);
 
@@ -117,12 +120,13 @@ void main() {
       final videoIds = state.videos.map((v) => v.id).toList();
       final uniqueIds = videoIds.toSet();
       expect(videoIds.length, equals(uniqueIds.length), reason: 'Found duplicate videos in feed');
+
+      container.dispose();
     });
 
     test('tracks cursor per user to prevent backtracking', () async {
       // ARRANGE
       final container = ProviderContainer();
-      addTearDown(container.dispose);
 
       const userId1 = testUserId;
       const userId2 = '82341f882b6eabcd2ba7f1ef90aad961cf074af15b9ef44a09f9d2a8fbfbe6a2'; // jack
@@ -155,6 +159,8 @@ void main() {
 
       // User 1 should have potentially loaded more content
       expect(state1AfterSecondLoad.videos.length >= videos1BeforeSecondLoad, isTrue);
+
+      container.dispose();
     });
   });
 }

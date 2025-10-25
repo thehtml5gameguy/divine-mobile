@@ -208,7 +208,21 @@ class NostrService implements INostrService {
   bool get isDisposed => _isDisposed;
 
   @override
-  List<String> get connectedRelays => _embeddedRelay?.connectedRelays ?? [];
+  List<String> get connectedRelays {
+    final relays = <String>[];
+
+    // Always include the embedded relay if it's initialized (on non-web platforms)
+    if (!kIsWeb && _embeddedRelay != null && _embeddedRelay!.isInitialized) {
+      relays.add('ws://localhost:7447');
+    }
+
+    // Add external relays managed by the embedded relay
+    if (_embeddedRelay != null) {
+      relays.addAll(_embeddedRelay!.connectedRelays);
+    }
+
+    return relays;
+  }
 
   @override
   String? get publicKey => _keyManager.publicKey;
@@ -975,9 +989,17 @@ class NostrService implements INostrService {
   }
 
   @override
-  String get primaryRelay => _configuredRelays.isNotEmpty
-      ? _configuredRelays.first
-      : 'wss://relay3.openvine.co';
+  String get primaryRelay {
+    // The embedded relay is ALWAYS the primary relay in our architecture
+    // External relays are managed by the embedded relay and are secondary
+    if (!kIsWeb && _embeddedRelay != null && _embeddedRelay!.isInitialized) {
+      return 'ws://localhost:7447';
+    }
+    // Fallback for web or when embedded relay unavailable
+    return _configuredRelays.isNotEmpty
+        ? _configuredRelays.first
+        : 'wss://relay3.openvine.co';
+  }
 
   /// Get embedded relay statistics for performance monitoring
   Future<Map<String, dynamic>?> getRelayStats() async {
