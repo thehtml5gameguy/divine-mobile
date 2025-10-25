@@ -204,9 +204,14 @@ class HomeFeed extends _$HomeFeed {
     // DEBUG: Dump all events with cdn.divine.video thumbnails
     videoEventService.debugDumpCdnDivineVideoThumbnails();
 
-    // Sort by creation time (newest first) without reordering based on seen status
-    // This preserves stable order and prevents videos from jumping around
-    followingVideos.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    // Sort by creation time (newest first) with stable secondary sort by ID
+    // This prevents videos with identical timestamps from jumping around
+    followingVideos.sort((a, b) {
+      final timeCompare = b.createdAt.compareTo(a.createdAt);
+      if (timeCompare != 0) return timeCompare;
+      // Secondary sort by ID for stable ordering when timestamps match
+      return a.id.compareTo(b.id);
+    });
 
     Log.info(
       '🏠 HomeFeed: Sorted ${followingVideos.length} videos by creation time (newest first)',
