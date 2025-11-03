@@ -93,7 +93,7 @@ class ComposableVideoGrid extends ConsumerWidget {
       child: Container(
         decoration: BoxDecoration(
           color: VineTheme.cardBackground,
-          borderRadius: BorderRadius.circular(0),
+          borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.3),
@@ -103,7 +103,7 @@ class ComposableVideoGrid extends ConsumerWidget {
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(0),
+          borderRadius: BorderRadius.circular(10),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
