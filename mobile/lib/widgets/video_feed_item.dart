@@ -18,6 +18,7 @@ import 'package:openvine/router/page_context_provider.dart';
 import 'package:openvine/router/route_utils.dart';
 import 'package:openvine/screens/comments_screen.dart';
 import 'package:openvine/services/visibility_tracker.dart';
+import 'package:openvine/theme/vine_theme.dart';
 import 'package:openvine/ui/overlay_policy.dart';
 import 'package:openvine/widgets/video_thumbnail_widget.dart';
 import 'package:openvine/utils/unified_logger.dart';
@@ -601,6 +602,7 @@ class VideoOverlayActions extends ConsumerWidget {
                     color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    height: 1.3,
                     shadows: [
                       Shadow(
                         offset: Offset(0, 0),
@@ -615,10 +617,10 @@ class VideoOverlayActions extends ConsumerWidget {
                     ],
                   ),
                   hashtagStyle: TextStyle(
-                    color: Colors.blue[300],
+                    color: VineTheme.vineGreen,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    decoration: TextDecoration.underline,
+                    height: 1.3,
                     shadows: const [
                       Shadow(
                         offset: Offset(0, 0),
@@ -632,7 +634,7 @@ class VideoOverlayActions extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  maxLines: 2,
+                  maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
