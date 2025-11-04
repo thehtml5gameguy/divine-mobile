@@ -114,7 +114,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             path: '/explore',
             name: 'explore',
             pageBuilder: (ctx, st) => NoTransitionPage(
-              key: const ValueKey('explore-page'),
+              key: st.pageKey,
               child: Navigator(
                 key: _exploreKey,
                 onGenerateRoute: (r) => MaterialPageRoute(
@@ -129,7 +129,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/explore/:index',
             pageBuilder: (ctx, st) => NoTransitionPage(
-              key: const ValueKey('explore-page'),
+              key: st.pageKey,
               child: Navigator(
                 key: _exploreKey,
                 onGenerateRoute: (r) => MaterialPageRoute(
@@ -176,7 +176,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             path: '/search',
             name: 'search',
             pageBuilder: (ctx, st) => NoTransitionPage(
-              key: const ValueKey('search-page'),
+              key: st.pageKey,
               child: Navigator(
                 key: _searchKey,
                 onGenerateRoute: (r) => MaterialPageRoute(
@@ -191,7 +191,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/search/:searchTerm',
             pageBuilder: (ctx, st) => NoTransitionPage(
-              key: const ValueKey('search-page'),
+              key: st.pageKey,
               child: Navigator(
                 key: _searchKey,
                 onGenerateRoute: (r) => MaterialPageRoute(
@@ -206,7 +206,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/search/:searchTerm/:index',
             pageBuilder: (ctx, st) => NoTransitionPage(
-              key: const ValueKey('search-page'),
+              key: st.pageKey,
               child: Navigator(
                 key: _searchKey,
                 onGenerateRoute: (r) => MaterialPageRoute(
@@ -222,7 +222,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             path: '/hashtag/:tag',
             name: 'hashtag',
             pageBuilder: (ctx, st) => NoTransitionPage(
-              key: const ValueKey('hashtag-page'),
+              key: st.pageKey,
               child: Navigator(
                 key: _hashtagKey,
                 onGenerateRoute: (r) => MaterialPageRoute(
@@ -237,7 +237,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/hashtag/:tag/:index',
             pageBuilder: (ctx, st) => NoTransitionPage(
-              key: const ValueKey('hashtag-page'),
+              key: st.pageKey,
               child: Navigator(
                 key: _hashtagKey,
                 onGenerateRoute: (r) => MaterialPageRoute(
