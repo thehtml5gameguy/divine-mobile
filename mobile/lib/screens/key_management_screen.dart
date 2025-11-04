@@ -1,5 +1,5 @@
-// ABOUTME: Key management screen for exporting, replacing, and restoring Nostr keys
-// ABOUTME: Provides secure backup and recovery options for user cryptographic keys
+// ABOUTME: Key management screen for importing, exporting, and backing up Nostr keys
+// ABOUTME: Simple, clear interface focused on user needs with helpful explanations
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -18,14 +18,23 @@ class KeyManagementScreen extends ConsumerStatefulWidget {
 
 class _KeyManagementScreenState extends ConsumerState<KeyManagementScreen> {
   bool _isProcessing = false;
+  final _importController = TextEditingController();
+
+  @override
+  void dispose() {
+    _importController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final keyManager = ref.watch(nostrKeyManagerProvider);
+    final nostrService = ref.watch(nostrServiceProvider);
+    final profileService = ref.watch(userProfileServiceProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Key Management'),
+        title: const Text('Nostr Keys'),
         backgroundColor: VineTheme.vineGreen,
         foregroundColor: VineTheme.whiteText,
       ),
@@ -33,417 +42,411 @@ class _KeyManagementScreenState extends ConsumerState<KeyManagementScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Warning banner
-          _buildWarningBanner(),
+          // What are Nostr keys explanation
+          _buildExplanationCard(),
           const SizedBox(height: 24),
 
-          // Export nsec card
-          _buildExportCard(context, keyManager),
-          const SizedBox(height: 16),
+          // Import existing key section
+          _buildImportSection(context, keyManager, nostrService, profileService),
+          const SizedBox(height: 24),
 
-          // Replace key card
-          _buildReplaceKeyCard(context, keyManager),
-          const SizedBox(height: 16),
-
-          // Restore backup card
-          if (keyManager.hasBackup) ...[
-            _buildRestoreCard(context, keyManager),
-            const SizedBox(height: 16),
-          ],
-
-          // Clear backup card
-          if (keyManager.hasBackup) ...[
-            _buildClearBackupCard(context, keyManager),
-          ],
+          // Export/Backup section
+          _buildExportSection(context, keyManager),
         ],
       ),
     );
   }
 
-  Widget _buildWarningBanner() {
+  Widget _buildExplanationCard() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.red.shade900.withValues(alpha: 0.3),
-        border: Border.all(color: Colors.red.shade700),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.warning, color: Colors.red.shade300, size: 32),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Security Warning',
-                  style: TextStyle(
-                    color: Colors.red.shade300,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Your private key (nsec) grants full access to your account. Never share it with anyone.',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildExportCard(BuildContext context, NostrKeyManager keyManager) {
-    return _buildCard(
-      icon: Icons.download,
-      iconColor: VineTheme.vineGreen,
-      title: 'Export Private Key (nsec)',
-      description:
-          'Copy your private key to backup or import into another Nostr app',
-      buttonText: 'Export nsec',
-      onPressed: _isProcessing
-          ? null
-          : () async {
-              try {
-                setState(() => _isProcessing = true);
-                final nsec = keyManager.exportAsNsec();
-
-                // Copy to clipboard
-                await Clipboard.setData(ClipboardData(text: nsec));
-
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('✅ Private key copied to clipboard'),
-                      backgroundColor: VineTheme.vineGreen,
-                      duration: Duration(seconds: 3),
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('❌ Failed to export key: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              } finally {
-                setState(() => _isProcessing = false);
-              }
-            },
-    );
-  }
-
-  Widget _buildReplaceKeyCard(
-      BuildContext context, NostrKeyManager keyManager) {
-    return _buildCard(
-      icon: Icons.refresh,
-      iconColor: Colors.orange,
-      title: 'Replace Key with Backup',
-      description:
-          'Generate a new key and backup your current one. Your old key can be restored later.',
-      buttonText: 'Replace Key',
-      onPressed: _isProcessing
-          ? null
-          : () => _showReplaceKeyDialog(context, keyManager),
-    );
-  }
-
-  Widget _buildRestoreCard(BuildContext context, NostrKeyManager keyManager) {
-    return _buildCard(
-      icon: Icons.restore,
-      iconColor: Colors.blue,
-      title: 'Restore Backup Key',
-      description:
-          'Restore your backed-up key as your active key. Your current key will become the backup.',
-      buttonText: 'Restore Backup',
-      onPressed: _isProcessing
-          ? null
-          : () => _showRestoreDialog(context, keyManager),
-    );
-  }
-
-  Widget _buildClearBackupCard(
-      BuildContext context, NostrKeyManager keyManager) {
-    return _buildCard(
-      icon: Icons.delete_forever,
-      iconColor: Colors.red,
-      title: 'Clear Backup',
-      description:
-          'Permanently delete your backup key. This cannot be undone.',
-      buttonText: 'Clear Backup',
-      onPressed:
-          _isProcessing ? null : () => _showClearBackupDialog(context, keyManager),
-    );
-  }
-
-  Widget _buildCard({
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    required String description,
-    required String buttonText,
-    required VoidCallback? onPressed,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: VineTheme.cardBackground,
+        color: VineTheme.vineGreen.withValues(alpha: 0.15),
+        border: Border.all(color: VineTheme.vineGreen.withValues(alpha: 0.3)),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade800),
       ),
-      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: iconColor, size: 32),
+              Icon(Icons.info_outline, color: VineTheme.vineGreen, size: 24),
               const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+              const Text(
+                'What are Nostr keys?',
+                style: TextStyle(
+                  color: VineTheme.vineGreen,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Text(
-            description,
-            style: const TextStyle(
+          const Text(
+            'Your Nostr identity is a cryptographic key pair:\n\n'
+            '• Your public key (npub) is like your username - share it freely\n'
+            '• Your private key (nsec) is like your password - keep it secret!\n\n'
+            'Your nsec lets you access your account on any Nostr app.',
+            style: TextStyle(
               color: Colors.white70,
               fontSize: 14,
-              height: 1.4,
+              height: 1.5,
             ),
           ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: onPressed,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: iconColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImportSection(
+    BuildContext context,
+    NostrKeyManager keyManager,
+    nostrService,
+    profileService,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Import Existing Key',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Already have a Nostr account? Paste your private key (nsec) to access it here.',
+          style: TextStyle(
+            color: Colors.white60,
+            fontSize: 14,
+            height: 1.4,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          decoration: BoxDecoration(
+            color: VineTheme.cardBackground,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade800),
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: _importController,
+                style: const TextStyle(color: Colors.white, fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: 'nsec1...',
+                  hintStyle: TextStyle(color: Colors.grey.shade600),
+                  filled: true,
+                  fillColor: Colors.black,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey.shade700),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey.shade700),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: VineTheme.vineGreen),
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(Icons.paste, color: Colors.grey.shade400),
+                    onPressed: () async {
+                      final data = await Clipboard.getData('text/plain');
+                      if (data?.text != null) {
+                        _importController.text = data!.text!.trim();
+                      }
+                    },
+                  ),
+                ),
+                maxLines: 3,
+                enabled: !_isProcessing,
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isProcessing
+                      ? null
+                      : () => _importKey(context, keyManager, nostrService, profileService),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: VineTheme.vineGreen,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: _isProcessing
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'Import Key',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
               ),
-              child: _isProcessing
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade900.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange.shade700.withValues(alpha: 0.5)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.warning_amber, color: Colors.orange.shade300, size: 20),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'This will replace your current key!',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                        ),
                       ),
-                    )
-                  : Text(
-                      buttonText,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExportSection(BuildContext context, NostrKeyManager keyManager) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Backup Your Key',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Save your private key (nsec) to use your account in other Nostr apps.',
+          style: TextStyle(
+            color: Colors.white60,
+            fontSize: 14,
+            height: 1.4,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          decoration: BoxDecoration(
+            color: VineTheme.cardBackground,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade800),
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _isProcessing
+                      ? null
+                      : () => _exportKey(context, keyManager),
+                  icon: const Icon(Icons.copy, size: 20),
+                  label: const Text(
+                    'Copy My Private Key (nsec)',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: VineTheme.vineGreen,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade900.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red.shade700.withValues(alpha: 0.5)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.security, color: Colors.red.shade300, size: 20),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Never share your nsec with anyone!',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
-            ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  void _showReplaceKeyDialog(
-      BuildContext context, NostrKeyManager keyManager) {
-    showDialog(
+  Future<void> _importKey(
+    BuildContext context,
+    NostrKeyManager keyManager,
+    nostrService,
+    profileService,
+  ) async {
+    final nsec = _importController.text.trim();
+
+    if (nsec.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please paste your private key'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (!nsec.startsWith('nsec1')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Invalid key format. Must start with "nsec1"'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: VineTheme.cardBackground,
         title: const Text(
-          'Replace Key with Backup?',
+          'Import This Key?',
           style: TextStyle(color: Colors.white),
         ),
         content: const Text(
-          'This will:\n'
-          '• Generate a new private key\n'
-          '• Backup your current key securely\n'
-          '• You can restore your old key later\n\n'
-          'Your current identity will be replaced with a new one.',
+          'This will replace your current identity with the imported one.\n\n'
+          'Your current key will be lost unless you backed it up first.',
           style: TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context, false),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
+              backgroundColor: VineTheme.vineGreen,
             ),
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                setState(() => _isProcessing = true);
-                await keyManager.replaceKeyWithBackup();
-
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('✅ Key replaced successfully'),
-                      backgroundColor: VineTheme.vineGreen,
-                    ),
-                  );
-                  setState(() {}); // Refresh UI to show restore option
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('❌ Failed to replace key: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              } finally {
-                setState(() => _isProcessing = false);
-              }
-            },
-            child: const Text('Replace Key'),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Import'),
           ),
         ],
       ),
     );
+
+    if (confirmed != true) return;
+
+    setState(() => _isProcessing = true);
+
+    try {
+      await keyManager.importFromNsec(
+        nsec,
+        nostrService: nostrService,
+        profileService: profileService,
+      );
+
+      if (context.mounted) {
+        _importController.clear();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Key imported successfully!'),
+            backgroundColor: VineTheme.vineGreen,
+            duration: Duration(seconds: 3),
+          ),
+        );
+
+        // Pop back to settings after successful import
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to import key: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
   }
 
-  void _showRestoreDialog(BuildContext context, NostrKeyManager keyManager) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: VineTheme.cardBackground,
-        title: const Text(
-          'Restore Backup Key?',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: const Text(
-          'This will:\n'
-          '• Restore your backed-up key as active\n'
-          '• Backup your current key\n'
-          '• Switch back to your previous identity',
-          style: TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-            ),
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                setState(() => _isProcessing = true);
-                await keyManager.restoreFromBackup();
+  Future<void> _exportKey(
+    BuildContext context,
+    NostrKeyManager keyManager,
+  ) async {
+    try {
+      final nsec = keyManager.exportAsNsec();
 
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('✅ Backup key restored successfully'),
-                      backgroundColor: VineTheme.vineGreen,
-                    ),
-                  );
-                  setState(() {}); // Refresh UI
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('❌ Failed to restore backup: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              } finally {
-                setState(() => _isProcessing = false);
-              }
-            },
-            child: const Text('Restore'),
-          ),
-        ],
-      ),
-    );
-  }
+      // Copy to clipboard
+      await Clipboard.setData(ClipboardData(text: nsec));
 
-  void _showClearBackupDialog(
-      BuildContext context, NostrKeyManager keyManager) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: VineTheme.cardBackground,
-        title: const Text(
-          'Clear Backup?',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: const Text(
-          'This will permanently delete your backup key.\n\n'
-          'This action cannot be undone.\n\n'
-          'Your active key will remain unchanged.',
-          style: TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Private key copied to clipboard!\n\nStore it somewhere safe.'),
+            backgroundColor: VineTheme.vineGreen,
+            duration: Duration(seconds: 4),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                setState(() => _isProcessing = true);
-                await keyManager.clearBackup();
-
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('✅ Backup cleared successfully'),
-                      backgroundColor: VineTheme.vineGreen,
-                    ),
-                  );
-                  setState(() {}); // Refresh UI to hide backup options
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('❌ Failed to clear backup: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              } finally {
-                setState(() => _isProcessing = false);
-              }
-            },
-            child: const Text('Clear Backup'),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to export key: $e'),
+            backgroundColor: Colors.red,
           ),
-        ],
-      ),
-    );
+        );
+      }
+    }
   }
 }

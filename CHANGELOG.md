@@ -8,6 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased Changes]
 
 ### Added
+- **Key Management Screen**: Simple, user-friendly interface for Nostr key import and backup
+  - Clear explanation of what Nostr keys are (npub/nsec concepts)
+  - Import existing keys via text field with paste functionality
+  - Export/backup current key to clipboard
+  - Validation for nsec format (must start with "nsec1")
+  - Confirmation dialog before key replacement to prevent accidental data loss
+  - Auto-fetches profile (kind 0) and contacts (kind 3) after successful import
+  - Accessible via Settings → Key Management
+  - Dark mode UI consistent with OpenVine aesthetic
+  - Security warnings for both import and export operations
+
+- **Nostr Key Manager Enhanced Features**: Backend support for key management operations
+  - `exportAsNsec()` - Export private key in bech32 nsec format
+  - `importFromNsec()` - Import existing nsec with automatic profile/contact fetching
+  - `replaceKeyWithBackup()` - Generate new key while backing up old one
+  - `restoreFromBackup()` - Restore previously backed up key
+  - `clearBackup()` - Delete backup key from secure storage
+  - Comprehensive test coverage (8/9 tests passing)
+
 - **Contributing Guide**: Comprehensive `CONTRIBUTING.md` with setup and build instructions
   - Complete prerequisites for Flutter, iOS, Android, and backend development
   - Detailed Flutter Embedded Nostr Relay setup with symlink instructions
