@@ -730,7 +730,7 @@ class VideoOverlayActions extends ConsumerWidget {
               ),
               // Show total like count: new likes + original Vine likes
               if (likeCount > 0 || (video.originalLikes != null && video.originalLikes! > 0)) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: 0),
                 Text(
                   StringUtils.formatCompactNumber(likeCount + (video.originalLikes ?? 0)),
                   style: const TextStyle(
@@ -781,7 +781,7 @@ class VideoOverlayActions extends ConsumerWidget {
               ),
               // Show original comment count if available
               if (video.originalComments != null && video.originalComments! > 0) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: 0),
                 Text(
                   StringUtils.formatCompactNumber(video.originalComments!),
                   style: const TextStyle(
@@ -808,21 +808,46 @@ class VideoOverlayActions extends ConsumerWidget {
 
           const SizedBox(height: 16),
 
-          // Share button
-          IconButton(
-            onPressed: () {
-              Log.info(
-                '📤 Share button tapped for ${video.id}',
-                name: 'VideoFeedItem',
-                category: LogCategory.ui,
-              );
-              _showShareMenu(context, video);
-            },
-            icon: const Icon(
-              Icons.share_outlined,
-              color: Colors.white,
-              size: 32,
-            ),
+          // Share button with label
+          Column(
+            children: [
+              IconButton(
+                onPressed: () {
+                  Log.info(
+                    '📤 Share button tapped for ${video.id}',
+                    name: 'VideoFeedItem',
+                    category: LogCategory.ui,
+                  );
+                  _showShareMenu(context, video);
+                },
+                icon: const Icon(
+                  Icons.share_outlined,
+                  color: Colors.white,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(height: 0),
+              const Text(
+                'Share',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  shadows: [
+                    Shadow(
+                      offset: Offset(0, 0),
+                      blurRadius: 6,
+                      color: Colors.black,
+                    ),
+                    Shadow(
+                      offset: Offset(1, 1),
+                      blurRadius: 3,
+                      color: Colors.black,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
 
           // Edit button (only show for owned videos when feature is enabled)
