@@ -849,7 +849,7 @@ class _ShareVideoMenuState extends ConsumerState<ShareVideoMenu> {
   void _showReportDialog() {
     showDialog(
       context: context,
-      builder: (context) => _ReportContentDialog(video: widget.video),
+      builder: (context) => ReportContentDialog(video: widget.video),
     );
   }
 
@@ -1632,16 +1632,17 @@ class _SelectListDialog extends StatelessWidget {
 }
 
 /// Dialog for reporting content
-class _ReportContentDialog extends ConsumerStatefulWidget {
-  const _ReportContentDialog({required this.video});
+/// Public report content dialog that can be used from anywhere
+class ReportContentDialog extends ConsumerStatefulWidget {
+  const ReportContentDialog({super.key, required this.video});
   final VideoEvent video;
 
   @override
-  ConsumerState<_ReportContentDialog> createState() =>
-      _ReportContentDialogState();
+  ConsumerState<ReportContentDialog> createState() =>
+      ReportContentDialogState();
 }
 
-class _ReportContentDialogState extends ConsumerState<_ReportContentDialog> {
+class ReportContentDialogState extends ConsumerState<ReportContentDialog> {
   ContentFilterReason? _selectedReason;
   final TextEditingController _detailsController = TextEditingController();
 

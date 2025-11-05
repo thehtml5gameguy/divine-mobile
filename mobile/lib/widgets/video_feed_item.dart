@@ -765,8 +765,8 @@ class VideoOverlayActions extends ConsumerWidget {
             // Like button
             Column(
             children: [
-              IconButton(
-                onPressed: isLikeInProgress ? null : () async {
+              _buildCircularIconButton(
+                onPressed: isLikeInProgress ? () {} : () async {
                   Log.info(
                     '❤️ Like button tapped for ${video.id}',
                     name: 'VideoFeedItem',
@@ -822,7 +822,7 @@ class VideoOverlayActions extends ConsumerWidget {
           // Comment button with count
           Column(
             children: [
-              IconButton(
+              _buildCircularIconButton(
                 onPressed: () {
                   Log.info(
                     '💬 Comment button tapped for ${video.id}',
@@ -873,7 +873,7 @@ class VideoOverlayActions extends ConsumerWidget {
           // Share button with label
           Column(
             children: [
-              IconButton(
+              _buildCircularIconButton(
                 onPressed: () {
                   Log.info(
                     '📤 Share button tapped for ${video.id}',
@@ -917,14 +917,17 @@ class VideoOverlayActions extends ConsumerWidget {
           // Flag/Report button for content moderation
           Column(
             children: [
-              IconButton(
+              _buildCircularIconButton(
                 onPressed: () {
                   Log.info(
                     '🚩 Report button tapped for ${video.id}',
                     name: 'VideoFeedItem',
                     category: LogCategory.ui,
                   );
-                  _showShareMenu(context, video);
+                  showDialog(
+                    context: context,
+                    builder: (context) => ReportContentDialog(video: video),
+                  );
                 },
                 icon: const Icon(
                   Icons.flag_outlined,
@@ -964,6 +967,24 @@ class VideoOverlayActions extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+
+  /// Build icon button with semi-transparent circular background
+  Widget _buildCircularIconButton({
+    required VoidCallback onPressed,
+    required Widget icon,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.3),
+        shape: BoxShape.circle,
+      ),
+      child: IconButton(
+        onPressed: onPressed,
+        icon: icon,
+        padding: EdgeInsets.zero,
+      ),
     );
   }
 
