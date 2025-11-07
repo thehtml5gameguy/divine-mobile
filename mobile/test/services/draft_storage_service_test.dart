@@ -54,6 +54,9 @@ void main() {
           selectedApproach: 'hybrid',
           createdAt: now,
           lastModified: now,
+          publishStatus: PublishStatus.draft,
+          publishError: null,
+          publishAttempts: 0,
         );
 
         final draft2 = VineDraft(
@@ -66,6 +69,9 @@ void main() {
           selectedApproach: 'imageSequence',
           createdAt: now,
           lastModified: now,
+          publishStatus: PublishStatus.draft,
+          publishError: null,
+          publishAttempts: 0,
         );
 
         await service.saveDraft(draft1);
@@ -121,6 +127,9 @@ void main() {
           selectedApproach: 'hybrid',
           createdAt: now,
           lastModified: now,
+          publishStatus: PublishStatus.draft,
+          publishError: null,
+          publishAttempts: 0,
         );
 
         final draft2 = VineDraft(
@@ -133,6 +142,9 @@ void main() {
           selectedApproach: 'imageSequence',
           createdAt: now,
           lastModified: now,
+          publishStatus: PublishStatus.draft,
+          publishError: null,
+          publishAttempts: 0,
         );
 
         await service.saveDraft(draft1);
@@ -164,6 +176,9 @@ void main() {
           selectedApproach: 'hybrid',
           createdAt: now,
           lastModified: now,
+          publishStatus: PublishStatus.draft,
+          publishError: null,
+          publishAttempts: 0,
         );
 
         final draft2 = VineDraft(
@@ -176,6 +191,9 @@ void main() {
           selectedApproach: 'imageSequence',
           createdAt: now,
           lastModified: now,
+          publishStatus: PublishStatus.draft,
+          publishError: null,
+          publishAttempts: 0,
         );
 
         await service.saveDraft(draft1);
@@ -220,6 +238,9 @@ void main() {
           selectedApproach: 'hybrid',
           createdAt: now,
           lastModified: now,
+          publishStatus: PublishStatus.draft,
+          publishError: null,
+          publishAttempts: 0,
         );
 
         final draft2 = VineDraft(
@@ -232,6 +253,9 @@ void main() {
           selectedApproach: 'imageSequence',
           createdAt: now,
           lastModified: now,
+          publishStatus: PublishStatus.draft,
+          publishError: null,
+          publishAttempts: 0,
         );
 
         await service.saveDraft(draft1);

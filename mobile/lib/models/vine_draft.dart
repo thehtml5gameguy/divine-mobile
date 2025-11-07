@@ -1,7 +1,14 @@
 // ABOUTME: Data model for Vine drafts that users save before publishing
-// ABOUTME: Includes video file path, metadata, and creation timestamp
+// ABOUTME: Includes video file path, metadata, publish status, and timestamps
 
 import 'dart:io';
+
+enum PublishStatus {
+  draft,
+  publishing,
+  failed,
+  published,
+}
 
 class VineDraft {
   const VineDraft({
@@ -14,6 +21,9 @@ class VineDraft {
     required this.selectedApproach,
     required this.createdAt,
     required this.lastModified,
+    required this.publishStatus,
+    this.publishError,
+    required this.publishAttempts,
   });
 
   factory VineDraft.create({
@@ -35,6 +45,9 @@ class VineDraft {
       selectedApproach: selectedApproach,
       createdAt: now,
       lastModified: now,
+      publishStatus: PublishStatus.draft,
+      publishError: null,
+      publishAttempts: 0,
     );
   }
 
@@ -48,6 +61,11 @@ class VineDraft {
         selectedApproach: json['selectedApproach'] as String,
         createdAt: DateTime.parse(json['createdAt'] as String),
         lastModified: DateTime.parse(json['lastModified'] as String),
+        publishStatus: json['publishStatus'] != null
+            ? PublishStatus.values.byName(json['publishStatus'] as String)
+            : PublishStatus.draft, // Migration: default for old drafts
+        publishError: json['publishError'] as String?,
+        publishAttempts: json['publishAttempts'] as int? ?? 0,
       );
   final String id;
   final File videoFile;
@@ -58,11 +76,17 @@ class VineDraft {
   final String selectedApproach;
   final DateTime createdAt;
   final DateTime lastModified;
+  final PublishStatus publishStatus;
+  final String? publishError;
+  final int publishAttempts;
 
   VineDraft copyWith({
     String? title,
     String? description,
     List<String>? hashtags,
+    PublishStatus? publishStatus,
+    Object? publishError = _sentinel,
+    int? publishAttempts,
   }) =>
       VineDraft(
         id: id,
@@ -74,7 +98,14 @@ class VineDraft {
         selectedApproach: selectedApproach,
         createdAt: createdAt,
         lastModified: DateTime.now(),
+        publishStatus: publishStatus ?? this.publishStatus,
+        publishError: publishError == _sentinel
+            ? this.publishError
+            : publishError as String?,
+        publishAttempts: publishAttempts ?? this.publishAttempts,
       );
+
+  static const _sentinel = Object();
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -86,6 +117,9 @@ class VineDraft {
         'selectedApproach': selectedApproach,
         'createdAt': createdAt.toIso8601String(),
         'lastModified': lastModified.toIso8601String(),
+        'publishStatus': publishStatus.name,
+        'publishError': publishError,
+        'publishAttempts': publishAttempts,
       };
 
   String get displayDuration {
@@ -104,4 +138,6 @@ class VineDraft {
   bool get hasTitle => title.trim().isNotEmpty;
   bool get hasDescription => description.trim().isNotEmpty;
   bool get hasHashtags => hashtags.isNotEmpty;
+  bool get canRetry => publishStatus == PublishStatus.failed;
+  bool get isPublishing => publishStatus == PublishStatus.publishing;
 }
