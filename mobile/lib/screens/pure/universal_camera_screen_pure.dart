@@ -6,8 +6,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:openvine/models/vine_draft.dart';
 import 'package:openvine/providers/vine_recording_provider.dart';
 import 'package:openvine/screens/vine_drafts_screen.dart';
+import 'package:openvine/services/draft_storage_service.dart';
 import 'package:openvine/utils/video_controller_cleanup.dart';
 import 'package:openvine/screens/pure/video_metadata_screen_pure.dart';
 import 'package:openvine/services/camera/native_macos_camera.dart';
@@ -15,6 +17,7 @@ import 'package:openvine/theme/vine_theme.dart';
 import 'package:openvine/utils/unified_logger.dart';
 import 'package:openvine/widgets/macos_camera_preview.dart' show CameraPreviewPlaceholder;
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Pure universal camera screen using revolutionary single-controller Riverpod architecture
 class UniversalCameraScreenPure extends ConsumerStatefulWidget {
@@ -1008,17 +1011,30 @@ class _UniversalCameraScreenPureState extends ConsumerState<UniversalCameraScree
       Log.info('📹 UniversalCameraScreenPure: Processing recorded file: ${recordedFile.path}',
           category: LogCategory.video);
 
-      // Get video duration (simplified for now)
-      const duration = Duration(seconds: 6); // Default duration
+      // Create a draft for the recorded video
+      final prefs = await SharedPreferences.getInstance();
+      final draftService = DraftStorageService(prefs);
+
+      final draft = VineDraft.create(
+        videoFile: recordedFile,
+        title: '',
+        description: '',
+        hashtags: [],
+        frameCount: 0,
+        selectedApproach: 'video',
+      );
+
+      await draftService.saveDraft(draft);
+
+      Log.info('📹 Created draft with ID: ${draft.id}',
+          category: LogCategory.video);
 
       if (mounted) {
         // Navigate to metadata screen
         await Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => VideoMetadataScreenPure(
-              videoFile: recordedFile,
-              duration: duration,
-              proofManifest: proofManifest,
+              draftId: draft.id,
             ),
           ),
         );
