@@ -60,15 +60,33 @@ class VideoFilterBuilder {
     Map<String, IntRangeFilter>? intFilters,
     String? cursor,
   }) async {
+    UnifiedLogger.debug(
+      '🔍 VideoFilterBuilder.buildFilter called: sortBy=$sortBy, intFilters=$intFilters, cursor=$cursor',
+      name: 'VideoFilterBuilder',
+    );
+
     // If no sorting requested, return standard filter
     if (sortBy == null && intFilters == null && cursor == null) {
+      UnifiedLogger.debug(
+        '⏭️  VideoFilterBuilder: No divine extensions requested, returning base filter',
+        name: 'VideoFilterBuilder',
+      );
       return baseFilter;
     }
 
     try {
       // Check relay capabilities
+      UnifiedLogger.debug(
+        '🔍 VideoFilterBuilder: Checking capabilities for $relayUrl',
+        name: 'VideoFilterBuilder',
+      );
       final capabilities =
           await _capabilityService.getRelayCapabilities(relayUrl);
+
+      UnifiedLogger.debug(
+        '🔍 VideoFilterBuilder: Capabilities - hasDivineExtensions=${capabilities.hasDivineExtensions}, sortFields=${capabilities.sortFields.join(', ')}',
+        name: 'VideoFilterBuilder',
+      );
 
       // If relay doesn't support divine extensions, fall back to standard filter
       if (!capabilities.hasDivineExtensions) {
