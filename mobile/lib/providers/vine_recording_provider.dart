@@ -1,6 +1,7 @@
 // ABOUTME: Riverpod state management for VineRecordingController
 // ABOUTME: Provides reactive state updates for recording UI without ChangeNotifier
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -41,6 +42,7 @@ class VineRecordingUIState {
     required this.canRecord,
     required this.segments,
     required this.isCameraInitialized,
+    required this.canSwitchCamera,
   });
 
   final VineRecordingState recordingState;
@@ -50,6 +52,7 @@ class VineRecordingUIState {
   final bool canRecord;
   final List<RecordingSegment> segments;
   final bool isCameraInitialized;
+  final bool canSwitchCamera;
 
   // Convenience getters used by UI
   bool get isRecording => recordingState == VineRecordingState.recording;
@@ -67,6 +70,7 @@ class VineRecordingUIState {
     bool? canRecord,
     List<RecordingSegment>? segments,
     bool? isCameraInitialized,
+    bool? canSwitchCamera,
   }) {
     return VineRecordingUIState(
       recordingState: recordingState ?? this.recordingState,
@@ -77,6 +81,7 @@ class VineRecordingUIState {
       canRecord: canRecord ?? this.canRecord,
       segments: segments ?? this.segments,
       isCameraInitialized: isCameraInitialized ?? this.isCameraInitialized,
+      canSwitchCamera: canSwitchCamera ?? this.canSwitchCamera,
     );
   }
 }
@@ -95,6 +100,7 @@ class VineRecordingNotifier extends StateNotifier<VineRecordingUIState> {
             canRecord: _controller.canRecord,
             segments: _controller.segments,
             isCameraInitialized: _controller.isCameraInitialized,
+            canSwitchCamera: _controller.canSwitchCamera,
           ),
         ) {
     // Set up callback for recording progress updates
@@ -123,6 +129,7 @@ class VineRecordingNotifier extends StateNotifier<VineRecordingUIState> {
       canRecord: _controller.canRecord,
       segments: _controller.segments,
       isCameraInitialized: _controller.isCameraInitialized,
+      canSwitchCamera: _controller.canSwitchCamera,
     );
   }
 
@@ -147,6 +154,17 @@ class VineRecordingNotifier extends StateNotifier<VineRecordingUIState> {
       try {
         final draftStorage = await _ref.read(draftStorageServiceProvider.future);
 
+        // Serialize ProofManifest to JSON if available
+        String? proofManifestJson;
+        if (result.$2 != null) {
+          try {
+            proofManifestJson = jsonEncode(result.$2!.toJson());
+            Log.info('📜 ProofManifest attached to draft', category: LogCategory.video);
+          } catch (e) {
+            Log.error('Failed to serialize ProofManifest for draft: $e', category: LogCategory.video);
+          }
+        }
+
         final draft = VineDraft.create(
           videoFile: result.$1!,
           title: 'Do it for the Vine!',
@@ -154,6 +172,7 @@ class VineRecordingNotifier extends StateNotifier<VineRecordingUIState> {
           hashtags: ['openvine', 'vine'],
           frameCount: _controller.segments.length,
           selectedApproach: 'native',
+          proofManifestJson: proofManifestJson,
         );
 
         await draftStorage.saveDraft(draft);

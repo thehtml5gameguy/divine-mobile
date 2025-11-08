@@ -18,6 +18,7 @@ void main() {
           canRecord: true,
           segments: [],
           isCameraInitialized: true,
+          canSwitchCamera: false,
         );
 
         const idleState = VineRecordingUIState(
@@ -28,6 +29,7 @@ void main() {
           canRecord: true,
           segments: [],
           isCameraInitialized: true,
+          canSwitchCamera: false,
         );
 
         expect(recordingState.isRecording, true);
@@ -43,6 +45,7 @@ void main() {
           canRecord: true,
           segments: [],
           isCameraInitialized: true,
+          canSwitchCamera: false,
         );
 
         const errorState = VineRecordingUIState(
@@ -53,6 +56,7 @@ void main() {
           canRecord: false,
           segments: [],
           isCameraInitialized: true,
+          canSwitchCamera: false,
         );
 
         const processingState = VineRecordingUIState(
@@ -63,6 +67,7 @@ void main() {
           canRecord: false,
           segments: [],
           isCameraInitialized: true,
+          canSwitchCamera: false,
         );
 
         expect(idleState.isInitialized, true);
@@ -79,6 +84,7 @@ void main() {
           canRecord: false,
           segments: [],
           isCameraInitialized: true,
+          canSwitchCamera: false,
         );
 
         const idleState = VineRecordingUIState(
@@ -89,6 +95,7 @@ void main() {
           canRecord: true,
           segments: [],
           isCameraInitialized: true,
+          canSwitchCamera: false,
         );
 
         expect(errorState.isError, true);
@@ -104,6 +111,7 @@ void main() {
           canRecord: true,
           segments: [],
           isCameraInitialized: true,
+          canSwitchCamera: false,
         );
 
         expect(state.recordingDuration, Duration(seconds: 3));
@@ -118,6 +126,7 @@ void main() {
           canRecord: false,
           segments: [],
           isCameraInitialized: true,
+          canSwitchCamera: false,
         );
 
         const idleState = VineRecordingUIState(
@@ -128,6 +137,7 @@ void main() {
           canRecord: true,
           segments: [],
           isCameraInitialized: true,
+          canSwitchCamera: false,
         );
 
         expect(errorState.errorMessage, isA<String>());

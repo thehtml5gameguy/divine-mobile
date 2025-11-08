@@ -15,6 +15,7 @@ void main() {
         remainingDuration: const Duration(seconds: 6),
         canRecord: true,
         isCameraInitialized: true,
+          canSwitchCamera: false,
         segments: [],
       );
 
@@ -30,6 +31,7 @@ void main() {
         remainingDuration: const Duration(seconds: 4),
         canRecord: true,
         isCameraInitialized: true,
+          canSwitchCamera: false,
         segments: [
           RecordingSegment(
             startTime: DateTime.now(),
@@ -53,6 +55,7 @@ void main() {
         remainingDuration: const Duration(seconds: 5),
         canRecord: false,
         isCameraInitialized: true,
+          canSwitchCamera: false,
         segments: [],
       );
 
@@ -63,6 +66,7 @@ void main() {
         remainingDuration: const Duration(seconds: 6),
         canRecord: true,
         isCameraInitialized: true,
+          canSwitchCamera: false,
         segments: [],
       );
 
@@ -78,6 +82,7 @@ void main() {
         remainingDuration: const Duration(seconds: 3),
         canRecord: true,
         isCameraInitialized: true,
+          canSwitchCamera: false,
         segments: [],
       );
 
@@ -114,6 +119,7 @@ void main() {
         remainingDuration: const Duration(seconds: 3),
         canRecord: true,
         isCameraInitialized: true,
+          canSwitchCamera: false,
         segments: segments,
       );
 
@@ -129,6 +135,7 @@ void main() {
         remainingDuration: const Duration(seconds: 6),
         canRecord: true,
         isCameraInitialized: true,
+          canSwitchCamera: false,
         segments: [],
       );
 
@@ -139,6 +146,7 @@ void main() {
         remainingDuration: Duration.zero,
         canRecord: false,
         isCameraInitialized: true,
+          canSwitchCamera: false,
         segments: [],
       );
 
@@ -155,6 +163,7 @@ void main() {
           remainingDuration: const Duration(seconds: 6),
           canRecord: true,
           isCameraInitialized: true,
+          canSwitchCamera: false,
           segments: [],
         ),
         VineRecordingUIState(
@@ -164,6 +173,7 @@ void main() {
           remainingDuration: const Duration(seconds: 3),
           canRecord: false,
           isCameraInitialized: true,
+          canSwitchCamera: false,
           segments: [],
         ),
         VineRecordingUIState(
@@ -173,6 +183,7 @@ void main() {
           remainingDuration: Duration.zero,
           canRecord: false,
           isCameraInitialized: true,
+          canSwitchCamera: false,
           segments: [],
         ),
       ];

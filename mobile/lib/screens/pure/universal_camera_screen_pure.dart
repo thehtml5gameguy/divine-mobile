@@ -1,6 +1,7 @@
 // ABOUTME: Pure universal camera screen using revolutionary Riverpod architecture
 // ABOUTME: Cross-platform recording without VideoManager dependencies using pure providers
 
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openvine/models/vine_draft.dart';
 import 'package:openvine/providers/vine_recording_provider.dart';
+import 'package:openvine/services/proofmode_session_service.dart';
 import 'package:openvine/screens/vine_drafts_screen.dart';
 import 'package:openvine/services/draft_storage_service.dart';
 import 'package:openvine/utils/video_controller_cleanup.dart';
@@ -743,15 +745,16 @@ class _UniversalCameraScreenPureState extends ConsumerState<UniversalCameraScree
           ),
         ),
 
-        // Switch camera button
-        IconButton(
-          onPressed: recordingState.isRecording ? null : _switchCamera,
-          icon: Icon(
-            Icons.flip_camera_ios,
-            color: recordingState.isRecording ? Colors.grey : Colors.white,
-            size: 32,
+        // Switch camera button - only show if multiple cameras available
+        if (recordingState.canSwitchCamera)
+          IconButton(
+            onPressed: recordingState.isRecording ? null : _switchCamera,
+            icon: Icon(
+              Icons.flip_camera_ios,
+              color: recordingState.isRecording ? Colors.grey : Colors.white,
+              size: 32,
+            ),
           ),
-        ),
           ],
         ),
       ],
@@ -995,7 +998,7 @@ class _UniversalCameraScreenPureState extends ConsumerState<UniversalCameraScree
     Log.info('📹 Timer duration changed to: $_timerDuration', category: LogCategory.video);
   }
 
-  void _processRecording(File recordedFile, proofManifest) async {
+  void _processRecording(File recordedFile, ProofManifest? proofManifest) async {
     // Guard against double-processing
     if (_isProcessing) {
       Log.warning('📹 Already processing a recording, ignoring duplicate call',
@@ -1015,6 +1018,17 @@ class _UniversalCameraScreenPureState extends ConsumerState<UniversalCameraScree
       final prefs = await SharedPreferences.getInstance();
       final draftService = DraftStorageService(prefs);
 
+      // Serialize ProofManifest to JSON if available
+      String? proofManifestJson;
+      if (proofManifest != null) {
+        try {
+          proofManifestJson = jsonEncode(proofManifest.toJson());
+          Log.info('📜 ProofManifest attached to draft from universal camera', category: LogCategory.video);
+        } catch (e) {
+          Log.error('Failed to serialize ProofManifest for draft: $e', category: LogCategory.video);
+        }
+      }
+
       final draft = VineDraft.create(
         videoFile: recordedFile,
         title: '',
@@ -1022,6 +1036,7 @@ class _UniversalCameraScreenPureState extends ConsumerState<UniversalCameraScree
         hashtags: [],
         frameCount: 0,
         selectedApproach: 'video',
+        proofManifestJson: proofManifestJson,
       );
 
       await draftService.saveDraft(draft);
