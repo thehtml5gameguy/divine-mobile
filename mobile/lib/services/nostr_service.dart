@@ -449,27 +449,7 @@ class NostrService implements INostrService {
       // Clean up any closed controllers
       _subscriptions.removeWhere((key, controller) => controller.isClosed);
 
-      // If still too many, aggressively close oldest profile subscriptions
-      if (_subscriptions.length >= 10) {
-        final profileSubs = _subscriptions.entries
-            .where((entry) => entry.key.startsWith('sub_') && entry.key.contains('profiles'))
-            .toList();
-
-        // Close half of the profile subscriptions to make room
-        for (int i = 0; i < profileSubs.length ~/ 2; i++) {
-          final entry = profileSubs[i];
-          Log.debug('Force closing old profile subscription: ${entry.key}',
-              name: 'NostrService', category: LogCategory.relay);
-          try {
-            entry.value.close();
-          } catch (e) {
-            // Ignore errors when closing
-          }
-          _subscriptions.remove(entry.key);
-        }
-      }
-
-      Log.info('After cleanup, active subscriptions: ${_subscriptions.length}',
+      Log.info('After cleanup of closed controllers: ${_subscriptions.length}',
           name: 'NostrService', category: LogCategory.relay);
     }
 
@@ -605,15 +585,27 @@ class NostrService implements INostrService {
               name: 'NostrService');
         }
 
-        // Auto-cleanup profile subscriptions after EOSE to prevent leaks
-        if (id.contains('profile') && _subscriptions.containsKey(id)) {
-          Timer(const Duration(seconds: 30), () {
+        // Auto-cleanup profile subscriptions (kind 0) after EOSE to prevent leaks
+        // Profile fetches are one-time queries, not live subscriptions
+        final isProfileSubscription = filters.any((f) =>
+          f.kinds != null &&
+          f.kinds!.length == 1 &&
+          f.kinds!.first == 0
+        );
+
+        if (isProfileSubscription && _subscriptions.containsKey(id)) {
+          // Close profile subscriptions immediately after EOSE since they're one-time fetches
+          Log.debug('Auto-closing profile subscription after EOSE: $id',
+              name: 'NostrService', category: LogCategory.relay);
+
+          // Schedule cleanup to allow any in-flight events to complete
+          Timer(const Duration(milliseconds: 500), () {
             if (_subscriptions.containsKey(id)) {
-              Log.debug('Auto-closing profile subscription after 30s: $id',
-                  name: 'NostrService', category: LogCategory.relay);
               try {
                 _subscriptions[id]?.close();
                 _subscriptions.remove(id);
+                Log.debug('Closed profile subscription $id (${_subscriptions.length} remaining)',
+                    name: 'NostrService', category: LogCategory.relay);
               } catch (e) {
                 // Ignore errors
               }
