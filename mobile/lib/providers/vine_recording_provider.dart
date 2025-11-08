@@ -225,6 +225,12 @@ class VineRecordingNotifier extends StateNotifier<VineRecordingUIState> {
     updateState();
   }
 
+  /// Set aspect ratio for recording
+  void setAspectRatio(model.AspectRatio ratio) {
+    _controller.setAspectRatio(ratio);
+    updateState();
+  }
+
   void reset() {
     _controller.reset();
     _wasPublished = false; // Reset publish flag for new recording
@@ -272,9 +278,9 @@ class VineRecordingNotifier extends StateNotifier<VineRecordingUIState> {
       // Ensure cleanup happens even if save fails
       _controller.setStateChangeCallback(null);
       _controller.dispose();
+    }).whenComplete(() {
+      super.dispose();
     });
-
-    super.dispose();
   }
 
   /// Auto-save recording as draft if completed but not published
