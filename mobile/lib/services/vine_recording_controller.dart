@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 
+import 'package:openvine/models/aspect_ratio.dart' as model;
 import 'package:openvine/services/camera/native_macos_camera.dart';
 import 'package:openvine/services/camera/enhanced_mobile_camera_interface.dart';
 import 'package:openvine/services/web_camera_service_stub.dart'
@@ -744,6 +745,7 @@ class VineRecordingController {
 
   // Recording session data
   final List<RecordingSegment> _segments = [];
+  model.AspectRatio _aspectRatio = model.AspectRatio.square;
   DateTime? _currentSegmentStartTime;
   Timer? _progressTimer;
   Timer? _maxDurationTimer;
@@ -757,6 +759,9 @@ class VineRecordingController {
   VineRecordingState get state => _state;
   bool get isCameraInitialized => _cameraInitialized;
   List<RecordingSegment> get segments => List.unmodifiable(_segments);
+
+  /// Get current aspect ratio
+  model.AspectRatio get aspectRatio => _aspectRatio;
   Duration get totalRecordedDuration => _totalRecordedDuration;
   Duration get remainingDuration =>
       maxRecordingDuration - _totalRecordedDuration;
@@ -812,6 +817,20 @@ class VineRecordingController {
   /// Set callback for state change notifications during recording
   void setStateChangeCallback(VoidCallback? callback) {
     _onStateChanged = callback;
+  }
+
+  /// Set aspect ratio (only allowed when not recording)
+  void setAspectRatio(model.AspectRatio ratio) {
+    if (state == VineRecordingState.recording) {
+      Log.warning('Cannot change aspect ratio while recording',
+          name: 'VineRecordingController', category: LogCategory.system);
+      return;
+    }
+
+    _aspectRatio = ratio;
+    Log.info('Aspect ratio changed to: $ratio',
+        name: 'VineRecordingController', category: LogCategory.system);
+    _onStateChanged?.call();
   }
 
   /// Switch between front and rear cameras
