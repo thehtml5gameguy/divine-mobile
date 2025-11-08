@@ -151,6 +151,31 @@ class _ProfileScreenRouterState extends ConsumerState<ProfileScreenRouter>
         final currentUserHex = authService.currentPublicKeyHex;
         final isOwnProfile = userIdHex == currentUserHex;
 
+        // Check if this user has muted us (mutual mute blocking)
+        final blocklistService = ref.watch(contentBlocklistServiceProvider);
+        if (blocklistService.shouldFilterFromFeeds(userIdHex)) {
+          return Scaffold(
+            backgroundColor: VineTheme.backgroundColor,
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+            body: const Center(
+              child: Text(
+                'This account is not available',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          );
+        }
+
         // Get video data from profile feed
         final videosAsync = ref.watch(profileFeedProvider(userIdHex));
 

@@ -140,6 +140,31 @@ class _VideoDetailScreenState extends ConsumerState<VideoDetailScreen> {
       );
     }
 
+    // Check if video author has muted us (mutual mute blocking)
+    final blocklistService = ref.watch(contentBlocklistServiceProvider);
+    if (blocklistService.shouldFilterFromFeeds(_video!.pubkey)) {
+      return Scaffold(
+        backgroundColor: VineTheme.backgroundColor,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ),
+        body: const Center(
+          child: Text(
+            'This account is not available',
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 16,
+            ),
+          ),
+        ),
+      );
+    }
+
     // Display video in full-screen player
     return VideoFeedScreen(
       startingVideo: _video!,
