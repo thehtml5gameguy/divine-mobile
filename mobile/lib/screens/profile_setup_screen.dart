@@ -10,13 +10,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:openvine/models/user_profile.dart' as profile_model;
-import 'package:openvine/services/nip05_service.dart';
-import 'package:openvine/utils/async_utils.dart';
 import 'package:openvine/utils/unified_logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openvine/providers/app_providers.dart';
+import 'package:openvine/providers/user_profile_providers.dart';
 import 'package:openvine/theme/vine_theme.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class ProfileSetupScreen extends ConsumerStatefulWidget {
   const ProfileSetupScreen({
@@ -120,8 +118,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          automaticallyImplyLeading:
-              false, // Don't show back button for setup flow
+          automaticallyImplyLeading: true, // Show back button
+          iconTheme: const IconThemeData(color: Colors.white),
         ),
         body: GestureDetector(
           onTap: () {
@@ -137,6 +135,17 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // diVine wordmark
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 24.0),
+                          child: Image.asset(
+                            'assets/icon/White on black.png',
+                            height: 50,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
                       Text(
                         widget.isNewUser
                             ? 'Welcome to divine!'
@@ -237,102 +246,103 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // NIP-05 Username (optional)
-                      TextFormField(
-                        controller: _nip05Controller,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                          labelText: 'Username (Optional)',
-                          labelStyle: const TextStyle(color: Colors.grey),
-                          hintText: 'username',
-                          hintStyle: TextStyle(color: Colors.grey[600]),
-                          filled: true,
-                          fillColor: Colors.grey[900],
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                BorderSide(color: Colors.grey[700]!, width: 1),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                                color: VineTheme.vineGreen, width: 2),
-                          ),
-                          prefixIcon: const Icon(Icons.verified_user,
-                              color: Colors.grey),
-                          suffixText: '@openvine.co',
-                          suffixStyle: TextStyle(color: Colors.grey[500]),
-                          errorMaxLines: 2,
-                        ),
-                        textInputAction: TextInputAction.next,
-                        onFieldSubmitted: (_) =>
-                            FocusScope.of(context).nextFocus(),
-                        onChanged: _onUsernameChanged,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return null; // Optional field
-                          }
-
-                          final regex =
-                              RegExp(r'^[a-z0-9\-_.]+$', caseSensitive: false);
-                          if (!regex.hasMatch(value)) {
-                            return 'Username can only contain letters, numbers, dash, underscore, and dot';
-                          }
-                          if (value.length < 3) {
-                            return 'Username must be at least 3 characters';
-                          }
-                          if (value.length > 20) {
-                            return 'Username must be 20 characters or less';
-                          }
-                          if (_usernameError != null) {
-                            return _usernameError;
-                          }
-                          return null;
-                        },
-                      ),
-                      if (_isCheckingUsername)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Row(
-                            children: [
-                              const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Checking availability...',
-                                style: TextStyle(
-                                    color: Colors.grey[400], fontSize: 12),
-                              ),
-                            ],
-                          ),
-                        ),
-                      if (_usernameAvailable == true &&
-                          !_isCheckingUsername &&
-                          _nip05Controller.text.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.check_circle,
-                                  color: VineTheme.vineGreen, size: 16),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Username available!',
-                                style: TextStyle(
-                                    color: VineTheme.vineGreen, fontSize: 12),
-                              ),
-                            ],
-                          ),
-                        ),
-                      const SizedBox(height: 16),
+                      // NIP-05 Username (optional) - HIDDEN until @divine.video is ready
+                      // TODO: Re-enable when @divine.video NIP-05 service is available
+                      // TextFormField(
+                      //   controller: _nip05Controller,
+                      //   style: const TextStyle(color: Colors.white),
+                      //   decoration: InputDecoration(
+                      //     labelText: 'Username (Optional)',
+                      //     labelStyle: const TextStyle(color: Colors.grey),
+                      //     hintText: 'username',
+                      //     hintStyle: TextStyle(color: Colors.grey[600]),
+                      //     filled: true,
+                      //     fillColor: Colors.grey[900],
+                      //     border: OutlineInputBorder(
+                      //       borderRadius: BorderRadius.circular(12),
+                      //       borderSide: BorderSide.none,
+                      //     ),
+                      //     enabledBorder: OutlineInputBorder(
+                      //       borderRadius: BorderRadius.circular(12),
+                      //       borderSide:
+                      //           BorderSide(color: Colors.grey[700]!, width: 1),
+                      //     ),
+                      //     focusedBorder: OutlineInputBorder(
+                      //       borderRadius: BorderRadius.circular(12),
+                      //       borderSide: const BorderSide(
+                      //           color: VineTheme.vineGreen, width: 2),
+                      //     ),
+                      //     prefixIcon: const Icon(Icons.verified_user,
+                      //         color: Colors.grey),
+                      //     suffixText: '@divine.video',
+                      //     suffixStyle: TextStyle(color: Colors.grey[500]),
+                      //     errorMaxLines: 2,
+                      //   ),
+                      //   textInputAction: TextInputAction.next,
+                      //   onFieldSubmitted: (_) =>
+                      //       FocusScope.of(context).nextFocus(),
+                      //   onChanged: _onUsernameChanged,
+                      //   validator: (value) {
+                      //     if (value == null || value.isEmpty) {
+                      //       return null; // Optional field
+                      //     }
+                      //
+                      //     final regex =
+                      //         RegExp(r'^[a-z0-9\-_.]+$', caseSensitive: false);
+                      //     if (!regex.hasMatch(value)) {
+                      //       return 'Username can only contain letters, numbers, dash, underscore, and dot';
+                      //     }
+                      //     if (value.length < 3) {
+                      //       return 'Username must be at least 3 characters';
+                      //     }
+                      //     if (value.length > 20) {
+                      //       return 'Username must be 20 characters or less';
+                      //     }
+                      //     if (_usernameError != null) {
+                      //       return _usernameError;
+                      //     }
+                      //     return null;
+                      //   },
+                      // ),
+                      // if (_isCheckingUsername)
+                      //   Padding(
+                      //     padding: const EdgeInsets.only(top: 8),
+                      //     child: Row(
+                      //       children: [
+                      //         const SizedBox(
+                      //           width: 16,
+                      //           height: 16,
+                      //           child:
+                      //               CircularProgressIndicator(strokeWidth: 2),
+                      //         ),
+                      //         const SizedBox(width: 8),
+                      //         Text(
+                      //           'Checking availability...',
+                      //           style: TextStyle(
+                      //               color: Colors.grey[400], fontSize: 12),
+                      //         ),
+                      //       ],
+                      //     ),
+                      //   ),
+                      // if (_usernameAvailable == true &&
+                      //     !_isCheckingUsername &&
+                      //     _nip05Controller.text.isNotEmpty)
+                      //   Padding(
+                      //     padding: const EdgeInsets.only(top: 8),
+                      //     child: Row(
+                      //       children: [
+                      //         const Icon(Icons.check_circle,
+                      //             color: VineTheme.vineGreen, size: 16),
+                      //         const SizedBox(width: 8),
+                      //         Text(
+                      //           'Username available!',
+                      //           style: TextStyle(
+                      //               color: VineTheme.vineGreen, fontSize: 12),
+                      //         ),
+                      //       ],
+                      //     ),
+                      //   ),
+                      // const SizedBox(height: 16),
 
                       // Profile Picture Section
                       Column(
@@ -524,25 +534,24 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                       // Action buttons
                       Row(
                         children: [
-                          if (!widget.isNewUser)
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: _isPublishing
-                                    ? null
-                                    : () => Navigator.of(context).pop(),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: Colors.white,
-                                  side: const BorderSide(color: Colors.white),
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: _isPublishing
+                                  ? null
+                                  : () => Navigator.of(context).pop(),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                side: const BorderSide(color: Colors.white),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: const Text('Cancel'),
                               ),
+                              child: const Text('Cancel'),
                             ),
-                          if (!widget.isNewUser) const SizedBox(width: 16),
+                          ),
+                          const SizedBox(width: 16),
                           Expanded(
                             child: ElevatedButton(
                               onPressed: _isPublishing ? null : _publishProfile,
@@ -569,14 +578,12 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                                           ),
                                         ),
                                         SizedBox(width: 12),
-                                        Text('Publishing...'),
+                                        Text('Saving...'),
                                       ],
                                     )
-                                  : Text(
-                                      widget.isNewUser
-                                          ? 'Get Started'
-                                          : 'Update Profile',
-                                      style: const TextStyle(
+                                  : const Text(
+                                      'Save',
+                                      style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600),
                                     ),
@@ -584,134 +591,6 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 24),
-
-                      // Skip option for new users
-                      if (widget.isNewUser)
-                        Center(
-                          child: TextButton(
-                            onPressed: _isPublishing ? null : _skipProfileSetup,
-                            child: Text(
-                              'Skip for now',
-                              style: TextStyle(
-                                color: Colors.grey[400],
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                        ),
-
-                      const SizedBox(height: 32),
-
-                      // Nostr explanation for new users
-                      if (widget.isNewUser)
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[900],
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                                color: VineTheme.vineGreen.withValues(alpha: 0.3)),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Row(
-                                children: [
-                                  Icon(Icons.public, color: VineTheme.vineGreen),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'Built on Nostr',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                'divine uses Nostr, a decentralized protocol where YOU own your identity and data. Unlike centralized platforms, no single company controls your account.',
-                                style: TextStyle(
-                                  color: Colors.grey[300],
-                                  fontSize: 13,
-                                  height: 1.4,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: VineTheme.vineGreen.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.key,
-                                        color: VineTheme.vineGreen, size: 20),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          const Text(
-                                            'Your Identity Key (nsec)',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                          Text(
-                                            "We've created a secure private key for you. Back it up in Profile > Settings to use your account in other Nostr apps.",
-                                            style: TextStyle(
-                                              color: Colors.grey[300],
-                                              fontSize: 12,
-                                              height: 1.3,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              GestureDetector(
-                                onTap: () async {
-                                  final url = Uri.parse('https://nostr.org');
-                                  try {
-                                    if (await canLaunchUrl(url)) {
-                                      await launchUrl(url,
-                                          mode: LaunchMode.externalApplication);
-                                    }
-                                  } catch (e) {
-                                    Log.debug('Could not launch nostr.org: $e',
-                                        name: 'ProfileSetupScreen',
-                                        category: LogCategory.ui);
-                                  }
-                                },
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.info_outline,
-                                        color: Colors.blue[300], size: 16),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      'Learn more about Nostr →',
-                                      style: TextStyle(
-                                        color: Colors.blue[300],
-                                        fontSize: 12,
-                                        decoration: TextDecoration.underline,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
                     ],
                   ),
                 ),
@@ -844,32 +723,33 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
       Log.info('  - picture: ${profileData['picture'] ?? 'not set'}',
           name: 'ProfileSetupScreen', category: LogCategory.ui);
 
-      // Handle NIP-05 registration if username provided
-      String? nip05Identifier;
-      if (_nip05Controller.text.trim().isNotEmpty &&
-          _usernameAvailable == true) {
-        try {
-          final nip05Service = Nip05Service();
-          final username = _nip05Controller.text.trim();
-          final nostrService = ref.read(nostrServiceProvider);
-          final relays = nostrService.connectedRelays.toList();
-
-          final registered = await nip05Service.registerUsername(
-            username,
-            authService.currentPublicKeyHex!,
-            relays,
-          );
-
-          if (registered) {
-            nip05Identifier = '$username@openvine.co';
-            profileData['nip05'] = nip05Identifier;
-          }
-        } catch (e) {
-          Log.error('Failed to register NIP-05: $e',
-              name: 'ProfileSetupScreen', category: LogCategory.ui);
-          // Continue with profile creation even if NIP-05 fails
-        }
-      }
+      // Handle NIP-05 registration if username provided - DISABLED until @divine.video is ready
+      // TODO: Re-enable when @divine.video NIP-05 service is available
+      // String? nip05Identifier;
+      // if (_nip05Controller.text.trim().isNotEmpty &&
+      //     _usernameAvailable == true) {
+      //   try {
+      //     final nip05Service = Nip05Service();
+      //     final username = _nip05Controller.text.trim();
+      //     final nostrService = ref.read(nostrServiceProvider);
+      //     final relays = nostrService.connectedRelays.toList();
+      //
+      //     final registered = await nip05Service.registerUsername(
+      //       username,
+      //       authService.currentPublicKeyHex!,
+      //       relays,
+      //     );
+      //
+      //     if (registered) {
+      //       nip05Identifier = '$username@divine.video';
+      //       profileData['nip05'] = nip05Identifier;
+      //     }
+      //   } catch (e) {
+      //     Log.error('Failed to register NIP-05: $e',
+      //         name: 'ProfileSetupScreen', category: LogCategory.ui);
+      //     // Continue with profile creation even if NIP-05 fails
+      //   }
+      // }
 
       // Create NIP-01 kind 0 profile event
       Log.info('🔨 Creating kind 0 event...',
@@ -928,241 +808,46 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
             name: 'ProfileSetupScreen', category: LogCategory.ui);
       }
 
-      // Immediate verification: try to query the event back from relay
-      Log.info(
-          '🔍 Immediate verification: checking if event was actually stored...',
-          name: 'ProfileSetupScreen',
-          category: LogCategory.ui);
-      await Future.delayed(
-          const Duration(seconds: 1)); // Brief delay to let relay process
-
-      try {
-        final verificationProfile = await userProfileService
-            .fetchProfile(currentPubkey, forceRefresh: true);
-        if (verificationProfile != null) {
-          Log.info(
-              '✅ Immediate verification: found profile with event ID ${verificationProfile.eventId}',
-              name: 'ProfileSetupScreen',
-              category: LogCategory.ui);
-          if (verificationProfile.eventId == event.id) {
-            Log.info(
-                '🎯 Immediate verification: Event ID matches! Relay stored our event correctly.',
-                name: 'ProfileSetupScreen',
-                category: LogCategory.ui);
-          } else {
-            Log.warning(
-                '⚠️ Immediate verification: Event ID mismatch. Expected ${event.id}, got ${verificationProfile.eventId}',
-                name: 'ProfileSetupScreen',
-                category: LogCategory.ui);
-          }
-        } else {
-          Log.warning(
-              '⚠️ Immediate verification: No profile found. Relay may have rejected the event.',
-              name: 'ProfileSetupScreen',
-              category: LogCategory.ui);
-        }
-      } catch (e) {
-        Log.error('❌ Immediate verification failed: $e',
-            name: 'ProfileSetupScreen', category: LogCategory.ui);
-      }
-
-      // Add delay to give relay time to process (temporary debugging)
-      Log.info('⏳ Waiting 2 seconds for relay to process event...',
-          name: 'ProfileSetupScreen', category: LogCategory.ui);
-      await Future.delayed(const Duration(seconds: 2));
 
       if (success) {
-        // Force refresh the user's profile in auth service
+        // Immediately update local cache with published profile data
         if (mounted) {
           Log.info(
-            '🔄 Attempting to force refresh profile after successful broadcast...',
+            '🔄 Updating local cache with published profile...',
             name: 'ProfileSetupScreen',
             category: LogCategory.ui,
           );
 
           final userProfileService = ref.read(userProfileServiceProvider);
-          final beforeRefreshProfile =
-              userProfileService.getCachedProfile(currentPubkey);
 
-          Log.info('📋 Profile before refresh:',
-              name: 'ProfileSetupScreen', category: LogCategory.ui);
-          if (beforeRefreshProfile != null) {
-            Log.info('  - name: ${beforeRefreshProfile.name}',
-                name: 'ProfileSetupScreen', category: LogCategory.ui);
-            Log.info('  - about: ${beforeRefreshProfile.about}',
-                name: 'ProfileSetupScreen', category: LogCategory.ui);
-            Log.info('  - eventId: ${beforeRefreshProfile.eventId}',
-                name: 'ProfileSetupScreen', category: LogCategory.ui);
-          } else {
-            Log.info('  - No cached profile',
-                name: 'ProfileSetupScreen', category: LogCategory.ui);
-          }
-
-          // Use proper retry logic to wait for relay to process the new event
-          Log.info(
-            '🔄 Using retry logic to wait for relay to process profile update...',
-            name: 'ProfileSetupScreen',
-            category: LogCategory.ui,
+          // Create profile from published data
+          final newProfile = profile_model.UserProfile(
+            pubkey: currentPubkey,
+            eventId: event.id,
+            createdAt:
+                DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000),
+            name: profileData['name'] as String?,
+            displayName: profileData['display_name'] as String?,
+            about: profileData['about'] as String?,
+            picture: profileData['picture'] as String?,
+            nip05: profileData['nip05'] as String?,
+            rawData: profileData,
           );
 
-          profile_model.UserProfile? refreshedProfile;
-          try {
-            refreshedProfile = await AsyncUtils.retryWithBackoff(
-              operation: () async {
-                Log.info(
-                  '🔄 Retry attempt: clearing cache and fetching profile...',
-                  name: 'ProfileSetupScreen',
-                  category: LogCategory.ui,
-                );
+          // Update cache directly (no async fetch needed)
+          await userProfileService.updateCachedProfile(newProfile);
+          Log.info('✅ Updated local cache with published profile data',
+              name: 'ProfileSetupScreen', category: LogCategory.ui);
 
-                // Log current relay status
-                final relayStatus = nostrService.getRelayStatus();
-                Log.info('🔗 Current relay status: $relayStatus',
-                    name: 'ProfileSetupScreen', category: LogCategory.ui);
+          // Update AuthService profile cache
+          await authService.refreshCurrentProfile(userProfileService);
+          Log.info('✅ Updated AuthService profile cache',
+              name: 'ProfileSetupScreen', category: LogCategory.ui);
 
-                userProfileService.removeProfile(currentPubkey);
-                final profile = await userProfileService
-                    .fetchProfile(currentPubkey, forceRefresh: true);
-
-                Log.info('📋 Profile fetch result:',
-                    name: 'ProfileSetupScreen', category: LogCategory.ui);
-                Log.info('  - Expected event ID: ${event.id}',
-                    name: 'ProfileSetupScreen', category: LogCategory.ui);
-                Log.info(
-                    '  - Expected timestamp: ${event.createdAt} (${DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000)})',
-                    name: 'ProfileSetupScreen',
-                    category: LogCategory.ui);
-                if (profile != null) {
-                  Log.info('  - Fetched profile event ID: ${profile.eventId}',
-                      name: 'ProfileSetupScreen', category: LogCategory.ui);
-                  Log.info(
-                      '  - Fetched profile timestamp: ${profile.createdAt.millisecondsSinceEpoch ~/ 1000} (${profile.createdAt})',
-                      name: 'ProfileSetupScreen',
-                      category: LogCategory.ui);
-                  Log.info('  - Profile name: ${profile.name}',
-                      name: 'ProfileSetupScreen', category: LogCategory.ui);
-                  Log.info('  - Profile about: ${profile.about}',
-                      name: 'ProfileSetupScreen', category: LogCategory.ui);
-                } else {
-                  Log.warning('  - Profile is null',
-                      name: 'ProfileSetupScreen', category: LogCategory.ui);
-                }
-
-                // Verify we got the updated profile by checking event ID or timestamp
-                final eventIdMatches = profile?.eventId == event.id;
-                final timestampMatches = profile?.createdAt != null &&
-                    profile!.createdAt.millisecondsSinceEpoch >=
-                        (event.createdAt * 1000 - 1000);
-
-                Log.info('🔍 Profile validation:',
-                    name: 'ProfileSetupScreen', category: LogCategory.ui);
-                Log.info('  - Event ID matches: $eventIdMatches',
-                    name: 'ProfileSetupScreen', category: LogCategory.ui);
-                Log.info('  - Timestamp valid: $timestampMatches',
-                    name: 'ProfileSetupScreen', category: LogCategory.ui);
-
-                if (eventIdMatches || timestampMatches) {
-                  Log.info(
-                      '✅ Profile validation passed - using fetched profile',
-                      name: 'ProfileSetupScreen',
-                      category: LogCategory.ui);
-                  return profile;
-                }
-
-                Log.warning(
-                    "❌ Profile validation failed - relay hasn't processed new event yet",
-                    name: 'ProfileSetupScreen',
-                    category: LogCategory.ui);
-                throw Exception(
-                    'Profile not yet updated on relay - retrying...');
-              },
-              maxRetries: 3,
-              baseDelay: const Duration(seconds: 1),
-              debugName: 'profile-refresh-after-publish',
-            );
-          } catch (retryError) {
-            Log.warning('⚠️ Profile refresh failed after retries: $retryError',
-                name: 'ProfileSetupScreen', category: LogCategory.ui);
-
-            // If refresh failed due to subscription limits, still treat as success
-            // since the profile was published successfully
-            if (retryError
-                .toString()
-                .contains('Maximum number of subscriptions')) {
-              Log.info(
-                  'ℹ️ Subscription limit reached, but profile was published successfully',
-                  name: 'ProfileSetupScreen',
-                  category: LogCategory.ui);
-
-              // Manually update the local cache with what we just published
-              final newProfile = profile_model.UserProfile(
-                pubkey: currentPubkey,
-                eventId: event.id,
-                createdAt:
-                    DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000),
-                name: profileData['name'] as String?,
-                displayName: profileData['display_name'] as String?,
-                about: profileData['about'] as String?,
-                picture: profileData['picture'] as String?,
-                nip05: profileData['nip05'] as String?,
-                rawData: profileData,
-              );
-
-              await userProfileService.updateCachedProfile(newProfile);
-              Log.info('✅ Updated local cache with published profile data',
-                  name: 'ProfileSetupScreen', category: LogCategory.ui);
-
-              // Also update AuthService profile
-              await authService.refreshCurrentProfile(userProfileService);
-              Log.info('✅ Updated AuthService profile cache',
-                  name: 'ProfileSetupScreen', category: LogCategory.ui);
-            }
-          }
-
-          // Check what we got back
-          if (refreshedProfile != null) {
-            Log.info('✅ Profile refreshed successfully:',
-                name: 'ProfileSetupScreen', category: LogCategory.ui);
-            Log.info('  - name: ${refreshedProfile.name}',
-                name: 'ProfileSetupScreen', category: LogCategory.ui);
-            Log.info('  - about: ${refreshedProfile.about}',
-                name: 'ProfileSetupScreen', category: LogCategory.ui);
-            Log.info('  - eventId: ${refreshedProfile.eventId}',
-                name: 'ProfileSetupScreen', category: LogCategory.ui);
-          } else {
-            Log.warning('⚠️ fetchProfile returned null after refresh',
-                name: 'ProfileSetupScreen', category: LogCategory.ui);
-
-            // Check cache again
-            final afterRefreshProfile =
-                userProfileService.getCachedProfile(currentPubkey);
-            if (afterRefreshProfile != null) {
-              Log.info('📋 But profile IS in cache after refresh:',
-                  name: 'ProfileSetupScreen', category: LogCategory.ui);
-              Log.info('  - name: ${afterRefreshProfile.name}',
-                  name: 'ProfileSetupScreen', category: LogCategory.ui);
-              Log.info('  - about: ${afterRefreshProfile.about}',
-                  name: 'ProfileSetupScreen', category: LogCategory.ui);
-              Log.info('  - eventId: ${afterRefreshProfile.eventId}',
-                  name: 'ProfileSetupScreen', category: LogCategory.ui);
-            } else {
-              Log.error('❌ Profile NOT in cache after refresh',
-                  name: 'ProfileSetupScreen', category: LogCategory.ui);
-            }
-          }
-        }
-
-        // Always try to refresh AuthService profile after publish
-        if (mounted) {
-          final finalProfile =
-              userProfileService.getCachedProfile(currentPubkey);
-          if (finalProfile != null) {
-            await authService.refreshCurrentProfile(userProfileService);
-            Log.info(
-                '✅ Updated AuthService profile cache after successful publish',
-                name: 'ProfileSetupScreen',
-                category: LogCategory.ui);
-          }
+          // Invalidate Riverpod provider to trigger UI refresh
+          ref.invalidate(fetchUserProfileProvider(currentPubkey));
+          Log.info('✅ Invalidated fetchUserProfileProvider for UI refresh',
+              name: 'ProfileSetupScreen', category: LogCategory.ui);
         }
 
         if (mounted) {
@@ -1214,16 +899,17 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     }
   }
 
-  void _skipProfileSetup() {
-    if (widget.isNewUser) {
-      // For new users, navigate back to the auth flow
-      // The auth service should already be in authenticated state
-      Navigator.of(context).popUntil((route) => route.isFirst);
-    } else {
-      // For existing users, just go back to previous screen
-      Navigator.of(context).pop();
-    }
-  }
+  // Skip button removed from UI - no longer needed
+  // void _skipProfileSetup() {
+  //   if (widget.isNewUser) {
+  //     // For new users, navigate back to the auth flow
+  //     // The auth service should already be in authenticated state
+  //     Navigator.of(context).popUntil((route) => route.isFirst);
+  //   } else {
+  //     // For existing users, just go back to previous screen
+  //     Navigator.of(context).pop();
+  //   }
+  // }
 
   Widget _buildProfilePicturePreview() {
     // Priority: selected image > uploaded URL > manual URL > placeholder
@@ -1481,59 +1167,61 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     }
   }
 
-  Timer? _usernameCheckTimer;
-
-  void _onUsernameChanged(String value) {
-    // Cancel any existing timer
-    _usernameCheckTimer?.cancel();
-
-    // Reset state
-    setState(() {
-      _usernameAvailable = null;
-      _usernameError = null;
-    });
-
-    // Don't check if empty or too short
-    if (value.isEmpty || value.length < 3) {
-      return;
-    }
-
-    // Validate format locally first
-    final regex = RegExp(r'^[a-z0-9\-_.]+$', caseSensitive: false);
-    if (!regex.hasMatch(value)) {
-      return;
-    }
-
-    // Debounce the check
-    _usernameCheckTimer = Timer(const Duration(milliseconds: 500), () {
-      _checkUsernameAvailability(value);
-    });
-  }
-
-  Future<void> _checkUsernameAvailability(String username) async {
-    setState(() {
-      _isCheckingUsername = true;
-    });
-
-    try {
-      final nip05Service = Nip05Service();
-      final isAvailable =
-          await nip05Service.checkUsernameAvailability(username);
-
-      if (mounted) {
-        setState(() {
-          _usernameAvailable = isAvailable;
-          _usernameError = isAvailable ? null : 'Username already taken';
-          _isCheckingUsername = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _usernameError = 'Failed to check username';
-          _isCheckingUsername = false;
-        });
-      }
-    }
-  }
+  // NIP-05 username checking - DISABLED until @divine.video is ready
+  // TODO: Re-enable when @divine.video NIP-05 service is available
+  // Timer? _usernameCheckTimer;
+  //
+  // void _onUsernameChanged(String value) {
+  //   // Cancel any existing timer
+  //   _usernameCheckTimer?.cancel();
+  //
+  //   // Reset state
+  //   setState(() {
+  //     _usernameAvailable = null;
+  //     _usernameError = null;
+  //   });
+  //
+  //   // Don't check if empty or too short
+  //   if (value.isEmpty || value.length < 3) {
+  //     return;
+  //   }
+  //
+  //   // Validate format locally first
+  //   final regex = RegExp(r'^[a-z0-9\-_.]+$', caseSensitive: false);
+  //   if (!regex.hasMatch(value)) {
+  //     return;
+  //   }
+  //
+  //   // Debounce the check
+  //   _usernameCheckTimer = Timer(const Duration(milliseconds: 500), () {
+  //     _checkUsernameAvailability(value);
+  //   });
+  // }
+  //
+  // Future<void> _checkUsernameAvailability(String username) async {
+  //   setState(() {
+  //     _isCheckingUsername = true;
+  //   });
+  //
+  //   try {
+  //     final nip05Service = Nip05Service();
+  //     final isAvailable =
+  //         await nip05Service.checkUsernameAvailability(username);
+  //
+  //     if (mounted) {
+  //       setState(() {
+  //         _usernameAvailable = isAvailable;
+  //         _usernameError = isAvailable ? null : 'Username already taken';
+  //         _isCheckingUsername = false;
+  //       });
+  //     }
+  //   } catch (e) {
+  //     if (mounted) {
+  //       setState(() {
+  //         _usernameError = 'Failed to check username';
+  //         _isCheckingUsername = false;
+  //       });
+  //     }
+  //   }
+  // }
 }

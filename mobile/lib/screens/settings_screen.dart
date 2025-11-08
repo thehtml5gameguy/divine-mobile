@@ -38,6 +38,17 @@ class SettingsScreen extends ConsumerWidget {
       backgroundColor: Colors.black,
       body: ListView(
         children: [
+          // diVine wordmark at top of settings
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24.0),
+            child: Center(
+              child: Image.asset(
+                'assets/icon/White on black.png',
+                height: 50,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
           // Profile Section
           if (isAuthenticated) ...[
             _buildSectionHeader('Profile'),

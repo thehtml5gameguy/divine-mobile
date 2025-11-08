@@ -186,6 +186,10 @@ flutter:
     - assets/videos/
     - assets/top_1000_hashtags.json
     - assets/fonts/
+    - assets/icon/White on black.png
+    - assets/icon/Ivory on Green.png
+    - assets/icon/Black on white.png
+    - assets/icon/Green on ivory.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

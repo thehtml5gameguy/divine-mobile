@@ -39,11 +39,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 40),
-                // App branding
-                const Icon(
-                  Icons.video_library,
-                  size: 80,
-                  color: VineTheme.vineGreen,
+                // App branding - diVine wordmark
+                Image.asset(
+                  'assets/icon/White on black.png',
+                  height: 60,
+                  fit: BoxFit.contain,
                 ),
                 const SizedBox(height: 24),
                 Text(
