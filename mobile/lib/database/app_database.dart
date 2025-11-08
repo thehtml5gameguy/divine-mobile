@@ -90,35 +90,90 @@ class AppDatabase extends _$AppDatabase {
             // Backfill metrics for ALL existing video events (kind 34236 and 6)
             // This parses tags from existing events and populates video_metrics
             // CRITICAL: Must happen during migration, not background, so queries work immediately
-            await customStatement('''
-              INSERT INTO video_metrics (event_id, loop_count, likes, views, comments, avg_completion,
-                                         has_proofmode, has_device_attestation, has_pgp_signature, updated_at)
-              SELECT
-                e.id,
-                CAST(json_extract(
-                  (SELECT value FROM json_each(e.tags)
-                   WHERE json_extract(value, '\$[0]') = 'loops' LIMIT 1),
-                  '\$[1]'
-                ) AS INTEGER),
-                CAST(json_extract(
-                  (SELECT value FROM json_each(e.tags)
-                   WHERE json_extract(value, '\$[0]') = 'likes' LIMIT 1),
-                  '\$[1]'
-                ) AS INTEGER),
-                NULL,
-                CAST(json_extract(
-                  (SELECT value FROM json_each(e.tags)
-                   WHERE json_extract(value, '\$[0]') = 'comments' LIMIT 1),
-                  '\$[1]'
-                ) AS INTEGER),
-                NULL,
-                NULL,
-                NULL,
-                NULL,
-                datetime('now')
-              FROM event e
-              WHERE e.kind IN (34236, 6)
-            ''');
+            try {
+              // Count events before backfill for logging
+              final countResult = await customSelect(
+                'SELECT COUNT(*) as cnt FROM event WHERE kind IN (34236, 6)',
+              ).getSingle();
+              final eventCount = countResult.read<int>('cnt');
+
+              print('[MIGRATION] Backfilling metrics for $eventCount video events...');
+
+              // Use INSERT OR IGNORE to skip events that fail parsing
+              // This ensures migration completes even if some events have bad data
+              await customStatement('''
+                INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, avg_completion,
+                                           has_proofmode, has_device_attestation, has_pgp_signature, updated_at)
+                SELECT
+                  e.id,
+                  CASE
+                    WHEN json_extract(
+                      (SELECT value FROM json_each(e.tags)
+                       WHERE json_extract(value, '\$[0]') = 'loops' LIMIT 1),
+                      '\$[1]'
+                    ) IS NOT NULL
+                    THEN CAST(json_extract(
+                      (SELECT value FROM json_each(e.tags)
+                       WHERE json_extract(value, '\$[0]') = 'loops' LIMIT 1),
+                      '\$[1]'
+                    ) AS INTEGER)
+                    ELSE NULL
+                  END,
+                  CASE
+                    WHEN json_extract(
+                      (SELECT value FROM json_each(e.tags)
+                       WHERE json_extract(value, '\$[0]') = 'likes' LIMIT 1),
+                      '\$[1]'
+                    ) IS NOT NULL
+                    THEN CAST(json_extract(
+                      (SELECT value FROM json_each(e.tags)
+                       WHERE json_extract(value, '\$[0]') = 'likes' LIMIT 1),
+                      '\$[1]'
+                    ) AS INTEGER)
+                    ELSE NULL
+                  END,
+                  NULL,
+                  CASE
+                    WHEN json_extract(
+                      (SELECT value FROM json_each(e.tags)
+                       WHERE json_extract(value, '\$[0]') = 'comments' LIMIT 1),
+                      '\$[1]'
+                    ) IS NOT NULL
+                    THEN CAST(json_extract(
+                      (SELECT value FROM json_each(e.tags)
+                       WHERE json_extract(value, '\$[0]') = 'comments' LIMIT 1),
+                      '\$[1]'
+                    ) AS INTEGER)
+                    ELSE NULL
+                  END,
+                  NULL,
+                  NULL,
+                  NULL,
+                  NULL,
+                  datetime('now')
+                FROM event e
+                WHERE e.kind IN (34236, 6)
+              ''');
+
+              // Count successful backfills
+              final backfilledResult = await customSelect(
+                'SELECT COUNT(*) as cnt FROM video_metrics',
+              ).getSingle();
+              final backfilledCount = backfilledResult.read<int>('cnt');
+
+              print('[MIGRATION] ✅ Backfilled metrics for $backfilledCount/$eventCount video events');
+
+              if (backfilledCount < eventCount) {
+                print('[MIGRATION] ⚠️  ${eventCount - backfilledCount} events skipped (malformed tags or duplicate IDs)');
+              }
+            } catch (e, stackTrace) {
+              // Log error but don't fail migration - table and indices are created
+              // Future events will still get metrics via upsertEvent()
+              print('[MIGRATION] ⚠️  Backfill failed: $e');
+              print('[MIGRATION] Stack trace: $stackTrace');
+              print('[MIGRATION] Migration completed with empty video_metrics table');
+              print('[MIGRATION] New events will populate metrics going forward');
+            }
           }
         },
       );

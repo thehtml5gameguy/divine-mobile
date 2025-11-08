@@ -1,6 +1,7 @@
 // ABOUTME: Comprehensive share menu for videos with content reporting, user sharing, and list management
 // ABOUTME: Provides Apple-compliant reporting, NIP-51 list management, and social sharing features
 
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -70,6 +71,8 @@ class _ShareVideoMenuState extends ConsumerState<ShareVideoMenu> {
                       ],
                       const SizedBox(height: 24),
                       _buildReportSection(),
+                      const SizedBox(height: 24),
+                      _buildAdvancedSection(),
                       const SizedBox(height: 16),
                     ],
                   ),
@@ -610,6 +613,40 @@ class _ShareVideoMenuState extends ConsumerState<ShareVideoMenu> {
         },
       );
 
+  /// Build advanced section for developer/power-user features
+  Widget _buildAdvancedSection() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Advanced',
+            style: TextStyle(
+              color: VineTheme.whiteText,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // View Source
+          _buildActionTile(
+            icon: Icons.code,
+            title: 'View Source',
+            subtitle: 'View raw Nostr event JSON',
+            onTap: _showViewSourceDialog,
+          ),
+
+          const SizedBox(height: 8),
+
+          // Get Event ID
+          _buildActionTile(
+            icon: Icons.fingerprint,
+            title: 'Copy Event ID',
+            subtitle: 'Copy Nostr event ID to clipboard',
+            onTap: _copyEventId,
+          ),
+        ],
+      );
+
   Widget _buildActionTile({
     required IconData icon,
     required String title,
@@ -752,6 +789,34 @@ class _ShareVideoMenuState extends ConsumerState<ShareVideoMenu> {
       }
     } catch (e) {
       Log.error('Failed to share externally: $e',
+          name: 'ShareVideoMenu', category: LogCategory.ui);
+    }
+  }
+
+  /// Show dialog with raw Nostr event JSON
+  void _showViewSourceDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => _ViewSourceDialog(video: widget.video),
+    );
+  }
+
+  /// Copy event ID to clipboard
+  Future<void> _copyEventId() async {
+    try {
+      await Clipboard.setData(ClipboardData(text: widget.video.id));
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Event ID copied to clipboard'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      Log.error('Failed to copy event ID: $e',
           name: 'ShareVideoMenu', category: LogCategory.ui);
     }
   }
@@ -2700,4 +2765,156 @@ class _ReportConfirmationDialog extends StatelessWidget {
           ),
         ],
       );
+}
+
+/// Dialog for viewing raw Nostr event JSON
+class _ViewSourceDialog extends ConsumerWidget {
+  const _ViewSourceDialog({required this.video});
+  final VideoEvent video;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Get the raw Nostr event from the video
+    final nostrService = ref.read(nostrServiceProvider);
+
+    return AlertDialog(
+      backgroundColor: VineTheme.cardBackground,
+      title: Row(
+        children: [
+          const Icon(Icons.code, color: VineTheme.vineGreen),
+          const SizedBox(width: 12),
+          const Text(
+            'Event Source',
+            style: TextStyle(color: VineTheme.whiteText),
+          ),
+        ],
+      ),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Event ID
+            Row(
+              children: [
+                const Text(
+                  'Event ID: ',
+                  style: TextStyle(
+                    color: VineTheme.secondaryText,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    video.id,
+                    style: const TextStyle(
+                      color: VineTheme.whiteText,
+                      fontSize: 12,
+                      fontFamily: 'monospace',
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.copy, size: 16),
+                  color: VineTheme.vineGreen,
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: video.id));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Event ID copied'),
+                        duration: Duration(seconds: 1),
+                      ),
+                    );
+                  },
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // JSON content
+            Flexible(
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: VineTheme.backgroundColor,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade700),
+                ),
+                child: FutureBuilder<String>(
+                  future: _getEventJson(nostrService),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(color: VineTheme.vineGreen),
+                      );
+                    }
+
+                    if (snapshot.hasError) {
+                      return Text(
+                        'Error loading event: ${snapshot.error}',
+                        style: const TextStyle(color: Colors.red),
+                      );
+                    }
+
+                    return SingleChildScrollView(
+                      child: SelectableText(
+                        snapshot.data ?? 'No data',
+                        style: const TextStyle(
+                          color: VineTheme.whiteText,
+                          fontSize: 12,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () async {
+            final json = await _getEventJson(nostrService);
+            await Clipboard.setData(ClipboardData(text: json));
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('JSON copied to clipboard'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+          },
+          child: const Text('Copy JSON'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Close'),
+        ),
+      ],
+    );
+  }
+
+  Future<String> _getEventJson(dynamic nostrService) async {
+    try {
+      // Fetch the raw event from Nostr
+      final event = await nostrService.fetchEventById(video.id);
+      if (event == null) {
+        return 'Event not found';
+      }
+
+      // Format as pretty-printed JSON
+      return const JsonEncoder.withIndent('  ').convert(event.toJson());
+    } catch (e) {
+      return 'Error: $e';
+    }
+  }
 }

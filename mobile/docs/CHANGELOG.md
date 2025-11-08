@@ -7,6 +7,85 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Mutual Mute Blocking (2025-11-08)
+
+#### Features
+- **Added mutual mute list blocking (NIP-51 kind 10000)** - Reciprocally hide content from users who mute you
+  - Background sync of kind 10000 events tagging your pubkey
+  - Automatic filtering of mutual muters across all feeds (home, discovery, hashtag, search, comments)
+  - "This account is not available" message when navigating to blocked user's profile or video
+  - Persistent storage via embedded relay's SQLite between sessions
+  - Non-blocking startup - runs as low priority background process
+
+#### Technical Details
+- Created comprehensive design document: `docs/plans/2025-11-08-mutual-mute-blocking-design.md`
+- Extended `lib/services/content_blocklist_service.dart`:
+  - Added `_mutualMuteBlocklist` Set for tracking mutual muters
+  - Added `syncMuteListsInBackground()` method to subscribe to kind 10000 events
+  - Added `_handleMuteListEvent()` to process mute/unmute events
+  - Modified `shouldFilterFromFeeds()` to check all three blocklists
+  - Handles replaceable events (unmuting when user removes you from their list)
+- Modified `lib/main.dart`:
+  - Integrated mutual mute sync into app startup via `Future.microtask()`
+  - Runs after AuthService ready but before feeds load
+  - Graceful error handling for non-critical feature
+- Modified `lib/screens/profile_screen_router.dart`:
+  - Added blocked user check before rendering profile
+  - Shows "This account is not available" message for mutual muters
+- Modified `lib/screens/video_detail_screen.dart`:
+  - Added blocked user check before playing video
+  - Shows "This account is not available" message for mutual muters
+
+#### Test Coverage
+- Created `test/services/content_blocklist_service_test.dart`:
+  - 11 comprehensive tests for mutual mute functionality
+  - Tests subscription creation, event handling, unmuting, and filtering
+  - All tests passing
+- Uses mock NostrService and StreamControllers for async testing
+
+### Added - Advanced Share Menu (2025-11-08)
+
+#### Features
+- **Added developer/power-user features to share menu** - View source and copy event IDs
+  - New "Advanced" section in video share menu
+  - "View Source" shows raw Nostr event JSON in dialog
+  - "Copy Event ID" copies full Nostr event ID to clipboard
+  - Pretty-printed JSON with syntax highlighting
+  - Copy entire JSON or just event ID
+
+#### Technical Details
+- Modified `lib/widgets/share_video_menu.dart`:
+  - Added `_buildAdvancedSection()` with View Source and Copy Event ID options
+  - Created `_ViewSourceDialog` widget for displaying event JSON
+  - Added `_showViewSourceDialog()` and `_copyEventId()` methods
+  - Uses `JsonEncoder.withIndent()` for readable formatting
+  - Fetches raw event from NostrService via `fetchEventById()`
+
+### Fixed - Database Migration Resilience (2025-11-08)
+
+#### Bug Fixes
+- **Fixed video_metrics backfill migration to handle malformed events** - Migration now completes successfully even with bad data
+  - Changed from `INSERT` to `INSERT OR IGNORE` to skip events with invalid tags
+  - Added NULL checks before CAST operations to prevent SQL errors
+  - Added logging for backfill success rate (shows X/Y events backfilled)
+  - Wrapped backfill in try-catch to prevent migration failure
+  - Empty video_metrics table is acceptable - new events will populate going forward
+
+#### Root Cause
+- Some events have malformed tag structures or missing tag values
+- Direct CAST operations threw SQL errors on NULL values
+- Migration would fail completely, preventing app startup
+- Users stuck on old schema version
+
+#### Technical Details
+- Modified `lib/database/app_database.dart`:
+  - Lines 90-180: Updated migration step 2 backfill logic
+  - Added CASE/WHEN checks before CAST operations
+  - Added event count logging before/after backfill
+  - Added comprehensive error handling with stack traces
+  - Migration completes successfully even if backfill fails
+  - Future events still get metrics via `upsertEvent()`
+
 ### Fixed - Relay Migration (2025-10-31)
 
 #### Bug Fixes
