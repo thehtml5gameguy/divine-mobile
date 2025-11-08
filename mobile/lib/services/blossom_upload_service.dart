@@ -510,16 +510,29 @@ class BlossomUploadService {
           if (mediaUrl != null && mediaUrl.isNotEmpty) {
             final imageId = sha256 ?? fileHash;
 
+            // WORKAROUND for Blossom server bug: Server returns .mp4 extension for images
+            // Fix the file extension based on the MIME type we sent
+            String correctedUrl = mediaUrl;
+            if (mediaUrl.endsWith('.mp4')) {
+              // Map MIME type to correct file extension
+              final extension = _getImageExtensionFromMimeType(mimeType);
+              correctedUrl = mediaUrl.replaceAll(RegExp(r'\.mp4$'), '.$extension');
+              Log.debug(
+                  'Fixed server extension: .mp4 → .$extension for MIME type: $mimeType',
+                  name: 'BlossomUploadService',
+                  category: LogCategory.video);
+            }
+
             onProgress?.call(1.0);
 
-            Log.info('  URL: $mediaUrl',
+            Log.info('  URL: $correctedUrl',
                 name: 'BlossomUploadService', category: LogCategory.video);
             Log.info('  SHA256: $sha256',
                 name: 'BlossomUploadService', category: LogCategory.video);
 
             return BlossomUploadResult(
               success: true,
-              cdnUrl: mediaUrl,
+              cdnUrl: correctedUrl,
               videoId: imageId,
             );
           } else {
@@ -772,6 +785,31 @@ class BlossomUploadService {
       Log.error('Failed to add ProofMode headers: $e',
           name: 'BlossomUploadService', category: LogCategory.video);
       // Don't fail the upload if ProofMode headers can't be added
+    }
+  }
+
+  /// Map MIME types to file extensions for image uploads
+  /// WORKAROUND: Blossom server returns .mp4 for all uploads, we need to fix it client-side
+  String _getImageExtensionFromMimeType(String mimeType) {
+    switch (mimeType.toLowerCase()) {
+      case 'image/jpeg':
+      case 'image/jpg':
+        return 'jpg';
+      case 'image/png':
+        return 'png';
+      case 'image/gif':
+        return 'gif';
+      case 'image/webp':
+        return 'webp';
+      case 'image/svg+xml':
+        return 'svg';
+      case 'image/bmp':
+        return 'bmp';
+      default:
+        // Default to jpg if unknown MIME type
+        Log.debug('Unknown image MIME type: $mimeType, defaulting to jpg',
+            name: 'BlossomUploadService', category: LogCategory.video);
+        return 'jpg';
     }
   }
 }
