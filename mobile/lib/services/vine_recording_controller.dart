@@ -72,6 +72,11 @@ class MobileCameraInterface extends CameraPlatformInterface {
   int _currentCameraIndex = 0;
   bool isRecording = false;
 
+  // Zoom support
+  double _minZoomLevel = 1.0;
+  double _maxZoomLevel = 1.0;
+  double _currentZoomLevel = 1.0;
+
   @override
   Future<void> initialize() async {
     _availableCameras = await availableCameras();
@@ -108,6 +113,21 @@ class MobileCameraInterface extends CameraPlatformInterface {
           name: 'VineRecordingController', category: LogCategory.system);
       // Continue anyway - some platforms don't need this
     }
+
+    // Initialize zoom levels
+    try {
+      _minZoomLevel = await _controller!.getMinZoomLevel();
+      _maxZoomLevel = await _controller!.getMaxZoomLevel();
+      _currentZoomLevel = _minZoomLevel;
+      Log.info('Zoom range initialized: $_minZoomLevel - $_maxZoomLevel',
+          name: 'VineRecordingController', category: LogCategory.system);
+    } catch (e) {
+      Log.warning('Failed to get zoom levels: $e',
+          name: 'VineRecordingController', category: LogCategory.system);
+      _minZoomLevel = 1.0;
+      _maxZoomLevel = 1.0;
+      _currentZoomLevel = 1.0;
+    }
   }
 
   Future<void> _initializeNewCamera() async {
@@ -124,6 +144,21 @@ class MobileCameraInterface extends CameraPlatformInterface {
       Log.warning('prepareForVideoRecording failed during camera switch: $e',
           name: 'VineRecordingController', category: LogCategory.system);
       // Continue anyway - some platforms don't need this
+    }
+
+    // Initialize zoom levels
+    try {
+      _minZoomLevel = await _controller!.getMinZoomLevel();
+      _maxZoomLevel = await _controller!.getMaxZoomLevel();
+      _currentZoomLevel = _minZoomLevel;
+      Log.info('Zoom range initialized: $_minZoomLevel - $_maxZoomLevel',
+          name: 'VineRecordingController', category: LogCategory.system);
+    } catch (e) {
+      Log.warning('Failed to get zoom levels: $e',
+          name: 'VineRecordingController', category: LogCategory.system);
+      _minZoomLevel = 1.0;
+      _maxZoomLevel = 1.0;
+      _currentZoomLevel = 1.0;
     }
   }
 
@@ -336,6 +371,36 @@ class MobileCameraInterface extends CameraPlatformInterface {
       ),
     );
   }
+
+  /// Set zoom level (clamped to camera's supported range)
+  Future<void> setZoom(double zoomLevel) async {
+    if (_controller == null || !_controller!.value.isInitialized) {
+      Log.warning('Cannot set zoom - controller not initialized',
+          name: 'VineRecordingController', category: LogCategory.system);
+      return;
+    }
+
+    try {
+      final clampedZoom = zoomLevel.clamp(_minZoomLevel, _maxZoomLevel);
+      await _controller!.setZoomLevel(clampedZoom);
+      _currentZoomLevel = clampedZoom;
+
+      Log.debug('Set zoom level to ${clampedZoom.toStringAsFixed(1)}x',
+          name: 'VineRecordingController', category: LogCategory.system);
+    } catch (e) {
+      Log.error('Failed to set zoom: $e',
+          name: 'VineRecordingController', category: LogCategory.system);
+    }
+  }
+
+  /// Get current zoom level
+  double get currentZoom => _currentZoomLevel;
+
+  /// Get minimum zoom level
+  double get minZoom => _minZoomLevel;
+
+  /// Get maximum zoom level
+  double get maxZoom => _maxZoomLevel;
 
   @override
   bool get canSwitchCamera => _availableCameras.length > 1;
