@@ -39,9 +39,13 @@ class _KeyManagementScreenState extends ConsumerState<KeyManagementScreen> {
         foregroundColor: VineTheme.whiteText,
       ),
       backgroundColor: Colors.black,
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
+      body: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
           // What are Nostr keys explanation
           _buildExplanationCard(),
           const SizedBox(height: 24),
@@ -53,6 +57,8 @@ class _KeyManagementScreenState extends ConsumerState<KeyManagementScreen> {
           // Export/Backup section
           _buildExportSection(context, keyManager),
         ],
+          ),
+        ),
       ),
     );
   }

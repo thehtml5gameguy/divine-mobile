@@ -36,8 +36,12 @@ class SettingsScreen extends ConsumerWidget {
         ),
       ),
       backgroundColor: Colors.black,
-      body: ListView(
-        children: [
+      body: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: ListView(
+            children: [
           // Profile Section
           if (isAuthenticated) ...[
             _buildSectionHeader('Profile'),
@@ -189,6 +193,8 @@ class SettingsScreen extends ConsumerWidget {
             },
           ),
         ],
+          ),
+        ),
       ),
       floatingActionButton: const CameraFAB(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,

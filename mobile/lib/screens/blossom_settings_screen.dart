@@ -166,9 +166,13 @@ class _BlossomSettingsScreenState extends ConsumerState<BlossomSettingsScreen> {
         ],
       ),
       backgroundColor: Colors.black,
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
+      body: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
           // Info card
           Card(
             color: Colors.black.withValues(alpha:0.7),
@@ -328,6 +332,8 @@ class _BlossomSettingsScreenState extends ConsumerState<BlossomSettingsScreen> {
             _buildServerOption('https://void.cat', 'Void.cat'),
           ],
         ],
+          ),
+        ),
       ),
       floatingActionButton: const CameraFAB(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
