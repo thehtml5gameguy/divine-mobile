@@ -192,15 +192,30 @@ class VideoEventPublisher {
 
       // Add all video URLs from Blossom upload stored in PendingUpload
       // Priority order (based on _scoreVideoUrl in video_event.dart):
-      // 1. streamingMp4Url (BunnyStream MP4 - scores 110)
+      // 1. streamingMp4Url (BunnyStream MP4 - scores 110) - ONLY if valid
       // 2. fallbackUrl (R2 MP4 - scores 100)
       // 3. streamingHlsUrl (HLS - scores 90)
 
       final urlsAdded = <String>[];
 
+      // Validate BunnyStream MP4 URL - must have quality suffix (e.g., play_360p.mp4)
+      // Invalid: .../play.mp4 (returns 404)
+      // Valid: .../play_360p.mp4, .../play_480p.mp4, etc.
       if (upload.streamingMp4Url != null && upload.streamingMp4Url!.isNotEmpty) {
-        imetaComponents.add('url ${upload.streamingMp4Url}');
-        urlsAdded.add('MP4(streaming): ${upload.streamingMp4Url}');
+        final isValidBunnyMp4 = upload.streamingMp4Url!.contains('stream.divine.video')
+            ? upload.streamingMp4Url!.contains(RegExp(r'play_\d+p\.mp4'))
+            : true; // Non-BunnyStream URLs are assumed valid
+
+        if (isValidBunnyMp4) {
+          imetaComponents.add('url ${upload.streamingMp4Url}');
+          urlsAdded.add('MP4(streaming): ${upload.streamingMp4Url}');
+        } else {
+          Log.warning(
+            '⚠️ Skipping invalid BunnyStream MP4 URL (missing quality suffix): ${upload.streamingMp4Url}',
+            name: 'VideoEventPublisher',
+            category: LogCategory.video,
+          );
+        }
       }
 
       if (upload.fallbackUrl != null && upload.fallbackUrl!.isNotEmpty) {

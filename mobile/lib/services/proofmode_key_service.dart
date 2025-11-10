@@ -1,7 +1,11 @@
 // ABOUTME: ProofMode PGP key management service for device-specific cryptographic operations
 // ABOUTME: Handles secure key generation, storage, and signing for proof validation
 
+import 'dart:convert';
+import 'dart:io';
+import 'package:crypto/crypto.dart';
 import 'package:dart_pg/dart_pg.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:openvine/services/proofmode_config.dart';
 import 'package:openvine/utils/unified_logger.dart';
@@ -129,7 +133,7 @@ class ProofModeKeyService {
       // In production, this would use proper PGP libraries like dart_pg
 
       // Generate a simple key pair using crypto library
-      final keyData = _generateSimpleKeyPair();
+      final keyData = await _generateSimpleKeyPair();
 
       final keyPair = ProofModeKeyPair(
         publicKey: keyData['publicKey']!,
@@ -215,7 +219,7 @@ class ProofModeKeyService {
       }
 
       // Generate signature (simplified approach for now)
-      final signature = _signWithPrivateKey(data, keyPair.privateKey);
+      final signature = await _signWithPrivateKey(data, keyPair.privateKey);
 
       final proofSignature = ProofSignature(
         signature: signature,
@@ -293,12 +297,44 @@ class ProofModeKeyService {
         key: _createdAtKey, value: keyPair.createdAt.toIso8601String());
   }
 
+  /// Generate device-specific passphrase using device identifiers
+  Future<String> _generateDevicePassphrase() async {
+    try {
+      final deviceInfo = DeviceInfoPlugin();
+      String deviceId;
+
+      if (Platform.isIOS) {
+        final iosInfo = await deviceInfo.iosInfo;
+        deviceId = iosInfo.identifierForVendor ?? 'ios-fallback';
+      } else if (Platform.isAndroid) {
+        final androidInfo = await deviceInfo.androidInfo;
+        deviceId = androidInfo.id;
+      } else if (Platform.isMacOS) {
+        final macOsInfo = await deviceInfo.macOsInfo;
+        deviceId = macOsInfo.systemGUID ?? 'macos-fallback';
+      } else {
+        deviceId = 'generic-fallback';
+      }
+
+      // Create device-specific passphrase by hashing device ID with salt
+      const salt = 'openvine_proofmode_v1';
+      final passphraseData = '$salt:$deviceId';
+      final hash = sha256.convert(utf8.encode(passphraseData));
+      return base64Encode(hash.bytes);
+    } catch (e) {
+      Log.warning('Failed to generate device passphrase, using fallback: $e',
+          name: 'ProofModeKeyService', category: LogCategory.auth);
+      // Fallback to static passphrase if device info unavailable
+      return 'openvine_proofmode_device_key_fallback';
+    }
+  }
+
   /// Generate a real PGP key pair using dart_pg
-  Map<String, String> _generateSimpleKeyPair() {
+  Future<Map<String, String>> _generateSimpleKeyPair() async {
     // Generate real PGP key pair using dart_pg
     final userID = 'OpenVine ProofMode <device@openvine.co>';
-    // Note: dart_pg requires non-empty passphrase, use device-specific passphrase
-    const passphrase = 'openvine_proofmode_device_key';
+    // Generate device-specific passphrase for enhanced security
+    final passphrase = await _generateDevicePassphrase();
 
     final privateKey = OpenPGP.generateKey(
       [userID],
@@ -324,9 +360,9 @@ class ProofModeKeyService {
   }
 
   /// Sign data with real PGP private key
-  String _signWithPrivateKey(String data, String armoredPrivateKey) {
+  Future<String> _signWithPrivateKey(String data, String armoredPrivateKey) async {
     // Real PGP signing using dart_pg
-    const passphrase = 'openvine_proofmode_device_key';
+    final passphrase = await _generateDevicePassphrase();
 
     final privateKey = OpenPGP.decryptPrivateKey(armoredPrivateKey, passphrase);
     // Note: signingKeys is a POSITIONAL parameter, not named

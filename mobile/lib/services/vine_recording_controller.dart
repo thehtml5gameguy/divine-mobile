@@ -150,19 +150,6 @@ class MobileCameraInterface extends CameraPlatformInterface {
       // Continue anyway - some platforms don't need this
     }
 
-    // iOS WORKAROUND: Try pausing and resuming preview to force texture refresh
-    try {
-      if (Platform.isIOS) {
-        await _controller!.pausePreview();
-        await _controller!.resumePreview();
-        Log.info('iOS: Paused and resumed preview to refresh texture',
-            name: 'VineRecordingController', category: LogCategory.system);
-      }
-    } catch (e) {
-      Log.warning('Preview pause/resume failed: $e',
-          name: 'VineRecordingController', category: LogCategory.system);
-    }
-
     // Initialize zoom levels
     try {
       _minZoomLevel = await _controller!.getMinZoomLevel();
@@ -322,6 +309,15 @@ class MobileCameraInterface extends CameraPlatformInterface {
         name: 'VineRecordingController', category: LogCategory.system);
 
     try {
+      // CRITICAL FIX: Dispose old controller BEFORE initializing new one
+      // AVFoundation requires the capture session to be fully stopped before switching
+      // See: https://stackoverflow.com/questions/5704464/video-freezes-on-camera-switch-with-avfoundation
+      Log.info('🔄 Disposing OLD controller to stop AVFoundation session...',
+          name: 'VineRecordingController', category: LogCategory.system);
+      await oldController?.dispose();
+      Log.info('🔄 OLD controller disposed, AVFoundation session stopped',
+          name: 'VineRecordingController', category: LogCategory.system);
+
       // Switch to the next camera
       final oldIndex = _currentCameraIndex;
       _currentCameraIndex = (_currentCameraIndex + 1) % _availableCameras.length;
@@ -344,13 +340,6 @@ class MobileCameraInterface extends CameraPlatformInterface {
         Log.error('🔄 NEW controller is NULL or not initialized!',
             name: 'VineRecordingController', category: LogCategory.system);
       }
-
-      // Safely dispose old controller after new one is ready
-      Log.info('🔄 Disposing OLD controller...',
-          name: 'VineRecordingController', category: LogCategory.system);
-      await oldController?.dispose();
-      Log.info('🔄 OLD controller disposed',
-          name: 'VineRecordingController', category: LogCategory.system);
 
       Log.info('✅ Successfully switched to camera $_currentCameraIndex (${_availableCameras[_currentCameraIndex].lensDirection})',
           name: 'VineRecordingController', category: LogCategory.system);

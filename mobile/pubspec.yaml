@@ -46,7 +46,7 @@ dependencies:
   http_parser: ^4.0.2
   web_socket_channel: ^3.0.3
   connectivity_plus: ^7.0.0
-  device_info_plus: ^12.1.0
+  device_info_plus: ^10.1.2
   url_launcher: ^6.3.2
   dio: ^5.8.0
   dio_web_adapter: ^2.1.1
@@ -79,7 +79,7 @@ dependencies:
   flutter_secure_storage: ^9.0.0
   
   # Crypto (needed for Nostr)
-  crypto: ^3.0.3
+  crypto: ^3.0.7
   encrypt: ^5.0.3
   bech32: ^0.2.2
   
