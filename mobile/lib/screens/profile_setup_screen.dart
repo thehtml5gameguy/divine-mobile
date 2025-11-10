@@ -129,23 +129,15 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
           child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(24),
-              child: Form(
-                key: _formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // diVine wordmark
-                      Center(
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 24.0),
-                          child: Image.asset(
-                            'assets/icon/White on black.png',
-                            height: 50,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: Form(
+                    key: _formKey,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                       Text(
                         widget.isNewUser
                             ? 'Welcome to divine!'
@@ -595,6 +587,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                   ),
                 ),
               ),
+                ),
+                ),
             ),
           ),
         ),
