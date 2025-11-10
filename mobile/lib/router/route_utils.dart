@@ -131,6 +131,11 @@ RouteContext parseRoute(String path) {
     case 'settings':
       return const RouteContext(type: RouteType.settings);
 
+    case 'edit-profile':
+    case 'setup-profile':
+      // Profile editing screens - treat as settings-like (non-feed routes)
+      return const RouteContext(type: RouteType.settings);
+
     default:
       return const RouteContext(type: RouteType.home, videoIndex: 0);
   }
