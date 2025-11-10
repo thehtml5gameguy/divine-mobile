@@ -9,9 +9,10 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:riverpod/riverpod.dart' show Ref;
 import 'package:openvine/services/vine_recording_controller.dart'
     show VineRecordingController, VineRecordingState, RecordingSegment, MacOSCameraInterface, CameraPlatformInterface;
-import 'package:openvine/models/native_proof_data.dart';
 import 'package:openvine/models/vine_draft.dart';
-import 'package:openvine/services/proofmode_session_service.dart' show ProofManifest;
+import 'package:openvine/services/proofmode_session_service.dart' show ProofManifest, ProofModeSessionService;
+import 'package:openvine/services/proofmode_key_service.dart';
+import 'package:openvine/services/proofmode_attestation_service.dart';
 import 'package:openvine/models/aspect_ratio.dart' as model;
 import 'package:openvine/providers/app_providers.dart';
 import 'package:openvine/utils/unified_logger.dart';
@@ -394,8 +395,13 @@ class VineRecordingNotifier extends StateNotifier<VineRecordingUIState> {
 /// Provider for VineRecordingController with reactive state management
 final vineRecordingProvider =
     StateNotifierProvider<VineRecordingNotifier, VineRecordingUIState>((ref) {
-  // Native ProofMode is initialized directly in recording controller
-  final controller = VineRecordingController();
+  // Create ProofMode services for cryptographic proof generation
+  final keyService = ProofModeKeyService();
+  final attestationService = ProofModeAttestationService();
+  final proofModeSession = ProofModeSessionService(keyService, attestationService);
+
+  // Create recording controller with ProofMode integration
+  final controller = VineRecordingController(proofModeSession: proofModeSession);
   final notifier = VineRecordingNotifier(controller, ref);
 
   ref.onDispose(() {

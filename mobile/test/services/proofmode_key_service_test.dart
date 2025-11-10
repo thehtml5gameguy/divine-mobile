@@ -35,16 +35,9 @@ void main() {
     });
 
     group('Initialization', () {
-      test('should initialize without crypto enabled', () async {
-
-        // Should not throw and should not generate keys
-        await keyService.initialize();
-
-        final keyPair = await keyService.getKeyPair();
-        expect(keyPair, isNull);
-      });
-
-      test('should generate keys when crypto enabled and no existing keys',
+      // ProofMode is ALWAYS enabled - crypto cannot be disabled
+      // If crypto needs to be disabled for testing, the entire ProofMode system should be disabled
+      test('should generate keys on initialize when no existing keys',
           () async {
 
         await keyService.initialize();
@@ -152,7 +145,7 @@ void main() {
     });
 
     group('Data Signing', () {
-      test('should sign data successfully when crypto enabled', () async {
+      test('should sign data successfully', () async {
 
         await keyService.generateKeyPair();
         const testData = 'test data to sign';
@@ -166,14 +159,6 @@ void main() {
         expect(signature.signature, contains('-----END PGP SIGNATURE-----'));
         expect(signature.publicKeyFingerprint, isNotEmpty);
         expect(signature.signedAt, isA<DateTime>());
-      });
-
-      test('should return null when crypto disabled', () async {
-
-        const testData = 'test data to sign';
-        final signature = await keyService.signData(testData);
-
-        expect(signature, isNull);
       });
 
       test('should return null when no keys available', () async {

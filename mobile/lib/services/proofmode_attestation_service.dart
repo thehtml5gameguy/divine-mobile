@@ -1,10 +1,8 @@
 // ABOUTME: ProofMode device attestation service for iOS App Attest and Android Play Integrity
 // ABOUTME: Provides hardware-backed device verification without user permission prompts
 
-import 'dart:convert';
 import 'dart:io';
 import 'package:app_device_integrity/app_device_integrity.dart';
-import 'package:crypto/crypto.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:openvine/services/proofmode_config.dart';
 import 'package:openvine/utils/unified_logger.dart';
@@ -352,46 +350,27 @@ class ProofModeAttestationService {
     }
   }
 
-  /// Generate fallback attestation for unsupported platforms
+  /// Generate fallback attestation for unsupported platforms or configurations
+  /// Returns attestation with EMPTY token - indicates attestation not available but not an error
   Future<DeviceAttestation> _generateFallbackAttestation(
       String challenge, DeviceInfo deviceInfo) async {
-    Log.info('Generating fallback attestation for ${deviceInfo.platform}',
+    Log.warning(
+        'Attestation not available for ${deviceInfo.platform} - returning empty attestation. '
+        'Reasons: GCP not configured, running on emulator, or platform not supported.',
         name: 'ProofModeAttestationService', category: LogCategory.auth);
 
-    final attestationData = {
-      'challenge': challenge,
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'deviceInfo': deviceInfo.toJson(),
-      'attestationType': 'fallback',
-    };
-
-    final token = _generateMockToken('fallback', attestationData);
-
     return DeviceAttestation(
-      token: token,
+      token: '', // EMPTY TOKEN - no attestation available
       platform: deviceInfo.platform,
       deviceId: deviceInfo.deviceId,
       isHardwareBacked: false,
       createdAt: DateTime.now(),
       challenge: challenge,
       metadata: {
-        'attestationType': 'fallback',
+        'attestationType': 'unavailable',
+        'reason': 'Platform or configuration does not support hardware-backed attestation',
         'deviceInfo': deviceInfo.toJson(),
       },
     );
-  }
-
-  /// Generate a mock attestation token (placeholder for real implementation)
-  String _generateMockToken(String type, Map<String, dynamic> data) {
-    final payload = {
-      'type': type,
-      'data': data,
-      'iat': DateTime.now().millisecondsSinceEpoch ~/ 1000,
-    };
-
-    final payloadBytes = utf8.encode(jsonEncode(payload));
-    final hash = sha256.convert(payloadBytes);
-
-    return 'MOCK_ATTESTATION_${type.toUpperCase()}_${base64Encode(hash.bytes)}';
   }
 }
