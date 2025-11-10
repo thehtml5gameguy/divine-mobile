@@ -67,10 +67,14 @@ class ComposableVideoGrid extends ConsumerWidget {
       return emptyBuilder!();
     }
 
+    // Responsive column count: 3 for tablets/desktop (width >= 600), 2 for phones
+    final screenWidth = MediaQuery.of(context).size.width;
+    final responsiveCrossAxisCount = screenWidth >= 600 ? 3 : crossAxisCount;
+
     final gridView = GridView.builder(
       padding: padding ?? const EdgeInsets.all(12),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
+        crossAxisCount: responsiveCrossAxisCount,
         childAspectRatio: childAspectRatio,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
@@ -107,7 +111,7 @@ class ComposableVideoGrid extends ConsumerWidget {
       child: Container(
         decoration: BoxDecoration(
           color: VineTheme.cardBackground,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(0),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.3),
@@ -117,7 +121,7 @@ class ComposableVideoGrid extends ConsumerWidget {
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -135,6 +139,7 @@ class ComposableVideoGrid extends ConsumerWidget {
                               width: double.infinity,
                               height: double.infinity,
                               fit: BoxFit.cover,
+                              borderRadius: BorderRadius.circular(0),
                             )
                           : Container(
                               color: VineTheme.cardBackground,
