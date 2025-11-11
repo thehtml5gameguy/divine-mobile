@@ -543,29 +543,10 @@ class _ProfileScreenRouterState extends ConsumerState<ProfileScreenRouter>
           Row(
             children: [
               // Profile picture
-              Container(
-                width: 86,
-                height: 86,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [Colors.purple, Colors.pink, Colors.orange],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  border: Border.all(color: Colors.white, width: 2),
-                ),
-                child: ClipOval(
-                  child: SizedBox(
-                    width: 80,
-                    height: 80,
-                    child: UserAvatar(
-                      imageUrl: profilePictureUrl,
-                      name: null,
-                      size: 80,
-                    ),
-                  ),
-                ),
+              UserAvatar(
+                imageUrl: profilePictureUrl,
+                name: null,
+                size: 86,
               ),
 
               const SizedBox(width: 20),

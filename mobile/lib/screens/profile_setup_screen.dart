@@ -191,7 +191,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                             ? 'Welcome to divine!'
                             : 'Update Your Profile',
                         style: const TextStyle(
-                          fontSize: 28,
+                          fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
@@ -408,11 +408,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                                     shape: BoxShape.circle,
                                     color: Colors.grey[800],
                                     border: Border.all(
-                                      color: _selectedImage != null ||
-                                              _uploadedImageUrl != null ||
-                                              _pictureController.text.isNotEmpty
-                                          ? VineTheme.vineGreen
-                                          : Colors.grey[700]!,
+                                      color: VineTheme.vineGreen,
                                       width: 2,
                                     ),
                                   ),
@@ -990,7 +986,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
         width: 120,
         height: 120,
         errorBuilder: (context, error, stackTrace) =>
-            const Icon(Icons.person, color: Colors.grey, size: 50),
+            Image.asset('assets/icon/user-avatar.png', width: 120, height: 120, fit: BoxFit.cover),
       );
     } else if (_pictureController.text.isNotEmpty) {
       return Image.network(
@@ -999,10 +995,10 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
         width: 120,
         height: 120,
         errorBuilder: (context, error, stackTrace) =>
-            const Icon(Icons.person, color: Colors.grey, size: 50),
+            Image.asset('assets/icon/user-avatar.png', width: 120, height: 120, fit: BoxFit.cover),
       );
     } else {
-      return const Icon(Icons.person, color: Colors.grey, size: 50);
+      return Image.asset('assets/icon/user-avatar.png', width: 120, height: 120, fit: BoxFit.cover);
     }
   }
 
