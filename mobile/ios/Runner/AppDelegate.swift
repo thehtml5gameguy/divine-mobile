@@ -69,7 +69,16 @@ import LibProofMode
           _ = Proof.shared.process(mediaItem: mediaItem, options: options)
 
           // Return the SHA256 hash (used as proof identifier)
-          let proofHash = mediaItem.mediaItemHash ?? ""
+          guard let proofHash = mediaItem.mediaItemHash, !proofHash.isEmpty else {
+            NSLog("❌ ProofMode: Proof generation did not produce hash")
+            result(FlutterError(
+              code: "PROOF_HASH_MISSING",
+              message: "LibProofMode did not generate video hash",
+              details: nil
+            ))
+            return
+          }
+
           NSLog("🔐 ProofMode: Proof generated successfully: \(proofHash)")
           result(proofHash)
 

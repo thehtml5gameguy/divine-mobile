@@ -39,6 +39,12 @@ class MainActivity : FlutterActivity() {
                         // Generate proof using native ProofMode library
                         val proofHash = ProofMode.generateProof(this, mediaUri)
 
+                        if (proofHash.isNullOrEmpty()) {
+                            Log.e(TAG, "ProofMode did not generate hash")
+                            result.error("PROOF_HASH_MISSING", "ProofMode did not generate video hash", null)
+                            return@setMethodCallHandler
+                        }
+
                         Log.d(TAG, "Proof generated successfully: $proofHash")
                         result.success(proofHash)
                     } catch (e: Exception) {
