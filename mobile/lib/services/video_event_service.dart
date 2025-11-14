@@ -408,6 +408,87 @@ class VideoEventService extends ChangeNotifier {
     return _locallyDeletedVideoIds.contains(videoId);
   }
 
+  /// Query for all users who have reposted a specific video
+  /// Returns list of pubkeys (hex) of users who created Kind 6 repost events
+  /// referencing the given video ID
+  Future<List<String>> getRepostersForVideo(String videoId) async {
+    final completer = Completer<List<String>>();
+    final reposters = <String>{};
+    Timer? timeoutTimer;
+
+    try {
+      Log.debug(
+          'Querying for reposters of video $videoId',
+          name: 'VideoEventService',
+          category: LogCategory.video);
+
+      // Create filter for Kind 6 repost events that reference this video
+      final filter = Filter(
+        kinds: [6], // Kind 6 = Repost
+        e: [videoId], // Events that reference this video ID
+      );
+
+      // Subscribe to events
+      final eventStream = _nostrService.subscribeToEvents(filters: [filter]);
+      late StreamSubscription<Event> streamSubscription;
+
+      // Set timeout for receiving events
+      timeoutTimer = Timer(const Duration(seconds: 5), () {
+        Log.info(
+          'Reposters query timeout for video $videoId - found ${reposters.length} reposters',
+          name: 'VideoEventService',
+          category: LogCategory.video,
+        );
+        if (!completer.isCompleted) {
+          streamSubscription.cancel();
+          completer.complete(reposters.toList());
+        }
+      });
+
+      streamSubscription = eventStream.listen(
+        (event) {
+          // Only process Kind 6 events (should be guaranteed by filter, but double-check)
+          if (event.kind == 6) {
+            // Add the pubkey of the reposter
+            reposters.add(event.pubkey);
+            Log.debug(
+                'Found reposter ${event.pubkey} for video $videoId',
+                name: 'VideoEventService',
+                category: LogCategory.video);
+          }
+        },
+        onError: (error) {
+          Log.error('Error querying reposters for video $videoId: $error',
+              name: 'VideoEventService', category: LogCategory.video);
+          if (!completer.isCompleted) {
+            timeoutTimer?.cancel();
+            streamSubscription.cancel();
+            completer.complete(reposters.toList());
+          }
+        },
+        onDone: () {
+          Log.info(
+              'Reposters query complete for video $videoId - found ${reposters.length} reposters',
+              name: 'VideoEventService',
+              category: LogCategory.video);
+          if (!completer.isCompleted) {
+            timeoutTimer?.cancel();
+            completer.complete(reposters.toList());
+          }
+        },
+      );
+    } catch (error) {
+      Log.error('Exception querying reposters for video $videoId: $error',
+          name: 'VideoEventService', category: LogCategory.video);
+      timeoutTimer?.cancel();
+      if (!completer.isCompleted) {
+        completer.complete([]);
+      }
+    }
+
+    return completer.future;
+  }
+
   /// Load cached events from database (cache-first strategy)
   ///
   /// Returns cached events matching the filter parameters for instant UI display.
@@ -1739,6 +1820,7 @@ class VideoEventService extends ChangeNotifier {
       subscriptionType: SubscriptionType.profile,
       authors: [pubkey],
       limit: limit,
+      includeReposts: true, // Include reposts to show what the user has reposted
     );
   }
 
