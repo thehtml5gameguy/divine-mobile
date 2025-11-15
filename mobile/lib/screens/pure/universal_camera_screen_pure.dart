@@ -378,7 +378,7 @@ class _UniversalCameraScreenPureState
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: VineTheme.vineGreen,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           key: const Key('back-button'),
@@ -390,36 +390,72 @@ class _UniversalCameraScreenPureState
           style: TextStyle(color: Colors.white),
         ),
         actions: [
-          // Drafts button - moved to right end of app bar with proper vertical alignment
+          // Drafts button - only show when not recording
           Consumer(
             builder: (context, ref, child) {
               final recordingState = ref.watch(vineRecordingProvider);
               if (recordingState.isRecording) {
                 return const SizedBox.shrink();
               }
-              return Center(
-                child: TextButton(
-                  key: const Key('drafts-button'),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const VineDraftsScreen(),
-                      ),
-                    );
-                  },
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    minimumSize: const Size(0, 48), // Match IconButton height
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: const Text(
-                    'Drafts',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
+              return TextButton(
+                key: const Key('drafts-button'),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const VineDraftsScreen(),
+                    ),
+                  );
+                },
+                child: const Text(
+                  'Drafts',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
                 ),
               );
             },
           ),
+          // Recording status indicator
+          Consumer(
+            builder: (context, ref, child) {
+              final recordingState = ref.watch(vineRecordingProvider);
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: recordingState.isRecording
+                      ? Colors.red.withValues(alpha: 0.7)
+                      : Colors.black.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      recordingState.isRecording
+                          ? Icons.fiber_manual_record
+                          : Icons.videocam,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      recordingState.isRecording
+                          ? _formatDuration(recordingState.recordingDuration)
+                          : 'Ready',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          // ProofMode status indicator - HIDDEN (now shown in Settings -> ProofMode Info)
         ],
       ),
       body: Consumer(
@@ -488,7 +524,7 @@ class _UniversalCameraScreenPureState
 
           return Stack(
             children: [
-              // Camera preview (square/1:1 or 9:16 aspect ratio for Vine-style videos)
+              // Camera preview (square/1:1 aspect ratio for Vine-style videos)
               // Wrapped in GestureDetector for tap-anywhere-to-record (Vine-style UX)
               Positioned.fill(
                 child: GestureDetector(
@@ -585,29 +621,6 @@ class _UniversalCameraScreenPureState
                   ),
                 ),
               ),
-
-              // Square crop mask overlay (only shown in square mode)
-              // Positioned OUTSIDE ClipRect so it's not clipped away
-              if (recordingState.aspectRatio == vine.AspectRatio.square && recordingState.isInitialized)
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    Log.info('🎭 Building square crop mask overlay',
-                        name: 'UniversalCameraScreenPure', category: LogCategory.video);
-
-                    // Use screen dimensions, not camera preview dimensions
-                    final screenWidth = constraints.maxWidth;
-                    final screenHeight = constraints.maxHeight;
-                    final squareSize = screenWidth; // Square uses full screen width
-
-                    Log.info('🎭 Mask dimensions: screenWidth=$screenWidth, screenHeight=$screenHeight, squareSize=$squareSize',
-                        name: 'UniversalCameraScreenPure', category: LogCategory.video);
-
-                    return _buildSquareCropMaskForPreview(
-                      screenWidth,
-                      screenHeight,
-                    );
-                  },
-                ),
 
               // Recording controls overlay (bottom)
               Positioned(
@@ -977,72 +990,15 @@ class _UniversalCameraScreenPureState
         onPressed: recordingState.isRecording
             ? null
             : () {
-                final currentRatio = recordingState.aspectRatio;
                 final newRatio =
                     recordingState.aspectRatio == vine.AspectRatio.square
                     ? vine.AspectRatio.vertical
                     : vine.AspectRatio.square;
-                Log.info('🎭 Aspect ratio button pressed: $currentRatio -> $newRatio',
-                    name: 'UniversalCameraScreenPure', category: LogCategory.video);
                 ref
                     .read(vineRecordingProvider.notifier)
                     .setAspectRatio(newRatio);
               },
       ),
-    );
-  }
-
-  /// Build square crop mask overlay centered on screen
-  /// Shows semi-transparent overlay outside the 1:1 square
-  Widget _buildSquareCropMaskForPreview(double screenWidth, double screenHeight) {
-    // Square uses full screen width
-    final squareSize = screenWidth;
-
-    // Calculate top/bottom areas to darken (centered vertically on screen)
-    final topBottomHeight = (screenHeight - squareSize) / 2;
-
-    return Stack(
-      children: [
-        // Top darkened area
-        if (topBottomHeight > 0)
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: topBottomHeight,
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.6),
-            ),
-          ),
-
-        // Bottom darkened area
-        if (topBottomHeight > 0)
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: topBottomHeight,
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.6),
-            ),
-          ),
-
-        // Square frame outline (visual guide)
-        Positioned(
-          top: topBottomHeight > 0 ? topBottomHeight : 0,
-          left: 0,
-          width: squareSize,
-          height: squareSize,
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: VineTheme.vineGreen,
-                width: 3,
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 
