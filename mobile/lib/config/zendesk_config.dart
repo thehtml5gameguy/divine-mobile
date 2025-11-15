@@ -3,14 +3,16 @@
 
 /// Zendesk Support SDK configuration
 class ZendeskConfig {
-  /// Zendesk application ID
+  /// Zendesk OAuth "Unique identifier" (shown as client ID in Zendesk admin)
+  /// Get from: Admin → Apps and integrations → APIs → OAuth Clients
   /// Set via: --dart-define=ZENDESK_APP_ID=xxx
   static const String appId = String.fromEnvironment(
     'ZENDESK_APP_ID',
     defaultValue: '',
   );
 
-  /// Zendesk client ID (OAuth)
+  /// Zendesk OAuth "Secret" (shown as secret in Zendesk admin)
+  /// Get from: Admin → Apps and integrations → APIs → OAuth Clients
   /// Set via: --dart-define=ZENDESK_CLIENT_ID=xxx
   static const String clientId = String.fromEnvironment(
     'ZENDESK_CLIENT_ID',
