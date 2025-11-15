@@ -15,6 +15,8 @@ import 'package:openvine/services/crash_reporting_service.dart';
 import 'package:openvine/services/deep_link_service.dart';
 import 'package:openvine/services/migration_service.dart';
 import 'package:openvine/services/performance_monitoring_service.dart';
+import 'package:openvine/services/zendesk_support_service.dart';
+import 'package:openvine/config/zendesk_config.dart';
 import 'package:openvine/database/app_database.dart';
 import 'package:openvine/router/app_router.dart';
 import 'package:openvine/router/route_normalization_provider.dart';
@@ -146,6 +148,32 @@ Future<void> _startOpenVineApp() async {
 
   // Log that core startup is complete
   CrashReportingService.instance.logInitializationStep('Core app startup complete');
+
+  // Initialize Zendesk Support SDK (gracefully degrades if credentials not configured)
+  StartupPerformanceService.instance.startPhase('zendesk');
+  CrashReportingService.instance.logInitializationStep('Initializing Zendesk Support SDK');
+  try {
+    final zendeskInitialized = await ZendeskSupportService.initialize(
+      appId: ZendeskConfig.appId,
+      clientId: ZendeskConfig.clientId,
+      zendeskUrl: ZendeskConfig.zendeskUrl,
+    );
+    if (zendeskInitialized) {
+      Log.info('[STARTUP] Zendesk Support SDK initialized successfully',
+          name: 'Main', category: LogCategory.system);
+      CrashReportingService.instance.logInitializationStep('✓ Zendesk initialized');
+    } else {
+      Log.info('[STARTUP] Zendesk Support SDK not initialized (credentials not configured)',
+          name: 'Main', category: LogCategory.system);
+      CrashReportingService.instance.logInitializationStep('○ Zendesk skipped (no credentials)');
+    }
+    StartupPerformanceService.instance.completePhase('zendesk');
+  } catch (e) {
+    Log.warning('[STARTUP] Zendesk initialization failed: $e',
+        name: 'Main', category: LogCategory.system);
+    CrashReportingService.instance.logInitializationStep('✗ Zendesk failed: $e');
+    StartupPerformanceService.instance.completePhase('zendesk');
+  }
 
   // Log startup time tracking
   final initDuration = DateTime.now().difference(startTime).inMilliseconds;
