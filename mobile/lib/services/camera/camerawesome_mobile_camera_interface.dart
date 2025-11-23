@@ -45,8 +45,25 @@ class CamerAwesomeMobileCameraInterface extends CameraPlatformInterface {
         category: LogCategory.system,
       );
 
+      // If only 1 physical camera, add synthetic 2x digital zoom to simulate multi-camera behavior
+      if (_availableSensors.length == 1) {
+        final physicalCamera = _availableSensors[0];
+        _availableSensors.add(PhysicalCameraSensor(
+          type: 'digital',
+          zoomFactor: 2.0,
+          deviceId: physicalCamera.deviceId, // Same device, digital zoom
+          displayName: '2x',
+          isDigital: true,
+        ));
+        Log.info(
+          'Added digital 2x zoom for single-camera device',
+          name: 'CamerAwesomeCamera',
+          category: LogCategory.system,
+        );
+      }
+
       // CamerAwesome defaults to wide-angle camera (1.0x), so set current index to match
-      // Sorted list: [0.5x ultrawide, 1.0x wide, 3.0x telephoto]
+      // Sorted list: [0.5x ultrawide, 1.0x wide, 3.0x telephoto] or [1.0x wide, 2.0x digital]
       _currentSensorIndex = _availableSensors.indexWhere((s) => s.zoomFactor == 1.0);
       if (_currentSensorIndex == -1) {
         _currentSensorIndex = 0; // Fallback to first camera if 1.0x not found
@@ -187,16 +204,25 @@ class CamerAwesomeMobileCameraInterface extends CameraPlatformInterface {
       final nextSensor = _availableSensors[_currentSensorIndex];
 
       Log.info(
-        'Switching to sensor: ${nextSensor.displayName} (${nextSensor.zoomFactor}x)',
+        'Switching to sensor: ${nextSensor.displayName} (${nextSensor.zoomFactor}x)${nextSensor.isDigital ? ' [digital zoom]' : ''}',
         name: 'CamerAwesomeCamera',
         category: LogCategory.system,
       );
 
-      // Map our sensor type to CamerAwesome SensorType
-      final sensorType = _mapToSensorType(nextSensor.type);
+      if (nextSensor.isDigital) {
+        // Digital zoom - apply zoom to current physical sensor
+        final normalizedZoom = (nextSensor.zoomFactor - 1.0) / 3.0;
+        await _cameraState!.sensorConfig.setZoom(normalizedZoom.clamp(0.0, 1.0));
+        Log.info('Applied digital zoom: ${nextSensor.zoomFactor}x',
+            name: 'CamerAwesomeCamera', category: LogCategory.system);
+      } else {
+        // Physical sensor switch
+        final sensorType = _mapToSensorType(nextSensor.type);
+        _cameraState!.setSensorType(0, sensorType, nextSensor.deviceId);
 
-      // Switch sensor via CamerAwesome (setSensorType returns void, not Future)
-      _cameraState!.setSensorType(0, sensorType, nextSensor.deviceId);
+        // Reset zoom to 1x when switching physical sensors
+        await _cameraState!.sensorConfig.setZoom(0.0);
+      }
 
       Log.info('Sensor switched successfully',
           name: 'CamerAwesomeCamera', category: LogCategory.system);
@@ -236,14 +262,43 @@ class CamerAwesomeMobileCameraInterface extends CameraPlatformInterface {
     final sensor = _availableSensors[_currentSensorIndex];
 
     Log.info(
-      'Switching to sensor: ${sensor.displayName} (${sensor.zoomFactor}x)',
+      'Switching to sensor: ${sensor.displayName} (${sensor.zoomFactor}x)${sensor.isDigital ? ' [digital zoom]' : ''}',
       name: 'CamerAwesomeCamera',
       category: LogCategory.system,
     );
 
-    final sensorType = _mapToSensorType(sensor.type);
-    // setSensorType returns void, not Future
-    _cameraState!.setSensorType(0, sensorType, sensor.deviceId);
+    if (sensor.isDigital) {
+      // Digital zoom - apply zoom to current physical sensor
+      // CamerAwesome zoom is normalized 0.0-1.0, where:
+      // 0.0 = 1x (no zoom), 1.0 = max zoom (typically 4x-10x)
+      // For 2x digital zoom, use 0.33 (assumes ~6x max zoom)
+      final normalizedZoom = (sensor.zoomFactor - 1.0) / 3.0; // Maps 2x to ~0.33
+
+      try {
+        await _cameraState!.sensorConfig.setZoom(normalizedZoom.clamp(0.0, 1.0));
+        Log.info(
+          'Applied digital zoom: ${sensor.zoomFactor}x (normalized: ${normalizedZoom.toStringAsFixed(2)})',
+          name: 'CamerAwesomeCamera',
+          category: LogCategory.system,
+        );
+      } catch (e) {
+        Log.error('Failed to apply digital zoom: $e',
+            name: 'CamerAwesomeCamera', category: LogCategory.system);
+      }
+    } else {
+      // Physical sensor switch
+      final sensorType = _mapToSensorType(sensor.type);
+      // setSensorType returns void, not Future
+      _cameraState!.setSensorType(0, sensorType, sensor.deviceId);
+
+      // Reset zoom to 1x when switching physical sensors
+      try {
+        await _cameraState!.sensorConfig.setZoom(0.0);
+      } catch (e) {
+        Log.error('Failed to reset zoom: $e',
+            name: 'CamerAwesomeCamera', category: LogCategory.system);
+      }
+    }
   }
 
   /// Map our sensor type string to CamerAwesome SensorType enum

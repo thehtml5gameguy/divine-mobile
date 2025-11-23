@@ -13,15 +13,17 @@ class PhysicalCameraSensor {
     required this.zoomFactor,
     required this.deviceId,
     required this.displayName,
+    this.isDigital = false,
   });
 
-  final String type; // 'wide', 'ultrawide', 'telephoto', 'front'
-  final double zoomFactor; // Actual zoom factor (e.g., 0.5, 1.0, 3.0)
+  final String type; // 'wide', 'ultrawide', 'telephoto', 'front', 'digital'
+  final double zoomFactor; // Actual zoom factor (e.g., 0.5, 1.0, 2.0, 3.0)
   final String deviceId; // Native device identifier
   final String displayName; // Human-readable name
+  final bool isDigital; // True if this is a digital zoom, false for physical sensor
 
   @override
-  String toString() => 'PhysicalCameraSensor($displayName, ${zoomFactor}x, $type)';
+  String toString() => 'PhysicalCameraSensor($displayName, ${zoomFactor}x, $type${isDigital ? ' [digital]' : ''})';
 }
 
 /// Detects available physical cameras and their actual zoom factors
@@ -71,7 +73,7 @@ class CameraZoomDetector {
         return cameras;
       } else if (Platform.isAndroid) {
         // Android: Use CamerAwesome getSensors API
-        final sensorData = await CameraAwesomePlugin.getSensors();
+        final sensorData = await CamerawesomePlugin.getSensors();
         final cameras = <PhysicalCameraSensor>[];
 
         // Add ultrawide if available
