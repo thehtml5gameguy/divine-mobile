@@ -685,11 +685,16 @@ class VideoOverlayActions extends ConsumerWidget {
 
     // Stack does not block pointer events by default - taps pass through to GestureDetector below
     // Only interactive elements (buttons, chips with GestureDetector) absorb taps
+    // When contextTitle is non-empty, a list header exists above - add extra offset to avoid overlap
+    // List header is roughly 64px tall (8px padding + 48px content + 8px padding), add clearance
+    final hasListHeader = contextTitle != null && contextTitle!.isNotEmpty;
+    final topOffset = hasListHeader ? 80.0 : 16.0;
+
     return Stack(
         children: [
         // Username and follow button at top left
         Positioned(
-          top: MediaQuery.of(context).viewPadding.top + 16,
+          top: MediaQuery.of(context).viewPadding.top + topOffset,
           left: 16,
           child: Consumer(
             builder: (context, ref, _) {

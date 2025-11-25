@@ -1135,6 +1135,146 @@ class CuratedListService {
     }
   }
 
+  /// Fetch public lists from any user that contain a specific video
+  /// Uses Nostr #e filter to find kind 30005 events referencing the video
+  /// Returns list of CuratedList objects (progressive loading via stream version)
+  Future<List<CuratedList>> fetchPublicListsContainingVideo(
+      String videoEventId) async {
+    Log.info('📋 Fetching public lists containing video: $videoEventId',
+        name: 'CuratedListService', category: LogCategory.system);
+
+    try {
+      final completer = Completer<void>();
+      final receivedEvents = <Event>[];
+
+      // Build filter for lists containing this video
+      final filter = Filter(
+        kinds: [30005], // NIP-51 curated lists
+        e: [videoEventId], // Lists that reference this video event
+        limit: 50,
+      );
+
+      // Subscribe to matching events
+      final subscription = _nostrService.subscribeToEvents(
+        filters: [filter],
+      );
+
+      // Set a timeout for the subscription
+      Timer? timeoutTimer;
+      timeoutTimer = Timer(const Duration(seconds: 10), () {
+        Log.debug(
+            'Public lists containing video fetch timeout, processing received events',
+            name: 'CuratedListService',
+            category: LogCategory.system);
+        if (!completer.isCompleted) {
+          completer.complete();
+        }
+      });
+
+      subscription.listen(
+        (event) {
+          receivedEvents.add(event);
+          Log.debug('Received public list containing video: ${event.id}',
+              name: 'CuratedListService', category: LogCategory.system);
+        },
+        onDone: () {
+          timeoutTimer?.cancel();
+          if (!completer.isCompleted) {
+            completer.complete();
+          }
+        },
+        onError: (error) {
+          Log.error('Error fetching public lists containing video: $error',
+              name: 'CuratedListService', category: LogCategory.system);
+          timeoutTimer?.cancel();
+          if (!completer.isCompleted) {
+            completer.complete();
+          }
+        },
+      );
+
+      await completer.future;
+
+      // Process received events into CuratedList objects
+      final publicLists = <CuratedList>[];
+
+      if (receivedEvents.isNotEmpty) {
+        // Group events by 'd' tag to handle replaceable events (keep newest)
+        final eventsByDTag = <String, Event>{};
+
+        for (final event in receivedEvents) {
+          final dTag = _extractDTag(event);
+          if (dTag != null) {
+            final existingEvent = eventsByDTag[dTag];
+            if (existingEvent == null ||
+                event.createdAt > existingEvent.createdAt) {
+              eventsByDTag[dTag] = event;
+            }
+          }
+        }
+
+        Log.debug(
+            'Processing ${eventsByDTag.length} unique public lists containing video',
+            name: 'CuratedListService',
+            category: LogCategory.system);
+
+        for (final event in eventsByDTag.values) {
+          final curatedList = _eventToCuratedList(event);
+          if (curatedList != null) {
+            publicLists.add(curatedList);
+          }
+        }
+      }
+
+      Log.info(
+          '✅ Found ${publicLists.length} public lists containing video',
+          name: 'CuratedListService',
+          category: LogCategory.system);
+
+      return publicLists;
+    } catch (e) {
+      Log.error('Failed to fetch public lists containing video: $e',
+          name: 'CuratedListService', category: LogCategory.system);
+      return [];
+    }
+  }
+
+  /// Stream public lists containing a specific video for progressive loading
+  /// Emits CuratedList objects as they arrive from relays
+  Stream<CuratedList> streamPublicListsContainingVideo(String videoEventId) {
+    Log.info('📋 Streaming public lists containing video: $videoEventId',
+        name: 'CuratedListService', category: LogCategory.system);
+
+    // Build filter for lists containing this video
+    final filter = Filter(
+      kinds: [30005], // NIP-51 curated lists
+      e: [videoEventId], // Lists that reference this video event
+      limit: 50,
+    );
+
+    // Track seen d-tags to handle replaceable events
+    final seenDTags = <String, Event>{};
+
+    // Subscribe and transform events to CuratedList objects
+    return _nostrService
+        .subscribeToEvents(filters: [filter])
+        .map((event) {
+          final dTag = _extractDTag(event);
+          if (dTag == null) return null;
+
+          // Check if we've seen a newer version of this list
+          final existing = seenDTags[dTag];
+          if (existing != null && existing.createdAt >= event.createdAt) {
+            return null; // Skip older version
+          }
+          seenDTags[dTag] = event;
+
+          return _eventToCuratedList(event);
+        })
+        .where((list) => list != null)
+        .cast<CuratedList>();
+  }
+
   /// Convert a Nostr event to a CuratedList object
   /// Returns null if event is invalid or cannot be parsed
   CuratedList? _eventToCuratedList(Event event) {

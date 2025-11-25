@@ -6,6 +6,7 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:openvine/providers/popular_now_feed_provider.dart';
 import 'package:openvine/providers/app_providers.dart';
+import 'package:openvine/providers/readiness_gate_providers.dart';
 import 'package:openvine/services/video_event_service.dart';
 import 'package:openvine/models/video_event.dart';
 import 'package:riverpod/riverpod.dart';
@@ -34,6 +35,8 @@ void main() {
       container = ProviderContainer(
         overrides: [
           videoEventServiceProvider.overrideWithValue(mockService),
+          // Override appReadyProvider to return true so subscription proceeds
+          appReadyProvider.overrideWithValue(true),
         ],
       );
     });
@@ -164,6 +167,30 @@ void main() {
         sortBy: argThat(isNotNull, named: 'sortBy'),
         force: true, // Should force refresh
       )).called(1);
+    });
+
+    test('should return empty state when appReady is false', () async {
+      // Arrange - create container with appReady=false
+      final notReadyContainer = ProviderContainer(
+        overrides: [
+          videoEventServiceProvider.overrideWithValue(mockService),
+          appReadyProvider.overrideWithValue(false),
+        ],
+      );
+
+      // Act
+      final state = await notReadyContainer.read(popularNowFeedProvider.future);
+
+      // Assert
+      expect(state.videos, isEmpty);
+      expect(state.hasMoreContent, true); // True because we assume content will load when ready
+      verifyNever(mockService.subscribeToVideoFeed(
+        subscriptionType: anyNamed('subscriptionType'),
+        limit: anyNamed('limit'),
+        sortBy: anyNamed('sortBy'),
+      ));
+
+      notReadyContainer.dispose();
     });
   });
 }

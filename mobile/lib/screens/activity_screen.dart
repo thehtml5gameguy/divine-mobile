@@ -336,6 +336,7 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen>
           startingVideo: video,
           videoList: allVideos,
           contextTitle: 'Activity Video',
+          useLocalActiveState: true, // Use local state since not using URL routing
         ),
       ),
     );

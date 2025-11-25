@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:nostr_sdk/event.dart';
+import 'package:nostr_sdk/filter.dart';
 import 'package:openvine/services/auth_service.dart';
 import 'package:openvine/services/curated_list_service.dart';
 import 'package:openvine/services/nostr_service_interface.dart';
@@ -372,6 +373,118 @@ void main() {
         // Should have tag1 from List 1
         expect(tags.length, greaterThan(0));
         expect(tags, contains('tag1'));
+      });
+    });
+
+    group('fetchPublicListsContainingVideo()', () {
+      test('queries Nostr for lists containing specific video', () async {
+        // Setup: Create mock kind 30005 events containing the target video
+        final targetVideoId = 'target_video_event_id_123456789abcdef';
+        final mockListEvent = Event.fromJson({
+          'id': 'list_event_id_1',
+          'pubkey': 'other_user_pubkey_123456789abcdef',
+          'created_at': DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          'kind': 30005,
+          'tags': [
+            ['d', 'test-list-1'],
+            ['title', 'Nature Videos'],
+            ['description', 'Beautiful nature content'],
+            ['e', targetVideoId],
+            ['e', 'other_video_id_123'],
+          ],
+          'content': '',
+          'sig': 'test_sig',
+        });
+
+        // Setup mock to return list events when queried with #e filter
+        when(mockNostr.subscribeToEvents(
+          filters: anyNamed('filters'),
+          bypassLimits: anyNamed('bypassLimits'),
+          onEose: anyNamed('onEose'),
+        )).thenAnswer((_) => Stream.fromIterable([mockListEvent]));
+
+        // Act
+        final lists =
+            await service.fetchPublicListsContainingVideo(targetVideoId);
+
+        // Assert: Verify filter includes the video ID
+        final captured = verify(mockNostr.subscribeToEvents(
+          filters: captureAnyNamed('filters'),
+          bypassLimits: anyNamed('bypassLimits'),
+          onEose: anyNamed('onEose'),
+        )).captured;
+        final filters = captured[0] as List<Filter>;
+        expect(filters[0].kinds, contains(30005));
+        expect(filters[0].e, contains(targetVideoId));
+
+        // Assert: Results parsed correctly
+        expect(lists.length, 1);
+        expect(lists.first.name, 'Nature Videos');
+        expect(lists.first.videoEventIds, contains(targetVideoId));
+      });
+
+      test('returns empty list when no public lists contain video', () async {
+        final targetVideoId = 'orphan_video_id_123456789abcdef';
+
+        // Setup mock to return empty stream
+        when(mockNostr.subscribeToEvents(
+          filters: anyNamed('filters'),
+          bypassLimits: anyNamed('bypassLimits'),
+          onEose: anyNamed('onEose'),
+        )).thenAnswer((_) => Stream.empty());
+
+        // Act
+        final lists =
+            await service.fetchPublicListsContainingVideo(targetVideoId);
+
+        // Assert
+        expect(lists, isEmpty);
+      });
+
+      test('returns stream for progressive loading', () async {
+        final targetVideoId = 'target_video_123456789abcdef';
+        final mockListEvent1 = Event.fromJson({
+          'id': 'list_1',
+          'pubkey': 'user1_pubkey_123456789abcdef',
+          'created_at': DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          'kind': 30005,
+          'tags': [
+            ['d', 'list-1'],
+            ['title', 'First List'],
+            ['e', targetVideoId],
+          ],
+          'content': '',
+          'sig': 'sig1',
+        });
+        final mockListEvent2 = Event.fromJson({
+          'id': 'list_2',
+          'pubkey': 'user2_pubkey_123456789abcdef',
+          'created_at': DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          'kind': 30005,
+          'tags': [
+            ['d', 'list-2'],
+            ['title', 'Second List'],
+            ['e', targetVideoId],
+          ],
+          'content': '',
+          'sig': 'sig2',
+        });
+
+        // Setup mock to return events progressively
+        when(mockNostr.subscribeToEvents(
+          filters: anyNamed('filters'),
+          bypassLimits: anyNamed('bypassLimits'),
+          onEose: anyNamed('onEose'),
+        )).thenAnswer((_) => Stream.fromIterable([mockListEvent1, mockListEvent2]));
+
+        // Act: Use the stream version
+        final listStream =
+            service.streamPublicListsContainingVideo(targetVideoId);
+        final lists = await listStream.toList();
+
+        // Assert: Both lists received
+        expect(lists.length, 2);
+        expect(lists.map((l) => l.name), containsAll(['First List', 'Second List']));
       });
     });
 

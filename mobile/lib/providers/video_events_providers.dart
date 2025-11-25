@@ -39,7 +39,6 @@ class VideoEvents extends _$VideoEvents {
   Timer? _debounceTimer;
   List<VideoEvent>? _pendingEvents;
   List<VideoEvent>? _lastEmittedEvents;
-  bool _isSubscribed = false;
   bool get _canEmit => _controller != null && !(_controller!.isClosed);
 
   // Buffer for new videos that arrive while user is browsing
@@ -183,7 +182,10 @@ class VideoEvents extends _$VideoEvents {
 
   /// Start subscription and emit initial events
   void _startSubscription(VideoEventService service, SeenVideosState seenState) {
-    Log.error('🔥🔥🔥 VideoEvents: _startSubscription called (subscribed: $_isSubscribed) 🔥🔥🔥',
+    // Use service's isSubscribed() to check actual subscription state
+    // This prevents the bug where we skip retrying after a failed initial subscription
+    final isAlreadySubscribed = service.isSubscribed(SubscriptionType.discovery);
+    Log.error('🔥🔥🔥 VideoEvents: _startSubscription called (serviceSubscribed: $isAlreadySubscribed) 🔥🔥🔥',
         name: 'VideoEventsProvider', category: LogCategory.video);
     Log.error('  🔍 VideoEventService.discoveryVideos.length: ${service.discoveryVideos.length}',
         name: 'VideoEventsProvider', category: LogCategory.video);
@@ -195,8 +197,10 @@ class VideoEvents extends _$VideoEvents {
     Log.error('  🔍 Listener attached to service ${service.hashCode}',
         name: 'VideoEventsProvider', category: LogCategory.video);
 
-    // Subscribe to discovery videos if not already subscribed
-    if (!_isSubscribed) {
+    // Subscribe to discovery videos if not already subscribed in the service
+    // We check the service's state directly to avoid the race condition where
+    // subscription fails (NostrService not ready) but we incorrectly mark as subscribed
+    if (!isAlreadySubscribed) {
       Log.error('  🔍 Starting NEW discovery subscription with NIP-50 search (sort:hot)',
           name: 'VideoEventsProvider', category: LogCategory.video);
       // Use NIP-50 search for trending/popular discovery (otherstuff-relay)
@@ -204,9 +208,10 @@ class VideoEvents extends _$VideoEvents {
         limit: 100,
         nip50Sort: NIP50SortMode.hot, // Recent events with high engagement
       );
-      _isSubscribed = true;
+      // NOTE: We don't set a local _isSubscribed flag here because we rely on
+      // service.isSubscribed() which accurately tracks actual subscription state
     } else {
-      Log.error('  🔍 Already subscribed - skipping subscription call',
+      Log.error('  🔍 Already subscribed in service - skipping subscription call',
           name: 'VideoEventsProvider', category: LogCategory.video);
     }
 
@@ -250,8 +255,8 @@ class VideoEvents extends _$VideoEvents {
 
     // Always remove listener (idempotent - safe to call even if not attached)
     service.removeListener(_onVideoEventServiceChange);
-    _isSubscribed = false;
     // Don't unsubscribe from service - keep videos cached
+    // The service tracks its own subscription state via isSubscribed()
   }
 
   /// Listener callback for service changes

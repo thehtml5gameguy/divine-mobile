@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'package:flutter/widgets.dart';
 import 'package:nostr_sdk/event.dart';
 import 'package:openvine/services/secure_key_storage_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:openvine/services/user_profile_service.dart' as ups;
 import 'package:openvine/utils/nostr_encoding.dart';
 import 'package:openvine/utils/nostr_timestamp.dart';
@@ -561,9 +562,16 @@ class AuthService {
       displayName: NostrEncoding.maskKey(keyContainer.npub),
     );
 
-    // TODO: Add secure metadata tracking for timestamps
-    // final createdAt = await _keyStorage.getKeyCreationTime();
-    // final lastAccess = await _keyStorage.getLastAccessTime();
+    // Store current user pubkey in SharedPreferences for router redirect checks
+    // This allows the router to know which user's following list to check
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+          'current_user_pubkey_hex', keyContainer.publicKeyHex);
+    } catch (e) {
+      Log.warning('Failed to save current user pubkey to prefs: $e',
+          name: 'AuthService', category: LogCategory.auth);
+    }
 
     _setAuthState(AuthState.authenticated);
     _profileController.add(_currentProfile);

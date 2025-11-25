@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - List Video Feed Layout (2025-11-25)
+
+#### Bug Fixes
+- **Fixed list header overlapping username/follow overlay** - When viewing videos in a list (e.g., Divine Team), the list header no longer overlaps with the video author info
+  - Added contextTitle-aware positioning in VideoOverlayActions
+  - Username/follow chip now positioned 80px below top when list header present
+  - Applies to both UserListPeopleScreen and CuratedListFeedScreen
+
+### Fixed - Video Playback on Navigation (2025-11-24)
+
+#### Bug Fixes
+- **Fixed videos continuing to play during navigation** - Videos now properly stop/pause when navigating away via Navigator.push
+  - VideoStopNavigatorObserver only catches GoRouter navigation, not raw Navigator.push calls
+  - Added explicit video cleanup before: opening comments, camera, lists, drawer screens
+  - Videos stop when exiting video mode back to grid in list screens
+
+#### Technical Details
+- Modified `lib/widgets/video_feed_item.dart`: Pause video before opening comments
+- Modified `lib/widgets/camera_fab.dart`: Stop videos before opening camera
+- Modified `lib/widgets/vine_drawer.dart`: Stop videos before Relays/Media/Notifications
+- Modified `lib/screens/explore_screen.dart`: Stop videos before list navigation
+- Modified `lib/screens/discover_lists_screen.dart`: Stop videos before list navigation
+- Modified `lib/screens/curated_list_feed_screen.dart`: Stop videos when exiting to grid
+- Modified `lib/screens/user_list_people_screen.dart`: Stop videos when exiting to grid
+
 ### Fixed - Comments and NIP-71 Compliance (2025-11-24)
 
 #### Bug Fixes

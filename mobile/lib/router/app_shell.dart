@@ -86,6 +86,11 @@ class AppShell extends ConsumerWidget {
     Log.info('👆 User tapped bottom nav: tab=$tabIndex (${_tabName(tabIndex)})',
         name: 'Navigation', category: LogCategory.ui);
 
+    // Pop any pushed routes (like CuratedListFeedScreen, UserListPeopleScreen)
+    // that were pushed via Navigator.push() on top of the shell
+    // This ensures we return to the shell before GoRouter navigation
+    Navigator.of(context).popUntil((route) => route.isFirst);
+
     // Navigate to last position in that tab
     switch (tabIndex) {
       case 0:
@@ -115,6 +120,48 @@ class AppShell extends ConsumerWidget {
       case 3: return 'Profile';
       default: return 'Unknown';
     }
+  }
+
+  /// Builds the header title - tappable for Explore and Hashtag routes to navigate back
+  Widget _buildTappableTitle(BuildContext context, WidgetRef ref, String title) {
+    final ctx = ref.watch(pageContextProvider).asData?.value;
+    final routeType = ctx?.type;
+
+    // Check if title should be tappable (Explore-related routes)
+    final isTappable = routeType == RouteType.explore || routeType == RouteType.hashtag;
+
+    final titleWidget = Text(
+      title,
+      // Use Pacifico font only for 'Divine' on home feed, system font elsewhere
+      style: title == 'Divine'
+          ? GoogleFonts.pacifico(
+              textStyle: const TextStyle(
+                fontSize: 24,
+                letterSpacing: 0.2,
+              ),
+            )
+          : const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
+
+    if (!isTappable) {
+      return titleWidget;
+    }
+
+    return GestureDetector(
+      onTap: () {
+        Log.info('👆 User tapped header title: $title', name: 'Navigation', category: LogCategory.ui);
+        // Pop any pushed routes first (like CuratedListFeedScreen)
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        // Navigate to main explore view
+        context.goExplore(null);
+      },
+      child: titleWidget,
+    );
   }
 
   @override
@@ -177,25 +224,7 @@ class AppShell extends ConsumerWidget {
                   },
                 ),
               ),
-        title: Text(
-          title,
-          // Use Pacifico font only for 'Divine' on home feed, system font elsewhere
-          style: title == 'Divine'
-              ? GoogleFonts.pacifico(
-                  textStyle: const TextStyle(
-                    fontSize: 24,
-                    letterSpacing: 0.2,
-                    // AppBar handles color via theme; no explicit color needed.
-                  ),
-                )
-              : const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  // AppBar handles color via theme; no explicit color needed.
-                ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
+        title: _buildTappableTitle(context, ref, title),
         actions: [
           IconButton(
             tooltip: 'Search',

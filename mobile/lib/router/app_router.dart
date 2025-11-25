@@ -1,12 +1,13 @@
 // ABOUTME: GoRouter configuration with ShellRoute for per-tab state preservation
 // ABOUTME: URL is source of truth, bottom nav bound to routes
 
+import 'dart:convert';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openvine/models/video_event.dart';
-import 'package:openvine/providers/social_providers.dart';
 import 'package:openvine/router/app_shell.dart';
 import 'package:openvine/screens/explore_screen.dart';
 import 'package:openvine/screens/hashtag_screen_router.dart';
@@ -73,6 +74,43 @@ int tabIndexFromLocation(String loc) {
 // Track if we've done initial navigation to avoid redirect loops
 bool _hasNavigated = false;
 
+/// Reset navigation state for testing purposes
+void resetNavigationState() {
+  _hasNavigated = false;
+}
+
+/// Check if the CURRENT user has any cached following list in SharedPreferences
+/// Exposed for testing
+Future<bool> hasAnyFollowingInCache(SharedPreferences prefs) async {
+  // Get the current user's pubkey
+  final currentUserPubkey = prefs.getString('current_user_pubkey_hex');
+  debugPrint('[Router] Current user pubkey from prefs: $currentUserPubkey');
+
+  if (currentUserPubkey == null || currentUserPubkey.isEmpty) {
+    // No current user stored - treat as no following
+    debugPrint('[Router] No current user pubkey stored, treating as no following');
+    return false;
+  }
+
+  // Check only the current user's following list
+  final key = 'following_list_$currentUserPubkey';
+  final value = prefs.getString(key);
+
+  if (value == null || value.isEmpty) {
+    debugPrint('[Router] No following list cache for current user');
+    return false;
+  }
+
+  try {
+    final List<dynamic> decoded = jsonDecode(value);
+    debugPrint('[Router] Current user following list has ${decoded.length} entries');
+    return decoded.isNotEmpty;
+  } catch (e) {
+    debugPrint('[Router] Current user following list has invalid JSON: $e');
+    return false;
+  }
+}
+
 final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: _rootKey,
@@ -83,10 +121,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     ],
     redirect: (context, state) async {
       final location = state.matchedLocation;
+      final prefs = await SharedPreferences.getInstance();
 
       // Check TOS acceptance first (before any other routes except /welcome)
       if (!location.startsWith('/welcome')) {
-        final prefs = await SharedPreferences.getInstance();
         final hasAcceptedTerms = prefs.getBool('age_verified_16_plus') ?? false;
 
         if (!hasAcceptedTerms) {
@@ -99,16 +137,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       if (!_hasNavigated && location.startsWith('/home')) {
         _hasNavigated = true;
 
-        try {
-          final socialState = ref.read(socialProvider);
-
-          // Only redirect if social state is initialized and user follows 0 people
-          if (socialState.isInitialized && socialState.followingPubkeys.isEmpty) {
-            return '/explore';
-          }
-        } catch (e) {
-          // If social provider isn't ready, let the route proceed
+        // Check SharedPreferences cache directly for following list
+        // This is more reliable than checking socialProvider state which may not be initialized
+        final hasFollowing = await hasAnyFollowingInCache(prefs);
+        debugPrint('[Router] Empty contacts check: hasFollowing=$hasFollowing, redirecting=${!hasFollowing}');
+        if (!hasFollowing) {
+          debugPrint('[Router] Redirecting to /explore because no following list found');
+          return '/explore';
         }
+      } else if (location.startsWith('/home')) {
+        debugPrint('[Router] Skipping empty contacts check: _hasNavigated=$_hasNavigated');
       }
 
       return null;
