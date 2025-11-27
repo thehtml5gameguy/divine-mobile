@@ -116,6 +116,7 @@ class BlossomUploadService {
       final tags = [
         ['t', 'upload'],
         ['expiration', expirationTimestamp.toString()],
+        ['size', fileSize.toString()], // File size for server validation
         ['x', fileHash], // SHA-256 hash of the file
       ];
 
@@ -258,7 +259,7 @@ class BlossomUploadService {
         );
       }
 
-      // Prepare headers following Blossom spec
+      // Prepare headers following Blossom spec (BUD-01 requires standard base64 encoding)
       final authEventJson = jsonEncode(authEvent.toJson());
       final authHeader = 'Nostr ${base64.encode(utf8.encode(authEventJson))}';
 
@@ -266,6 +267,7 @@ class BlossomUploadService {
       final headers = <String, dynamic>{
         'Authorization': authHeader,
         'Content-Type': 'video/mp4',
+        'Content-Length': fileSize.toString(),
       };
 
       if (proofManifestJson != null && proofManifestJson.isNotEmpty) {
@@ -505,7 +507,7 @@ class BlossomUploadService {
         );
       }
 
-      // Prepare authorization header
+      // Prepare authorization header (BUD-01/NIP-98 requires standard base64 encoding)
       final authEventJson = jsonEncode(authEvent.toJson());
       final authHeader = 'Nostr ${base64.encode(utf8.encode(authEventJson))}';
 
@@ -720,7 +722,7 @@ class BlossomUploadService {
         return null;
       }
 
-      // Prepare headers following Blossom spec
+      // Prepare headers following Blossom spec (BUD-01 requires standard base64 encoding)
       final authEventJson = jsonEncode(authEvent.toJson());
       final authHeader = 'Nostr ${base64.encode(utf8.encode(authEventJson))}';
 
