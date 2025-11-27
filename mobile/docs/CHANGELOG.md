@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - Blossom Upload Authentication (2025-11-27)
+
+#### Bug Fixes
+- **Improved Blossom BUD-01 authentication compliance** - Fixed auth event construction for better compatibility with Blossom media servers
+  - Added missing `size` tag to auth event (required by some servers for validation)
+  - Confirmed standard base64 encoding (not base64url) per BUD-01 specification
+  - Added explicit `Content-Length` header to upload requests
+  - Added debug logging for auth event JSON to aid troubleshooting
+
+#### Technical Details
+- Modified `lib/services/blossom_upload_service.dart`:
+  - Added `size` tag to auth event tags list: `['size', fileSize.toString()]`
+  - Added `Content-Length` header to upload request headers
+  - Added X-Reason header check for detailed error information from server
+  - Added debug logging to print auth event JSON before encoding
+  - Comment clarification: BUD-01 requires standard base64 encoding (not base64url)
+
 ### Fixed - Expiring Post Safety & Multiple Imeta Parsing (2025-11-25)
 
 #### Safety Improvements
