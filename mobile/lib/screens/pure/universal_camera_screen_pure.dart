@@ -1090,11 +1090,45 @@ class _UniversalCameraScreenPureState
   }
 
   void _stopRecording() async {
+    // Set processing state immediately - provider's stopRecording() auto-finishes
+    // and runs FFmpeg, so we need to show "Processing video..." during that time
+    if (_isProcessing) {
+      Log.warning(
+        '📹 Already processing, ignoring stop recording call',
+        category: LogCategory.video,
+      );
+      return;
+    }
+
+    setState(() {
+      _isProcessing = true;
+    });
+
     try {
       final notifier = ref.read(vineRecordingProvider.notifier);
       Log.info('📹 Stopping recording segment', category: LogCategory.video);
-      await notifier.stopRecording();
-      // Don't process here - wait for user to press publish button
+      final result = await notifier.stopRecording();
+
+      // Provider's stopRecording() auto-finishes and creates a draft
+      if (result.draftId != null && mounted) {
+        Log.info(
+          '📹 Recording completed, draft created: ${result.draftId}',
+          category: LogCategory.video,
+        );
+
+        // Navigate to metadata screen with the draft
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => VideoMetadataScreenPure(draftId: result.draftId!),
+          ),
+        );
+
+        // After metadata screen returns, navigate to profile
+        if (mounted) {
+          disposeAllVideoControllers(ref);
+          context.go('/profile/me/0');
+        }
+      }
     } catch (e) {
       Log.error(
         '📹 UniversalCameraScreenPure: Stop recording failed: $e',
@@ -1102,6 +1136,12 @@ class _UniversalCameraScreenPureState
       );
 
       _showErrorSnackBar('Stop recording failed: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+      }
     }
   }
 
