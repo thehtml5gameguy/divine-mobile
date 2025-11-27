@@ -211,7 +211,7 @@ void main() {
       when(() => mockRepostEvent.id).thenReturn('repost-event-id');
       when(
         () => mockAuthService.createAndSignEvent(
-          kind: 6,
+          kind: 16,
           content: any(named: 'content'),
           tags: any(named: 'tags'),
         ),

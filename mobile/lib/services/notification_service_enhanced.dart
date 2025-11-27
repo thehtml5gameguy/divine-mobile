@@ -183,7 +183,7 @@ class NotificationServiceEnhanced {
   /// Subscribe to reposts
   void _subscribeToReposts(String userPubkey) {
     final filter = Filter(
-      kinds: [6], // Kind 6 = Reposts (NIP-18)
+      kinds: [16], // Kind 16 = Generic Reposts (NIP-18)
       // NO h filter - we query all relays
     );
 

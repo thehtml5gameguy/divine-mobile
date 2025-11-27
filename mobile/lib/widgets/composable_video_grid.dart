@@ -21,6 +21,7 @@ class ComposableVideoGrid extends ConsumerWidget {
     required this.onVideoTap,
     this.crossAxisCount = 2,
     this.childAspectRatio = 0.72,
+    this.thumbnailAspectRatio = 1.0,
     this.padding,
     this.emptyBuilder,
     this.onRefresh,
@@ -30,6 +31,7 @@ class ComposableVideoGrid extends ConsumerWidget {
   final Function(List<VideoEvent> videos, int index) onVideoTap;
   final int crossAxisCount;
   final double childAspectRatio;
+  final double thumbnailAspectRatio;
   final EdgeInsets? padding;
   final Widget Function()? emptyBuilder;
   final Future<void> Function()? onRefresh;
@@ -123,11 +125,10 @@ class ComposableVideoGrid extends ConsumerWidget {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(0),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              // Video thumbnail with play overlay (square aspect ratio)
+              // Video thumbnail with play overlay
               AspectRatio(
-                aspectRatio: 1.0,
+                aspectRatio: thumbnailAspectRatio,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -192,74 +193,76 @@ class ComposableVideoGrid extends ConsumerWidget {
                   ],
                 ),
               ),
-              // Video info - wrapped in Flexible to prevent overflow
-              Flexible(
+              // Video info - wrapped in Expanded to fill remaining space
+              Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(6),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                    // Creator name
-                    _buildCreatorName(ref, video),
-                    const SizedBox(height: 2),
-                    // Title or content
-                    Text(
-                      video.title ?? video.content,
-                      style: TextStyle(
-                        color: VineTheme.primaryText,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
+                      // Creator name
+                      _buildCreatorName(ref, video),
+                      const SizedBox(height: 1),
+                      // Title or content
+                      Flexible(
+                        child: Text(
+                          video.title ?? video.content,
+                          style: TextStyle(
+                            color: VineTheme.primaryText,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 3),
-                    // Stats row - watch social provider for current metrics
-                    Consumer(
-                      builder: (context, ref, _) {
-                        final socialState = ref.watch(socialProvider);
-                        final newLikeCount = socialState.likeCounts[video.id] ?? 0;
-                        final totalLikes = newLikeCount + (video.originalLikes ?? 0);
+                      const SizedBox(height: 2),
+                      // Stats row - watch social provider for current metrics
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final socialState = ref.watch(socialProvider);
+                          final newLikeCount = socialState.likeCounts[video.id] ?? 0;
+                          final totalLikes = newLikeCount + (video.originalLikes ?? 0);
 
-                        return Row(
-                          children: [
-                            Icon(
-                              Icons.favorite,
-                              size: 11,
-                              color: VineTheme.likeRed,
-                            ),
-                            const SizedBox(width: 3),
-                            Text(
-                              StringUtils.formatCompactNumber(totalLikes),
-                              style: TextStyle(
-                                color: VineTheme.secondaryText,
-                                fontSize: 10,
-                              ),
-                            ),
-                            if (video.originalLoops != null) ...[
-                              const SizedBox(width: 8),
+                          return Row(
+                            children: [
                               Icon(
-                                Icons.repeat,
-                                size: 11,
-                                color: VineTheme.secondaryText,
+                                Icons.favorite,
+                                size: 10,
+                                color: VineTheme.likeRed,
                               ),
-                              const SizedBox(width: 3),
+                              const SizedBox(width: 2),
                               Text(
-                                StringUtils.formatCompactNumber(video.originalLoops!),
+                                StringUtils.formatCompactNumber(totalLikes),
                                 style: TextStyle(
                                   color: VineTheme.secondaryText,
-                                  fontSize: 10,
+                                  fontSize: 9,
                                 ),
                               ),
+                              if (video.originalLoops != null) ...[
+                                const SizedBox(width: 6),
+                                Icon(
+                                  Icons.repeat,
+                                  size: 10,
+                                  color: VineTheme.secondaryText,
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  StringUtils.formatCompactNumber(video.originalLoops!),
+                                  style: TextStyle(
+                                    color: VineTheme.secondaryText,
+                                    fontSize: 9,
+                                  ),
+                                ),
+                              ],
                             ],
-                          ],
-                        );
-                      },
-                    ),
-                  ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-              ),
               ),
             ],
           ),

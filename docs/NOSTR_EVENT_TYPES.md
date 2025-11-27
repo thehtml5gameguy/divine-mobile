@@ -30,20 +30,20 @@ This document outlines the required Nostr event types (kinds) that OpenVine uses
 - `about` - User bio/description
 - `picture` - Avatar image URL
 
-### Kind 6 - Reposts (NIP-18) 
+### Kind 16 - Generic Reposts (NIP-18)
 **Required for:** Video repost functionality
 
 **Purpose:** Share/repost existing video content while preserving original attribution
 
 **Implementation:**
-- `SocialService.repostEvent()` creates Kind 6 events
-- `VideoEventService` processes Kind 6 events and fetches original content
+- `SocialService.repostEvent()` creates Kind 16 events
+- `VideoEventService` processes Kind 16 events and fetches original content
 - `VideoFeedProvider` displays reposts with "Reposted by" indicator
 
 **Example Structure:**
 ```json
 {
-  "kind": 6,
+  "kind": 16,
   "content": "",
   "tags": [
     ["e", "original_video_event_id"],
@@ -135,7 +135,7 @@ This document outlines the required Nostr event types (kinds) that OpenVine uses
 ```dart
 // Required filter for complete video feed functionality
 final filter = Filter(
-  kinds: [32222, 6], // Addressable videos AND reposts
+  kinds: [32222, 16], // Addressable videos AND reposts
   // ... other filter parameters
 );
 ```
@@ -169,8 +169,8 @@ Filter(kinds: [3], p: [targetPubkey])
 ## Critical Implementation Notes
 
 ### Repost System Requirements
-1. **Kind 6 Event Processing:** VideoEventService MUST subscribe to Kind 6 events
-2. **Original Event Fetching:** When receiving Kind 6, fetch the referenced Kind 32222 event using the 'a' tag
+1. **Kind 16 Event Processing:** VideoEventService MUST subscribe to Kind 16 events
+2. **Original Event Fetching:** When receiving Kind 16, fetch the referenced Kind 32222 event using the 'a' tag
 3. **Metadata Preservation:** Repost VideoEvents preserve original content but add repost metadata
 4. **UI Indication:** Display "Reposted by [user]" with green vine theme
 
@@ -185,8 +185,8 @@ The video feed requires both event types working together:
 
 ```dart
 // VideoFeedProvider workflow:
-1. VideoEventService receives Kind 32222 (videos) and Kind 6 (reposts)
-2. For Kind 6: fetch original Kind 32222 using the 'a' tag reference and create repost VideoEvent
+1. VideoEventService receives Kind 32222 (videos) and Kind 16 (reposts)
+2. For Kind 16: fetch original Kind 32222 using the 'a' tag reference and create repost VideoEvent
 3. UserProfileService provides Kind 0 data for user display
 4. UI shows: "Reposted by [Kind 0 name]" above "[Kind 0 name]" for original creator
 ```
@@ -198,7 +198,7 @@ The video feed requires both event types working together:
 - Use placeholder avatar
 - Retry profile fetch in background
 
-### Failed Repost Processing (Kind 6)
+### Failed Repost Processing (Kind 16)
 - Log error but don't crash feed
 - Skip displaying repost if original can't be fetched
 - Provide user feedback for failed repost actions
@@ -211,19 +211,19 @@ The video feed requires both event types working together:
 ## Testing Requirements
 
 ### Event Processing Tests
-- Verify Kind 6 processing creates correct repost VideoEvents
+- Verify Kind 16 processing creates correct repost VideoEvents
 - Test Kind 0 parsing extracts correct profile fields
 - Validate fallback behavior for missing events
 
-### Integration Tests  
+### Integration Tests
 - Test complete repost workflow (create → process → display)
 - Verify profile updates reflect in UI
-- Test feed with mixed Kind 22 and Kind 6 events
+- Test feed with mixed Kind 22 and Kind 16 events
 
 ## Migration Notes
 
 If updating existing OpenVine installations:
-1. Ensure VideoEventService filter includes Kind 6 events
+1. Ensure VideoEventService filter includes Kind 16 events
 2. Update UI components to handle repost indicators
 3. Verify UserProfileService properly caches Kind 0 events
 4. Test repost button functionality with authentication
@@ -231,9 +231,9 @@ If updating existing OpenVine installations:
 ## Related NIPs
 
 - **NIP-01:** Basic protocol flow (Kind 0, 1)
-- **NIP-02:** Contact Lists and petnames (Kind 3)  
+- **NIP-02:** Contact Lists and petnames (Kind 3)
 - **NIP-09:** Event Deletion (Kind 5)
-- **NIP-18:** Reposts (Kind 6)
+- **NIP-18:** Reposts (Kind 16)
 - **NIP-25:** Reactions (Kind 7)
 - **NIP-71:** Video Events (Kind 22)
 

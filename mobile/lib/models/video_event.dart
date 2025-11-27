@@ -159,11 +159,25 @@ class VideoEvent {
                     videoUrlCandidates.add(fixedUrl);
                   } else {
                     videoUrlCandidates.add(value);
-                    developer.log('✅ Added video URL candidate from imeta: $value',
+                    developer.log('✅ Added video URL candidate from imeta url: $value',
                         name: 'VideoEvent');
                   }
                 } else {
                   developer.log('⚠️ WARNING: Invalid URL in imeta: $value',
+                      name: 'VideoEvent');
+                }
+              // POSTEL'S LAW: Accept various video URL keys that different clients may use
+              case 'hls':
+              case 'dash':
+              case 'stream':
+              case 'streaming':
+              case 'fallback':
+              case 'mp4':
+              case 'video':
+                // Alternative video URL keys - add as candidates if valid
+                if (value.isNotEmpty && _isValidVideoUrl(value)) {
+                  videoUrlCandidates.add(value);
+                  developer.log('✅ Added video URL candidate from imeta $key: $value',
                       name: 'VideoEvent');
                 }
               case 'm':
@@ -948,12 +962,26 @@ class VideoEvent {
         urlLower.contains('//www.vine.co/') ||
         urlLower.startsWith('vine.co/')) return -1;
 
+    // POSTEL'S LAW: Deprioritize known broken URL patterns
+    // The cdn.divine.video/*/manifest/video.m3u8 pattern is often broken
+    // Prefer stream.divine.video HLS or direct MP4 files
+    if (urlLower.contains('cdn.divine.video') &&
+        urlLower.contains('/manifest/')) return 5;
+
     // ALWAYS prefer MP4 over HLS for short videos (6 seconds)
     // HLS adaptive bitrate is pointless for content this short
     // MP4 is simpler, faster (single file vs manifest + segments)
+
+    // Direct MP4 from cdn.divine.video (blob storage) - highest priority
+    if (urlLower.contains('.mp4') && urlLower.contains('cdn.divine.video')) return 115;
+
+    // Any other MP4 - still preferred
     if (urlLower.contains('.mp4')) return 110;
 
-    // HLS fallback only if no MP4 available
+    // BunnyStream HLS (stream.divine.video) - reliable streaming
+    if (urlLower.contains('.m3u8') && urlLower.contains('stream.divine.video')) return 105;
+
+    // Generic HLS fallback
     if (urlLower.contains('.m3u8') || urlLower.contains('hls')) return 100;
 
     // WebM is good for web

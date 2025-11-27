@@ -422,9 +422,9 @@ class VideoEventService extends ChangeNotifier {
           name: 'VideoEventService',
           category: LogCategory.video);
 
-      // Create filter for Kind 6 repost events that reference this video
+      // Create filter for Kind 16 generic repost events that reference this video
       final filter = Filter(
-        kinds: [6], // Kind 6 = Repost
+        kinds: [16], // Kind 16 = Generic repost (NIP-18)
         e: [videoId], // Events that reference this video ID
       );
 
@@ -447,8 +447,8 @@ class VideoEventService extends ChangeNotifier {
 
       streamSubscription = eventStream.listen(
         (event) {
-          // Only process Kind 6 events (should be guaranteed by filter, but double-check)
-          if (event.kind == 6) {
+          // Only process Kind 16 events (should be guaranteed by filter, but double-check)
+          if (event.kind == 16) {
             // Add the pubkey of the reposter
             reposters.add(event.pubkey);
             Log.debug(
@@ -762,7 +762,7 @@ class VideoEventService extends ChangeNotifier {
       // Optionally add repost filter if enabled
       if (includeReposts) {
         final repostFilter = Filter(
-          kinds: [6], // NIP-18 reposts only
+          kinds: [16], // NIP-18 generic reposts only
           authors: authors,
           since: effectiveSince,
           until: effectiveUntil,
@@ -1331,7 +1331,7 @@ class VideoEventService extends ChangeNotifier {
       }
 
       // Skip repost events if reposts are disabled
-      if (event.kind == 6 && !(_includeReposts[subscriptionType] ?? false)) {
+      if (event.kind == 16 && !(_includeReposts[subscriptionType] ?? false)) {
         Log.warning(
             '⏩ Skipping repost event ${event.id}... (reposts disabled)',
             name: 'VideoEventService',
@@ -1496,9 +1496,9 @@ class VideoEventService extends ChangeNotifier {
           Log.verbose('  - Tags: ${event.tags}',
               name: 'VideoEventService', category: LogCategory.video);
         }
-      } else if (event.kind == 6) {
-        // Repost event - only process if it likely references video content
-        Log.verbose('Processing repost event ${event.id}...',
+      } else if (event.kind == 16) {
+        // Generic repost event (NIP-18) - only process if it likely references video content
+        Log.verbose('Processing generic repost event ${event.id}...',
             name: 'VideoEventService', category: LogCategory.video);
 
         String? originalEventId;
@@ -1629,7 +1629,7 @@ class VideoEventService extends ChangeNotifier {
       }
 
       // Skip repost events if reposts are disabled
-      if (event.kind == 6 && !(_includeReposts[subscriptionType] ?? false)) {
+      if (event.kind == 16 && !(_includeReposts[subscriptionType] ?? false)) {
         Log.warning(
             '⏩ Skipping historical repost event ${event.id}... (reposts disabled)',
             name: 'VideoEventService',
@@ -1720,10 +1720,10 @@ class VideoEventService extends ChangeNotifier {
           Log.error('Failed to parse historical video event: $e',
               name: 'VideoEventService', category: LogCategory.video);
         }
-      } else if (event.kind == 6) {
-        // Repost event - same logic as real-time but marked as historical
+      } else if (event.kind == 16) {
+        // Generic repost event (NIP-18) - same logic as real-time but marked as historical
         Log.verbose(
-            'Processing historical repost event ${event.id}...',
+            'Processing historical generic repost event ${event.id}...',
             name: 'VideoEventService',
             category: LogCategory.video);
 
@@ -3913,7 +3913,7 @@ class VideoEventService extends ChangeNotifier {
           name: 'VideoEventService', category: LogCategory.video);
 
       final directQueryEvents = await _nostrService.getEvents(
-        filters: [Filter(kinds: [34236, 34235, 22, 21], limit: 100)],
+        filters: [Filter(kinds: [34236], limit: 100)],
         limit: 100,
       );
 

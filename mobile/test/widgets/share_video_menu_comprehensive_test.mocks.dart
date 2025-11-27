@@ -759,6 +759,34 @@ class MockCuratedListService extends _i1.Mock
             ),
           )
           as _i7.Future<List<_i10.CuratedList>>);
+
+  @override
+  _i7.Future<List<_i10.CuratedList>> fetchPublicListsContainingVideo(
+    String? videoEventId,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#fetchPublicListsContainingVideo, [videoEventId]),
+            returnValue: _i7.Future<List<_i10.CuratedList>>.value(
+              <_i10.CuratedList>[],
+            ),
+            returnValueForMissingStub: _i7.Future<List<_i10.CuratedList>>.value(
+              <_i10.CuratedList>[],
+            ),
+          )
+          as _i7.Future<List<_i10.CuratedList>>);
+
+  @override
+  _i7.Stream<_i10.CuratedList> streamPublicListsContainingVideo(
+    String? videoEventId,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#streamPublicListsContainingVideo, [
+              videoEventId,
+            ]),
+            returnValue: _i7.Stream<_i10.CuratedList>.empty(),
+            returnValueForMissingStub: _i7.Stream<_i10.CuratedList>.empty(),
+          )
+          as _i7.Stream<_i10.CuratedList>);
 }
 
 /// A class which mocks [SocialService].

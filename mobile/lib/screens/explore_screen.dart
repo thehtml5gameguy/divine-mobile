@@ -28,6 +28,7 @@ import 'package:openvine/providers/list_providers.dart';
 import 'package:openvine/screens/curated_list_feed_screen.dart';
 import 'package:openvine/screens/user_list_people_screen.dart';
 import 'package:openvine/screens/discover_lists_screen.dart';
+import 'package:openvine/utils/video_controller_cleanup.dart';
 
 /// Pure ExploreScreen using revolutionary Riverpod architecture
 class ExploreScreen extends ConsumerStatefulWidget {
@@ -286,7 +287,24 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
           return _buildFeedModeContent();
         }
 
-        if (_hashtagMode != null) {
+        // IMPORTANT: Clear hashtag mode when URL shows we're on main explore
+        // This handles the case where user taps bottom nav "Explore" to go back
+        if (ctx.type == RouteType.explore && ctx.hashtag == null && _hashtagMode != null) {
+          Log.info('🔄 Clearing hashtag mode: URL is main explore but _hashtagMode=$_hashtagMode',
+              name: 'ExploreScreen', category: LogCategory.ui);
+          // Schedule the state clear for after this build
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {
+                _hashtagMode = null;
+                _customTitle = null;
+              });
+            }
+          });
+          // Still show the grid content this frame (not hashtag content)
+        } else if (_hashtagMode != null) {
+          Log.debug('🏷️ Showing hashtag mode: $_hashtagMode',
+              name: 'ExploreScreen', category: LogCategory.ui);
           return _buildHashtagModeContent(_hashtagMode!);
         }
 
@@ -368,6 +386,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
               onPressed: () {
                 Log.info('Tapped Discover Lists button',
                     category: LogCategory.ui);
+                // Stop any playing videos before navigating
+                disposeAllVideoControllers(ref);
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => const DiscoverListsScreen(),
@@ -542,6 +562,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
                             Log.info(
                                 'Tapped my curated list: ${curatedList.name}',
                                 category: LogCategory.ui);
+                            // Stop any playing videos before navigating
+                            disposeAllVideoControllers(ref);
                             Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (context) => CuratedListFeedScreen(
@@ -581,6 +603,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
                           onTap: () {
                             Log.info('Tapped user list: ${userList.name}',
                                 category: LogCategory.ui);
+                            // Stop any playing videos before navigating
+                            disposeAllVideoControllers(ref);
                             Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (context) =>
@@ -690,6 +714,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
               onTap: () {
                 Log.info('Tapped subscribed list: ${curatedList.name}',
                     category: LogCategory.ui);
+                // Stop any playing videos before navigating
+                disposeAllVideoControllers(ref);
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => CuratedListFeedScreen(
@@ -796,7 +822,13 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
         }
 
         // Videos are already sorted by PopularNowFeed provider (newest first)
-        return _buildVideoGrid(videos, 'New Videos');
+        // Use portrait aspect ratio (9:16) for New Videos to match vertical video format
+        return _buildVideoGrid(
+          videos,
+          'New Videos',
+          childAspectRatio: 0.50,  // Taller grid cells for portrait videos
+          thumbnailAspectRatio: 9 / 16,  // Portrait thumbnail (0.5625)
+        );
       },
       loading: () {
         Log.info('⏳ NewVinesTab: Showing loading indicator',
@@ -933,23 +965,12 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
         _lastRawVideos = videos;
         _cachedTrendingVideos = sortedVideos;
 
-        // Debug: Log top 10 videos after sorting
-        Log.debug(
-          '🎯 TRENDING SORT: Sorted ${sortedVideos.length} videos by loop count',
+        // Log trending sort at verbose level to reduce noise
+        Log.verbose(
+          'Trending: sorted ${sortedVideos.length} videos by loop count',
           name: 'ExploreScreen',
           category: LogCategory.video,
         );
-        if (sortedVideos.isNotEmpty) {
-          final top10 = sortedVideos.take(10).toList();
-          for (var i = 0; i < top10.length; i++) {
-            final v = top10[i];
-            Log.debug(
-              '  #${i + 1}: ${v.originalLoops ?? 0} loops (id: ${v.id})',
-              name: 'ExploreScreen',
-              category: LogCategory.video,
-            );
-          }
-        }
       }
 
       return _buildTrendingTabWithHashtags(sortedVideos);
@@ -1102,9 +1123,20 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
     );
   }
 
-  Widget _buildVideoGrid(List<VideoEvent> videos, String tabName) {
+  Widget _buildVideoGrid(
+    List<VideoEvent> videos,
+    String tabName, {
+    double? childAspectRatio,
+    double? thumbnailAspectRatio,
+  }) {
+    // Default aspect ratios - square thumbnails with standard grid height
+    final gridAspectRatio = childAspectRatio ?? 0.72;
+    final thumbAspectRatio = thumbnailAspectRatio ?? 1.0;
+
     return ComposableVideoGrid(
       videos: videos,
+      childAspectRatio: gridAspectRatio,
+      thumbnailAspectRatio: thumbAspectRatio,
       onVideoTap: (videos, index) {
         Log.info('🎯 ExploreScreen: Tapped video tile at index $index',
             category: LogCategory.video);

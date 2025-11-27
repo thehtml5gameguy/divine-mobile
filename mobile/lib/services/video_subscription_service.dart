@@ -123,10 +123,10 @@ class VideoSubscriptionService {
   }) {
     final filters = <Filter>[];
 
-    // Video events filter (kind 32222)
+    // Video events filter (kind 34236 only)
     filters.add(
       Filter(
-        kinds: [32222],
+        kinds: [34236],
         authors: authors,
         t: hashtags,
         h: group != null ? [group] : null,
@@ -136,11 +136,11 @@ class VideoSubscriptionService {
       ),
     );
 
-    // Repost filter (kind 6) if requested
+    // Repost filter (kind 16 generic repost) if requested
     if (includeReposts) {
       filters.add(
         Filter(
-          kinds: [6],
+          kinds: [16],
           authors: authors,
           since: since,
           until: until,

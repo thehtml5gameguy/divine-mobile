@@ -14,6 +14,7 @@ part of 'popular_now_feed_provider.dart';
 /// - Poll interval elapses (uses same auto-refresh as home feed)
 /// - User pulls to refresh
 /// - VideoEventService updates with new videos
+/// - appReady gate becomes true (triggers rebuild to start subscription)
 
 @ProviderFor(PopularNowFeed)
 const popularNowFeedProvider = PopularNowFeedProvider._();
@@ -24,6 +25,7 @@ const popularNowFeedProvider = PopularNowFeedProvider._();
 /// - Poll interval elapses (uses same auto-refresh as home feed)
 /// - User pulls to refresh
 /// - VideoEventService updates with new videos
+/// - appReady gate becomes true (triggers rebuild to start subscription)
 final class PopularNowFeedProvider
     extends $AsyncNotifierProvider<PopularNowFeed, VideoFeedState> {
   /// PopularNow feed provider - shows newest videos (sorted by creation time)
@@ -32,6 +34,7 @@ final class PopularNowFeedProvider
   /// - Poll interval elapses (uses same auto-refresh as home feed)
   /// - User pulls to refresh
   /// - VideoEventService updates with new videos
+  /// - appReady gate becomes true (triggers rebuild to start subscription)
   const PopularNowFeedProvider._()
     : super(
         from: null,
@@ -51,7 +54,7 @@ final class PopularNowFeedProvider
   PopularNowFeed create() => PopularNowFeed();
 }
 
-String _$popularNowFeedHash() => r'f76c1a227ed8d7d0ad5b787c7f555d4de87ddb22';
+String _$popularNowFeedHash() => r'ddc56aa632164a21ec18ea7a85a6ec1bce239eb3';
 
 /// PopularNow feed provider - shows newest videos (sorted by creation time)
 ///
@@ -59,6 +62,7 @@ String _$popularNowFeedHash() => r'f76c1a227ed8d7d0ad5b787c7f555d4de87ddb22';
 /// - Poll interval elapses (uses same auto-refresh as home feed)
 /// - User pulls to refresh
 /// - VideoEventService updates with new videos
+/// - appReady gate becomes true (triggers rebuild to start subscription)
 
 abstract class _$PopularNowFeed extends $AsyncNotifier<VideoFeedState> {
   FutureOr<VideoFeedState> build();

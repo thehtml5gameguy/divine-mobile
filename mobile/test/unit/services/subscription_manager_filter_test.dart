@@ -188,7 +188,7 @@ void main() {
           limit: 200,
         ),
         Filter(
-          kinds: [6],
+          kinds: [16],
           h: ['vine'],
           limit: 150,
         ),
@@ -224,7 +224,7 @@ void main() {
       final filter2 = passedFilters[1];
       expect(filter2.t, isNull);
       expect(filter2.h, equals(['vine']));
-      expect(filter2.kinds, equals([6]));
+      expect(filter2.kinds, equals([16]));
       expect(filter2.limit, equals(100));
     });
 

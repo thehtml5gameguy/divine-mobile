@@ -88,9 +88,10 @@ void main() {
       mockRepostEvent.sign(privateKey);
 
       when(mockAuthService.createAndSignEvent(
-        kind: 6,
+        kind: 16,
         content: '',
         tags: [
+          ['k', '34236'],
           ['a', '32222:$testAuthorPubkey:$testDTag'],
           ['p', testAuthorPubkey],
         ],
@@ -115,9 +116,10 @@ void main() {
 
       // Verify repost event was created
       verify(mockAuthService.createAndSignEvent(
-        kind: 6,
+        kind: 16,
         content: '',
         tags: [
+          ['k', '34236'],
           ['a', '32222:$testAuthorPubkey:$testDTag'],
           ['p', testAuthorPubkey],
         ],
@@ -137,8 +139,9 @@ void main() {
 
       final mockRepostEvent = Event(
         publicKey,
-        6,
+        16,
         [
+          ['k', '34236'],
           ['a', '32222:$testAuthorPubkey:$testDTag'],
           ['p', testAuthorPubkey],
         ],
@@ -147,9 +150,10 @@ void main() {
       mockRepostEvent.sign(privateKey);
 
       when(mockAuthService.createAndSignEvent(
-        kind: 6,
+        kind: 16,
         content: '',
         tags: [
+          ['k', '34236'],
           ['a', '32222:$testAuthorPubkey:$testDTag'],
           ['p', testAuthorPubkey],
         ],

@@ -327,6 +327,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
           videoList: [video],
           contextTitle: 'From Notification',
           startingIndex: 0,
+          useLocalActiveState: true, // Use local state since not using URL routing
         ),
       ),
     );

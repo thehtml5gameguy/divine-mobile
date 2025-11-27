@@ -47,7 +47,7 @@ target 'Runner' do
   pod 'LibProofMode', :path => 'LocalPods/LibProofMode'
 
   # Zendesk Support SDK
-  pod 'ZendeskSupportSDK', '~> 5.3'
+  pod 'ZendeskSupportSDK', '~> 9.0'
 
   target 'RunnerTests' do
     inherit! :search_paths

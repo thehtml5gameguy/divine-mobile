@@ -3,6 +3,7 @@
 
 import 'dart:async';
 import 'package:nostr_sdk/filter.dart';
+import 'package:openvine/constants/nip71_migration.dart';
 import 'package:openvine/models/video_event.dart';
 import 'package:openvine/providers/app_providers.dart';
 import 'package:openvine/providers/tab_visibility_provider.dart';
@@ -78,24 +79,24 @@ class LatestVideos extends _$LatestVideos {
       if (loadMore && _oldestTimestamp != null) {
         // Load older videos
         filter = Filter(
-          kinds: [32222], // Video events
+          kinds: [NIP71VideoKinds.addressableShortVideo], // Kind 34236 only
           until:
               _oldestTimestamp! - 1, // Get videos older than the oldest we have
           limit: 200, // Get 200 more videos
         );
 
         Log.debug(
-            '🔍 Loading more: kind=32222, until=${DateTime.fromMillisecondsSinceEpoch(_oldestTimestamp! * 1000).toIso8601String()}, limit=200',
+            '🔍 Loading more: kind=34236, until=${DateTime.fromMillisecondsSinceEpoch(_oldestTimestamp! * 1000).toIso8601String()}, limit=200',
             name: 'LatestVideosProvider',
             category: LogCategory.system);
       } else {
         // Initial load or refresh - just get the latest videos, no time limit
         filter = Filter(
-          kinds: [32222], // Video events
+          kinds: [NIP71VideoKinds.addressableShortVideo], // Kind 34236 only
           limit: 500, // Get up to 500 latest videos
         );
 
-        Log.debug('🔍 Filter: kind=32222, limit=500 (no time restrictions)',
+        Log.debug('🔍 Filter: kind=34236, limit=500 (no time restrictions)',
             name: 'LatestVideosProvider', category: LogCategory.system);
       }
 
@@ -114,7 +115,7 @@ class LatestVideos extends _$LatestVideos {
       _subscription = eventStream.listen(
         (event) {
           try {
-            if (event.kind == 32222 && !_loadedVideoIds.contains(event.id)) {
+            if (event.kind == NIP71VideoKinds.addressableShortVideo && !_loadedVideoIds.contains(event.id)) {
               _loadedVideoIds.add(event.id);
               final video = VideoEvent.fromNostrEvent(event);
               newVideos.add(video);

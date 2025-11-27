@@ -63,11 +63,11 @@ class P2PVideoSyncService extends ChangeNotifier {
       final peerId = connection.peer.id;
       final lastSync = _lastSyncTimes[peerId];
 
-      // Get recent video events (Kind 32222 for divine videos)
+      // Get recent video events (Kind 34236 addressable short videos)
       final since =
           lastSync ?? DateTime.now().subtract(const Duration(days: 7));
       final videoFilter = embedded.Filter(
-        kinds: [32222], // divine video events
+        kinds: [34236], // Kind 34236 addressable short video events
         since: since.millisecondsSinceEpoch ~/ 1000,
         limit: 100,
       );

@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openvine/models/video_event.dart';
 import 'package:openvine/providers/app_providers.dart';
+import 'package:openvine/providers/list_providers.dart';
 import 'package:openvine/services/bookmark_service.dart';
 import 'package:openvine/services/content_deletion_service.dart';
 import 'package:openvine/services/content_moderation_service.dart';
@@ -61,6 +62,8 @@ class _ShareVideoMenuState extends ConsumerState<ShareVideoMenu> {
                       _buildShareSection(),
                       const SizedBox(height: 24),
                       _buildListSection(),
+                      const SizedBox(height: 24),
+                      _buildPublicListsSection(),
                       const SizedBox(height: 24),
                       _buildBookmarkSection(),
                       const SizedBox(height: 24),
@@ -379,89 +382,172 @@ class _ShareVideoMenuState extends ConsumerState<ShareVideoMenu> {
 
           const SizedBox(height: 8),
 
-          // External share options
-          _buildActionTile(
-            icon: Icons.copy,
-            title: 'Copy Link',
-            subtitle: 'Copy shareable URL',
-            onTap: _copyVideoLink,
-          ),
-
-          const SizedBox(height: 8),
-
+          // External share (native share sheet includes copy option)
           _buildActionTile(
             icon: Icons.share,
-            title: 'Share Externally',
-            subtitle: 'Share via other apps',
+            title: 'Share',
+            subtitle: 'Share via other apps or copy link',
             onTap: _shareExternally,
           ),
         ],
       );
 
-  Widget _buildListSection() => Consumer(
-        builder: (context, ref, child) {
-          final listServiceAsync = ref.watch(curatedListServiceProvider);
+  Widget _buildListSection() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Lists',
+            style: TextStyle(
+              color: VineTheme.whiteText,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 12),
 
-          return listServiceAsync.when(
-            data: (listService) {
-              final defaultList = listService.getDefaultList();
-              final isInDefaultList = defaultList != null &&
-                  listService.isVideoInDefaultList(widget.video.id);
+          // Dynamic part: show which lists contain this video (loaded async)
+          Consumer(
+            builder: (context, ref, child) {
+              final listServiceAsync = ref.watch(curatedListServiceProvider);
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Add to List',
-                    style: TextStyle(
-                      color: VineTheme.whiteText,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+              return listServiceAsync.when(
+                data: (listService) {
+                  final listsContainingVideo =
+                      listService.getListsContainingVideo(widget.video.id);
+
+                  if (listsContainingVideo.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: VineTheme.vineGreen.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: VineTheme.vineGreen.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.playlist_add_check,
+                                color: VineTheme.vineGreen,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'In ${listsContainingVideo.length} list${listsContainingVideo.length == 1 ? '' : 's'}',
+                                style: const TextStyle(
+                                  color: VineTheme.vineGreen,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          ...listsContainingVideo.map((list) => Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: InkWell(
+                                  onTap: () => _removeFromList(list.id),
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 4, horizontal: 4),
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.folder,
+                                          color: VineTheme.secondaryText,
+                                          size: 16,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            list.name,
+                                            style: const TextStyle(
+                                              color: VineTheme.whiteText,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ),
+                                        const Icon(
+                                          Icons.remove_circle_outline,
+                                          color: VineTheme.secondaryText,
+                                          size: 16,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              )),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Add to My List (default list)
-                  _buildActionTile(
-                    icon: isInDefaultList
-                        ? Icons.playlist_add_check
-                        : Icons.playlist_add,
-                    title: isInDefaultList
-                        ? 'Remove from My List'
-                        : 'Add to My List',
-                    subtitle: 'Your public curated list',
-                    iconColor: isInDefaultList ? VineTheme.vineGreen : null,
-                    onTap: () => _toggleDefaultList(isInDefaultList),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // Create new list or add to existing
-                  _buildActionTile(
-                    icon: Icons.create_new_folder,
-                    title: 'Create New List',
-                    subtitle: 'Start a new curated collection',
-                    onTap: _showCreateListDialog,
-                  ),
-
-                  // Show existing lists if any
-                  if (listService.lists.length > 1) ...[
-                    const SizedBox(height: 8),
-                    _buildActionTile(
-                      icon: Icons.folder,
-                      title: 'Add to Other List',
-                      subtitle: '${listService.lists.length - 1} other lists',
-                      onTap: _showSelectListDialog,
-                    ),
-                  ],
-                ],
+                  );
+                },
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
               );
             },
-            loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
-          );
-        },
+          ),
+
+          // Static buttons - always visible immediately
+          _buildActionTile(
+            icon: Icons.playlist_add,
+            title: 'Add to List',
+            subtitle: 'Add to your curated lists',
+            onTap: _showSelectListDialog,
+          ),
+
+          const SizedBox(height: 8),
+
+          _buildActionTile(
+            icon: Icons.create_new_folder,
+            title: 'Create New List',
+            subtitle: 'Start a new curated collection',
+            onTap: _showCreateListDialog,
+          ),
+        ],
       );
+
+  /// Remove video from a specific list
+  Future<void> _removeFromList(String listId) async {
+    try {
+      final listService = await ref.read(curatedListServiceProvider.future);
+      await listService.removeVideoFromList(listId, widget.video.id);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Removed from list'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      Log.error('Failed to remove from list: $e',
+          name: 'ShareVideoMenu', category: LogCategory.ui);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to remove from list'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
+  /// Build public lists section showing other users' lists containing this video
+  Widget _buildPublicListsSection() => _PublicListsSection(videoId: widget.video.id);
 
   /// Build bookmark section for quick bookmarking
   Widget _buildBookmarkSection() => Consumer(
@@ -753,28 +839,6 @@ class _ShareVideoMenuState extends ConsumerState<ShareVideoMenu> {
     );
   }
 
-  Future<void> _copyVideoLink() async {
-    try {
-      final sharingService = ref.read(videoSharingServiceProvider);
-      final url = sharingService.generateShareUrl(widget.video);
-
-      await Clipboard.setData(ClipboardData(text: url));
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Link copied to clipboard'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-        Navigator.of(context).pop();
-      }
-    } catch (e) {
-      Log.error('Failed to copy link: $e',
-          name: 'ShareVideoMenu', category: LogCategory.ui);
-    }
-  }
-
   Future<void> _shareExternally() async {
     try {
       final sharingService = ref.read(videoSharingServiceProvider);
@@ -817,37 +881,6 @@ class _ShareVideoMenuState extends ConsumerState<ShareVideoMenu> {
       }
     } catch (e) {
       Log.error('Failed to copy event ID: $e',
-          name: 'ShareVideoMenu', category: LogCategory.ui);
-    }
-  }
-
-  Future<void> _toggleDefaultList(bool isCurrentlyInList) async {
-    try {
-      final listService = await ref.read(curatedListServiceProvider.future);
-
-      bool success;
-      if (isCurrentlyInList) {
-        success = await listService.removeVideoFromList(
-          CuratedListService.defaultListId,
-          widget.video.id,
-        );
-      } else {
-        success = await listService.addVideoToList(
-          CuratedListService.defaultListId,
-          widget.video.id,
-        );
-      }
-
-      if (mounted && success) {
-        final message =
-            isCurrentlyInList ? 'Removed from My List' : 'Added to My List';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(message), duration: const Duration(seconds: 2)),
-        );
-      }
-    } catch (e) {
-      Log.error('Failed to toggle list: $e',
           name: 'ShareVideoMenu', category: LogCategory.ui);
     }
   }
@@ -2934,6 +2967,234 @@ class _ViewSourceDialog extends ConsumerWidget {
       return const JsonEncoder.withIndent('  ').convert(event.toJson());
     } catch (e) {
       return 'Error: $e';
+    }
+  }
+}
+
+/// Widget for displaying public lists containing a video using Riverpod streaming
+/// Uses publicListsContainingVideoProvider for reactive updates as lists arrive
+class _PublicListsSection extends ConsumerStatefulWidget {
+  const _PublicListsSection({required this.videoId});
+  final String videoId;
+
+  @override
+  ConsumerState<_PublicListsSection> createState() => _PublicListsSectionState();
+}
+
+class _PublicListsSectionState extends ConsumerState<_PublicListsSection> {
+  bool _minTimeElapsed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Start minimum time timer to avoid flashing "no lists" before query completes
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() => _minTimeElapsed = true);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Watch the Riverpod StreamProvider - automatically updates as lists stream in
+    final listsAsync = ref.watch(publicListsContainingVideoProvider(widget.videoId));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Public Lists',
+          style: TextStyle(
+            color: VineTheme.whiteText,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 12),
+        listsAsync.when(
+          data: (lists) {
+            if (lists.isNotEmpty) {
+              // Show lists as they arrive via Riverpod streaming
+              return Column(
+                children: lists.map((list) => _buildPublicListTile(list)).toList(),
+              );
+            }
+            // Empty list - check if minimum time has elapsed
+            if (!_minTimeElapsed) {
+              return _buildLoadingIndicator();
+            }
+            return _buildEmptyState();
+          },
+          loading: () => _buildLoadingIndicator(),
+          error: (error, _) {
+            Log.error('Error loading public lists: $error',
+                name: 'PublicListsSection', category: LogCategory.ui);
+            if (!_minTimeElapsed) {
+              return _buildLoadingIndicator();
+            }
+            return _buildEmptyState();
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: VineTheme.secondaryText,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            'Checking public lists...',
+            style: TextStyle(
+              color: VineTheme.secondaryText,
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Text(
+        'Not yet in any lists...',
+        style: TextStyle(
+          color: VineTheme.secondaryText,
+          fontSize: 14,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPublicListTile(CuratedList list) {
+    final listServiceAsync = ref.watch(curatedListServiceProvider);
+
+    return listServiceAsync.when(
+      data: (listService) {
+        final isSubscribed = listService.isSubscribedToList(list.id);
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: VineTheme.cardBackground,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isSubscribed
+                    ? VineTheme.vineGreen.withValues(alpha: 0.5)
+                    : Colors.grey.shade800,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.video_library,
+                  color: VineTheme.vineGreen,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        list.name,
+                        style: const TextStyle(
+                          color: VineTheme.whiteText,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        '${list.videoEventIds.length} videos',
+                        style: TextStyle(
+                          color: VineTheme.secondaryText,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => _toggleSubscription(list),
+                  style: TextButton.styleFrom(
+                    backgroundColor: isSubscribed
+                        ? VineTheme.cardBackground
+                        : VineTheme.vineGreen,
+                    foregroundColor: isSubscribed
+                        ? VineTheme.vineGreen
+                        : VineTheme.backgroundColor,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    minimumSize: Size.zero,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      side: isSubscribed
+                          ? BorderSide(color: VineTheme.vineGreen)
+                          : BorderSide.none,
+                    ),
+                  ),
+                  child: Text(
+                    isSubscribed ? 'Subscribed' : 'Subscribe',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Future<void> _toggleSubscription(CuratedList list) async {
+    try {
+      final listService = await ref.read(curatedListServiceProvider.future);
+      final isSubscribed = listService.isSubscribedToList(list.id);
+
+      if (isSubscribed) {
+        await listService.unsubscribeFromList(list.id);
+        Log.info('Unsubscribed from list: ${list.name}',
+            name: 'PublicListsSection', category: LogCategory.ui);
+      } else {
+        await listService.subscribeToList(list.id, list);
+        Log.info('Subscribed to list: ${list.name}',
+            name: 'PublicListsSection', category: LogCategory.ui);
+      }
+
+      if (mounted) setState(() {});
+    } catch (e) {
+      Log.error('Failed to toggle subscription: $e',
+          name: 'PublicListsSection', category: LogCategory.ui);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update subscription: $e'),
+            backgroundColor: VineTheme.likeRed,
+          ),
+        );
+      }
     }
   }
 }

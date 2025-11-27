@@ -1,5 +1,5 @@
 #!/bin/bash
-# ABOUTME: Build script for OpenVine Android app (debug and release builds)
+# ABOUTME: Build script for diVine Android app (debug and release builds)
 # ABOUTME: Builds debug APKs for testing and release AABs for Play Store distribution
 
 set -e
@@ -46,7 +46,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 echo -e "${GREEN}================================${NC}"
-echo -e "${GREEN}OpenVine Android Build${NC}"
+echo -e "${GREEN}diVine Android Build${NC}"
 echo -e "${GREEN}================================${NC}"
 echo ""
 echo -e "Build type: ${YELLOW}$BUILD_TYPE${NC}"
@@ -66,6 +66,10 @@ fi
 echo -e "${YELLOW}Cleaning previous builds...${NC}"
 flutter clean
 flutter pub get
+
+# Generate code (Riverpod providers, Freezed models, etc.)
+echo -e "${YELLOW}Generating code with build_runner...${NC}"
+dart run build_runner build --delete-conflicting-outputs
 
 # Verify keystore exists for release builds
 if [ "$BUILD_TYPE" = "release" ]; then

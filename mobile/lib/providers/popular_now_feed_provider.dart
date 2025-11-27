@@ -4,6 +4,7 @@
 import 'package:openvine/helpers/video_feed_builder.dart';
 import 'package:openvine/models/video_event.dart';
 import 'package:openvine/providers/app_providers.dart';
+import 'package:openvine/providers/readiness_gate_providers.dart';
 import 'package:openvine/services/video_event_service.dart';
 import 'package:openvine/services/video_filter_builder.dart';
 import 'package:openvine/state/video_feed_state.dart';
@@ -18,19 +19,38 @@ part 'popular_now_feed_provider.g.dart';
 /// - Poll interval elapses (uses same auto-refresh as home feed)
 /// - User pulls to refresh
 /// - VideoEventService updates with new videos
+/// - appReady gate becomes true (triggers rebuild to start subscription)
 @Riverpod(keepAlive: true) // Keep alive to prevent state loss on tab switches
 class PopularNowFeed extends _$PopularNowFeed {
   VideoFeedBuilder? _builder;
 
   @override
   Future<VideoFeedState> build() async {
+    // Watch appReady gate - provider rebuilds when this changes
+    final isAppReady = ref.watch(appReadyProvider);
+
     Log.info(
-      '🆕 PopularNowFeed: Building feed for newest videos',
+      '🆕 PopularNowFeed: Building feed for newest videos (appReady: $isAppReady)',
       name: 'PopularNowFeedProvider',
       category: LogCategory.video,
     );
 
     final videoEventService = ref.watch(videoEventServiceProvider);
+
+    // If app is not ready, return empty state - will rebuild when appReady becomes true
+    if (!isAppReady) {
+      Log.info(
+        '🆕 PopularNowFeed: App not ready, returning empty state (will rebuild when ready)',
+        name: 'PopularNowFeedProvider',
+        category: LogCategory.video,
+      );
+      return VideoFeedState(
+        videos: const [],
+        hasMoreContent: true, // Assume there's content to load when ready
+        isLoadingMore: false,
+      );
+    }
+
     _builder = VideoFeedBuilder(videoEventService);
 
     // Configure feed for popularNow subscription type

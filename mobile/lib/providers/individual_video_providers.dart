@@ -252,12 +252,51 @@ VideoPlayerController individualVideoController(
 
   controller.addListener(stateChangeListener);
 
-  final initFuture = controller.initialize().timeout(
-    timeoutDuration,
-    onTimeout: () => throw TimeoutException(
-      'Video initialization timed out after ${timeoutDuration.inSeconds} seconds ($formatType format)'
-    ),
-  );
+  // Initialize with automatic retry for transient failures (CoreMedia errors, byte range issues)
+  // Retry up to 2 times (3 attempts total) with 500ms delay between attempts
+  Future<void> initializeWithRetry() async {
+    const maxAttempts = 3;
+    const retryDelay = Duration(milliseconds: 500);
+
+    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        await controller.initialize().timeout(
+          timeoutDuration,
+          onTimeout: () => throw TimeoutException(
+            'Video initialization timed out after ${timeoutDuration.inSeconds} seconds ($formatType format)'
+          ),
+        );
+        // Success! Exit retry loop
+        if (attempt > 1) {
+          Log.info('✅ Video ${params.videoId} initialized successfully on attempt $attempt',
+              name: 'IndividualVideoController', category: LogCategory.video);
+        }
+        return;
+      } catch (error) {
+        final errorStr = error.toString().toLowerCase();
+        final isRetryable = errorStr.contains('byte range') ||
+                           errorStr.contains('coremediaerrordomain') ||
+                           errorStr.contains('network') ||
+                           errorStr.contains('connection');
+
+        if (isRetryable && attempt < maxAttempts) {
+          Log.warning('⚠️ Video ${params.videoId} initialization attempt $attempt failed (retryable): $error',
+              name: 'IndividualVideoController', category: LogCategory.video);
+          await Future.delayed(retryDelay);
+          // Continue to next attempt
+        } else {
+          // Non-retryable error or max attempts reached - rethrow
+          if (attempt == maxAttempts) {
+            Log.error('❌ Video ${params.videoId} initialization failed after $maxAttempts attempts',
+                name: 'IndividualVideoController', category: LogCategory.video);
+          }
+          rethrow;
+        }
+      }
+    }
+  }
+
+  final initFuture = initializeWithRetry();
 
   initFuture.then((_) {
     final initialPosition = controller.value.position;

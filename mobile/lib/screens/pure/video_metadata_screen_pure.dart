@@ -38,6 +38,7 @@ class _VideoMetadataScreenPureState extends ConsumerState<VideoMetadataScreenPur
   final TextEditingController _hashtagController = TextEditingController();
   final List<String> _hashtags = [];
   bool _isExpiringPost = false;
+  bool _expirationConfirmed = false; // User must explicitly confirm expiration
   int _expirationHours = 24;
   bool _isPublishing = false;
   String _publishingStatus = '';
@@ -421,36 +422,6 @@ class _VideoMetadataScreenPureState extends ConsumerState<VideoMetadataScreenPur
                                             : 9.0 / 16.0,
                                         child: VideoPlayer(_videoController!),
                                       ),
-                                      // Play/pause overlay
-                                      Positioned(
-                                        bottom: 8,
-                                        right: 8,
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.black.withValues(alpha: 0.6),
-                                            borderRadius: BorderRadius.circular(20),
-                                          ),
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const Icon(
-                                                Icons.loop,
-                                                color: Colors.white,
-                                                size: 16,
-                                              ),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                _formatDuration(_videoController?.value.duration ?? Duration.zero),
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
                                     ],
                                   )
                                 : Column(
@@ -639,10 +610,22 @@ class _VideoMetadataScreenPureState extends ConsumerState<VideoMetadataScreenPur
                                   style: TextStyle(color: Colors.grey[400]),
                                 ),
                                 value: _isExpiringPost,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _isExpiringPost = value;
-                                  });
+                                onChanged: (value) async {
+                                  if (value) {
+                                    // Show confirmation dialog before enabling expiration
+                                    final confirmed = await _showExpirationConfirmationDialog();
+                                    if (confirmed) {
+                                      setState(() {
+                                        _isExpiringPost = true;
+                                        _expirationConfirmed = true;
+                                      });
+                                    }
+                                  } else {
+                                    setState(() {
+                                      _isExpiringPost = false;
+                                      _expirationConfirmed = false;
+                                    });
+                                  }
                                 },
                                 activeThumbColor: VineTheme.vineGreen,
                               ),
@@ -780,11 +763,61 @@ class _VideoMetadataScreenPureState extends ConsumerState<VideoMetadataScreenPur
     });
   }
 
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
-    String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
-    return '${duration.inHours > 0 ? '${twoDigits(duration.inHours)}:' : ''}$twoDigitMinutes:$twoDigitSeconds';
+  Future<bool> _showExpirationConfirmationDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey[900],
+          title: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+              SizedBox(width: 12),
+              Text(
+                'Enable Expiring Post?',
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
+            ],
+          ),
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'This will permanently delete your video from Nostr relays after the expiration time.',
+                style: TextStyle(color: Colors.white, fontSize: 14),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'This action cannot be undone. Once expired, the video will be gone forever.',
+                style: TextStyle(color: Colors.orange, fontSize: 14, fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.orange.withValues(alpha: 0.2),
+              ),
+              child: const Text(
+                'Yes, Make It Expire',
+                style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    return result ?? false;
   }
 
   String _formatExpirationDuration() {
@@ -930,9 +963,11 @@ class _VideoMetadataScreenPureState extends ConsumerState<VideoMetadataScreenPur
         _publishingStatus = 'Publishing to Nostr...';
       });
 
+      // Only add expiration tag if user explicitly confirmed (double-check safety)
+      final shouldExpire = _isExpiringPost && _expirationConfirmed;
       final published = await videoEventPublisher.publishDirectUpload(
         pendingUpload,
-        expirationTimestamp: _isExpiringPost
+        expirationTimestamp: shouldExpire
             ? DateTime.now().millisecondsSinceEpoch ~/ 1000 + (_expirationHours * 3600)
             : null,
       );

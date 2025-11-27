@@ -588,7 +588,7 @@ class SocialService {
         filters: [
           Filter(
             authors: [currentUserPubkey],
-            kinds: [6],
+            kinds: [16], // Generic repost (NIP-18) for video events
           ),
         ],
         onEvent: (event) {
@@ -1653,11 +1653,12 @@ class SocialService {
         Log.debug('➕ Adding repost for video: ${videoToRepost.id}',
             name: 'SocialService', category: LogCategory.system);
 
-        // Create NIP-18 repost event (Kind 6)
+        // Create NIP-18 generic repost event (Kind 16) for non-kind-1 events
         final event = await _authService.createAndSignEvent(
-          kind: 6,
+          kind: 16,
           content: '',
           tags: [
+            ['k', '34236'], // Required k tag for generic repost
             ['a', addressableId],
             ['p', videoToRepost.pubkey],
           ],
@@ -1776,12 +1777,13 @@ class SocialService {
 
       // Use 'a' tag for addressable event reference
       final repostTags = <List<String>>[
+        ['k', '34236'], // Required k tag for generic repost (kind 16)
         ['a', '32222:${eventToRepost.pubkey}:$dTagValue'],
         ['p', eventToRepost.pubkey], // Reference to original author
       ];
 
       final event = await _authService.createAndSignEvent(
-        kind: 6, // Repost event
+        kind: 16, // Generic repost event for non-kind-1 events (NIP-18)
         content: '', // Content is typically empty for reposts
         tags: repostTags,
       );

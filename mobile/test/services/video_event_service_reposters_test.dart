@@ -1,5 +1,5 @@
-// ABOUTME: Tests for VideoEventService method to query Kind 6 repost events for a specific video
-// ABOUTME: Verifies correct filter construction and pubkey extraction from Kind 6 events
+// ABOUTME: Tests for VideoEventService method to query Kind 16 repost events for a specific video
+// ABOUTME: Verifies correct filter construction and pubkey extraction from Kind 16 events
 
 import 'dart:async';
 
@@ -69,7 +69,7 @@ void main() {
               if (filters.isEmpty) return false;
               final filter = filters.first;
               return filter.kinds != null &&
-                  filter.kinds!.contains(6) &&
+                  filter.kinds!.contains(16) &&
                   filter.e != null &&
                   filter.e!.contains(videoId);
             }),
@@ -79,7 +79,7 @@ void main() {
       ).called(1);
     });
 
-    test('should extract pubkeys correctly from Kind 6 events', () async {
+    test('should extract pubkeys correctly from Kind 16 events', () async {
       final videoId = 'abc123def456789012345678901234567890123456789012345678901234';
       final eventStreamController = StreamController<Event>.broadcast();
 
@@ -275,10 +275,10 @@ void main() {
       final creatorPubkey =
           '3333333333333333333333333333333333333333333333333333333333333333';
 
-      // Create a Kind 6 repost
+      // Create a Kind 16 repost
       final repost = Event(
         reposterPubkey,
-        6,
+        16,
         [
           ['e', videoId],
         ],
@@ -324,7 +324,7 @@ void main() {
 
       final result = await resultFuture;
 
-      // Verify only the Kind 6 event was processed
+      // Verify only the Kind 16 event was processed
       expect(result.length, 1);
       expect(result, contains(reposterPubkey));
     });

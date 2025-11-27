@@ -83,13 +83,13 @@ void main() {
 
     test('filter order should not affect hash', () {
       final filter1 = Filter(
-        kinds: [34236, 6], // Order 1
+        kinds: [34236, 16], // Order 1
         authors: ['pubkey1', 'pubkey2', 'pubkey3'],
         t: ['hashtag1', 'hashtag2'],
       );
 
       final filter2 = Filter(
-        kinds: [6, 34236], // Order 2 (reversed)
+        kinds: [16, 34236], // Order 2 (reversed)
         authors: ['pubkey3', 'pubkey1', 'pubkey2'], // Different order
         t: ['hashtag2', 'hashtag1'], // Different order
       );

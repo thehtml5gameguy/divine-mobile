@@ -7,6 +7,86 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - Expiring Post Safety & Multiple Imeta Parsing (2025-11-25)
+
+#### Safety Improvements
+- **Added confirmation dialog for expiring posts** - Users must now explicitly confirm before enabling post expiration
+  - Shows warning that video will be "permanently deleted from Nostr relays"
+  - Warns "This action cannot be undone. Once expired, the video will be gone forever."
+  - Requires clicking "Yes, Make It Expire" to enable (prevents accidental expiration)
+  - Double-check safety: expiration tag only added if both toggle AND confirmation are true
+
+#### Bug Fixes (Postel's Law)
+- **Fixed video URL selection from multiple imeta tags** - Now correctly selects best working URL when events have multiple imeta tags with mixed working/broken URLs
+  - Added handling for `hls`, `dash`, `stream`, `streaming`, `fallback`, `mp4`, `video` keys in imeta
+  - Deprioritized known broken URL pattern: `cdn.divine.video/*/manifest/video.m3u8` (score: 5)
+  - Prioritized reliable sources: direct MP4 from cdn.divine.video (115), stream.divine.video HLS (105)
+  - Ensures working URLs from first imeta tag aren't overridden by broken URLs from second imeta tag
+
+#### Technical Details
+- Modified `lib/screens/pure/video_metadata_screen_pure.dart`:
+  - Added `_expirationConfirmed` flag
+  - Added `_showExpirationConfirmationDialog()` method
+  - Updated switch handler to show confirmation before enabling
+  - Updated publish logic to require both flags
+- Modified `lib/models/video_event.dart`:
+  - Extended imeta parsing to collect URLs from additional keys
+  - Updated `_scoreVideoUrl()` with new scoring tiers
+  - Added test: `test/unit/models/video_event_multiple_imeta_test.dart`
+
+### Fixed - List Video Feed Layout (2025-11-25)
+
+#### Bug Fixes
+- **Fixed list header overlapping username/follow overlay** - When viewing videos in a list (e.g., Divine Team), the list header no longer overlaps with the video author info
+  - Added contextTitle-aware positioning in VideoOverlayActions
+  - Username/follow chip now positioned 80px below top when list header present
+  - Applies to both UserListPeopleScreen and CuratedListFeedScreen
+
+### Fixed - Video Playback on Navigation (2025-11-24)
+
+#### Bug Fixes
+- **Fixed videos continuing to play during navigation** - Videos now properly stop/pause when navigating away via Navigator.push
+  - VideoStopNavigatorObserver only catches GoRouter navigation, not raw Navigator.push calls
+  - Added explicit video cleanup before: opening comments, camera, lists, drawer screens
+  - Videos stop when exiting video mode back to grid in list screens
+
+#### Technical Details
+- Modified `lib/widgets/video_feed_item.dart`: Pause video before opening comments
+- Modified `lib/widgets/camera_fab.dart`: Stop videos before opening camera
+- Modified `lib/widgets/vine_drawer.dart`: Stop videos before Relays/Media/Notifications
+- Modified `lib/screens/explore_screen.dart`: Stop videos before list navigation
+- Modified `lib/screens/discover_lists_screen.dart`: Stop videos before list navigation
+- Modified `lib/screens/curated_list_feed_screen.dart`: Stop videos when exiting to grid
+- Modified `lib/screens/user_list_people_screen.dart`: Stop videos when exiting to grid
+
+### Fixed - Comments and NIP-71 Compliance (2025-11-24)
+
+#### Bug Fixes
+- **Fixed comments not loading on videos** - Comments now properly load when opening the comments panel
+  - Fixed `subscription_manager.dart` to preserve `e` and `p` tags when reconstructing filters
+  - Comment subscriptions require `e` tag to filter comments for specific videos
+  - Added comprehensive debug logging to trace comment loading flow
+- **Enforced NIP-71 kind 34236 only** - OpenVine now exclusively uses addressable short videos
+  - Updated `NIP71VideoKinds.getAllVideoKinds()` to return only `[34236]`
+  - Removed deprecated kinds 22, 21, 34235 from all subscription filters
+  - Fixed hardcoded kind arrays in relay diagnostics, search, and video queries
+
+#### Technical Details
+- Modified `lib/services/subscription_manager.dart`:
+  - Added `e: filter.e` and `p: filter.p` to all filter reconstruction points
+  - Prevents critical tag loss when filters are modified for cache optimization
+  - Added debug logging for subscription filter inspection
+- Modified `lib/constants/nip71_migration.dart`:
+  - `getAllVideoKinds()` now returns `[34236]` only
+  - `getPrimaryVideoKinds()` returns `[34236]` only
+  - `getPreferredKind()` returns `34236` instead of `22`
+- Modified `lib/providers/comments_provider.dart`:
+  - Added debug logging for comment loading flow tracing
+- Updated filter kinds in:
+  - `lib/screens/relay_diagnostic_screen.dart`
+  - `lib/services/nostr_service.dart`
+  - `lib/services/video_event_service.dart`
+
 ### Added - Seed Data Preloading (2025-11-11)
 
 #### Features

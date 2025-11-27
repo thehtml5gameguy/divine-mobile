@@ -911,7 +911,7 @@ class SocialNotifier extends _$SocialNotifier {
       );
 
       final repostFilter = Filter(
-        kinds: const [6], // reposts  
+        kinds: const [16], // Generic reposts (NIP-18)
         authors: [authService.currentPublicKeyHex!],
         limit: 500, // Get last 500 reposts
       );
@@ -940,7 +940,7 @@ class SocialNotifier extends _$SocialNotifier {
         (event) {
           if (event.kind == 7) {
             reactionEvents.add(event);
-          } else if (event.kind == 6) {
+          } else if (event.kind == 16) {
             repostEvents.add(event);
           }
         },
@@ -1139,20 +1139,16 @@ class SocialNotifier extends _$SocialNotifier {
       final authService = ref.read(authServiceProvider);
       final nostrService = ref.read(nostrServiceProvider);
 
-      // Build tags for repost (NIP-18)
+      // Build tags for repost (NIP-18 generic repost)
       final tags = <List<String>>[
         ['e', eventToRepost.id, '', 'mention'],
         ['p', eventToRepost.pubkey],
+        ['k', eventToRepost.kind.toString()], // Required 'k' tag for kind 16 reposts
       ];
 
-      // Add original event kind tag if it's a video
-      if (eventToRepost.kind == 32222) {
-        tags.add(['k', '32222']);
-      }
-
-      // Create Kind 6 event (repost)
+      // Create Kind 16 event (generic repost per NIP-18)
       final event = await authService.createAndSignEvent(
-        kind: 6,
+        kind: 16,
         content: '', // Content is typically empty for reposts
         tags: tags,
       );
@@ -1260,7 +1256,7 @@ class SocialNotifier extends _$SocialNotifier {
 
       // Query for user's reposts of this specific video
       final repostFilter = Filter(
-        kinds: const [6], // reposts
+        kinds: const [16], // Generic reposts (NIP-18)
         authors: [authService.currentPublicKeyHex!],
         e: [videoId], // reposts of this specific video
         limit: 1,

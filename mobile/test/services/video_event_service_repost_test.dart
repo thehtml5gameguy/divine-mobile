@@ -1,5 +1,5 @@
-// ABOUTME: Integration tests for VideoEventService Kind 6 repost event processing
-// ABOUTME: Verifies that Kind 6 Nostr events are properly converted to VideoEvent reposts
+// ABOUTME: Integration tests for VideoEventService Kind 16 generic repost event processing
+// ABOUTME: Verifies that Kind 16 Nostr events are properly converted to VideoEvent reposts
 
 import 'dart:async';
 
@@ -18,7 +18,7 @@ import './video_event_service_repost_test.mocks.dart';
   SubscriptionManager,
 ])
 void main() {
-  group('VideoEventService Kind 6 Repost Processing', () {
+  group('VideoEventService Kind 16 Generic Repost Processing', () {
     late VideoEventService videoEventService;
     late MockINostrService mockNostrService;
     late MockSubscriptionManager mockSubscriptionManager;
@@ -51,12 +51,12 @@ void main() {
       videoEventService.dispose();
     });
 
-    test('should include Kind 6 events in subscription filter', () async {
+    test('should include Kind 16 events in subscription filter', () async {
       // Subscribe to video feed
       await videoEventService.subscribeToVideoFeed(
           subscriptionType: SubscriptionType.discovery);
 
-      // Verify that the filter includes both Kind 22 and Kind 6
+      // Verify that the filter includes both Kind 22 and Kind 16
       verify(
         mockNostrService.subscribeToEvents(
           filters: argThat(
@@ -65,7 +65,7 @@ void main() {
               final filter = filters.first;
               return filter.kinds != null &&
                   filter.kinds!.contains(22) &&
-                  filter.kinds!.contains(6);
+                  filter.kinds!.contains(16);
             }),
             named: 'filters',
           ),
@@ -73,7 +73,7 @@ void main() {
       ).called(1);
     });
 
-    test('should process Kind 6 repost event with cached original', () async {
+    test('should process Kind 16 repost event with cached original', () async {
       // Create original video event
       final originalEvent = Event(
         'author456', // pubkey
@@ -138,7 +138,7 @@ void main() {
       expect(repostVideoEvent.videoUrl, 'https://example.com/video.mp4');
     });
 
-    test('should fetch original event for Kind 6 repost when not cached',
+    test('should fetch original event for Kind 16 repost when not cached',
         () async {
       // Create repost event without original being cached
       final repostEvent = Event(
@@ -180,7 +180,7 @@ void main() {
       ).called(greaterThan(0));
     });
 
-    test('should skip Kind 6 repost without e tag', () async {
+    test('should skip Kind 16 repost without e tag', () async {
       // Create invalid repost event without e tag
       final invalidRepostEvent = Event(
         'reposter101', // pubkey
@@ -206,7 +206,7 @@ void main() {
       expect(videoEventService.discoveryVideos.length, 0);
     });
 
-    test('should handle Kind 6 repost when original is not a video', () async {
+    test('should handle Kind 16 repost when original is not a video', () async {
       // Create a non-video event (e.g., a text note)
       final nonVideoEvent = Event(
         'author456', // pubkey
@@ -264,7 +264,7 @@ void main() {
       fetchStreamController.close();
     });
 
-    test('should apply hashtag filter to Kind 6 reposts', () async {
+    test('should apply hashtag filter to Kind 16 reposts', () async {
       // Create original video with hashtags
       final originalEvent = Event(
         'author456', // pubkey

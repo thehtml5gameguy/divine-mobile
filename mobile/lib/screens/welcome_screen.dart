@@ -89,6 +89,23 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 // Age verification and TOS acceptance
                 _buildCheckboxSection(),
 
+                const SizedBox(height: 16),
+
+                // Import existing keys option
+                Center(
+                  child: GestureDetector(
+                    onTap: () => context.push('/import-key'),
+                    child: const Text(
+                      'Already have keys? Import them here →',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ),
+
                 const SizedBox(height: 32),
 
                 // Main action buttons - show based on auth state

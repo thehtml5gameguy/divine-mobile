@@ -271,7 +271,7 @@ class InfiniteFeedService {
       }
 
       final filter = Filter(
-        kinds: [32222], // NIP-32222 addressable video events
+        kinds: [34236], // Kind 34236 addressable short video events
         limit: _pageSize,
         until: since,
       );

@@ -19,7 +19,7 @@ class NostrEventsDao extends DatabaseAccessor<AppDatabase>
   /// Uses INSERT OR REPLACE for upsert behavior - if event with same ID exists,
   /// it will be replaced with the new data.
   ///
-  /// For video events (kind 34236 or 6), also upserts video metrics to the
+  /// For video events (kind 34236 or 16), also upserts video metrics to the
   /// video_metrics table for fast sorted queries.
   Future<void> upsertEvent(Event event) async {
     await customInsert(
@@ -37,8 +37,8 @@ class NostrEventsDao extends DatabaseAccessor<AppDatabase>
       ],
     );
 
-    // Also upsert video metrics for video events
-    if (event.kind == 34236 || event.kind == 6) {
+    // Also upsert video metrics for video events and reposts
+    if (event.kind == 34236 || event.kind == 16) {
       await db.videoMetricsDao.upsertVideoMetrics(event);
     }
   }
@@ -69,8 +69,8 @@ class NostrEventsDao extends DatabaseAccessor<AppDatabase>
         );
       }
 
-      // Batch upsert video metrics for video events
-      final videoEvents = events.where((e) => e.kind == 34236 || e.kind == 6).toList();
+      // Batch upsert video metrics for video events and reposts
+      final videoEvents = events.where((e) => e.kind == 34236 || e.kind == 16).toList();
       for (final event in videoEvents) {
         await db.videoMetricsDao.upsertVideoMetrics(event);
       }
@@ -189,7 +189,7 @@ class NostrEventsDao extends DatabaseAccessor<AppDatabase>
     final variables = <Variable>[];
 
     // Kind filter (defaults to video kinds if not specified)
-    final effectiveKinds = kinds ?? [34236, 6];
+    final effectiveKinds = kinds ?? [34236, 16];
     if (effectiveKinds.length == 1) {
       conditions.add('kind = ?');
       variables.add(Variable.withInt(effectiveKinds.first));

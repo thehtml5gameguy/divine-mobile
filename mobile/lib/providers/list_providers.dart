@@ -77,3 +77,29 @@ Stream<List<VideoEvent>> userListMemberVideos(
     }
   }
 }
+
+/// Provider that streams public lists containing a specific video
+/// Accumulates results as they arrive from Nostr relays, yielding updated list
+/// on each new result. This enables progressive UI updates via Riverpod.
+@riverpod
+Stream<List<CuratedList>> publicListsContainingVideo(
+    Ref ref, String videoId) async* {
+  final service = await ref.watch(curatedListServiceProvider.future);
+  final accumulated = <CuratedList>[];
+  final seenIds = <String>{};
+
+  // Stream events from Nostr relays, accumulating as they arrive
+  await for (final list
+      in service.streamPublicListsContainingVideo(videoId)) {
+    if (!seenIds.contains(list.id)) {
+      seenIds.add(list.id);
+      accumulated.add(list);
+      // Yield a copy of accumulated list on each new result
+      yield List<CuratedList>.from(accumulated);
+    }
+  }
+
+  // After stream completes (EOSE from relay), yield final accumulated result
+  // This ensures the provider has data even if stream completes immediately
+  yield accumulated;
+}
