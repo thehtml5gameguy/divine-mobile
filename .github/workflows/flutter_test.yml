@@ -29,7 +29,7 @@ jobs:
         ls -la nostr_sdk/
     - name: Fix flutter
       run: |
-        flutter upgrade
+        flutter upgrade dart
     
     - name: Install dependencies
       run: |
