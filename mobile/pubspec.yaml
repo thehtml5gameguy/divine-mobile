@@ -94,14 +94,15 @@ dependencies:
   share_plus: ^12.0.0  # Cross-platform sharing
   google_fonts: ^6.3.2  # For using Google Fonts including Pacifico
   blurhash_dart: ^1.2.1  # Generate blurhash for progressive image loading
-  # Nostr SDK - Local package for comprehensive Nostr support
   nostr_sdk:
-    path: ../nostr_sdk
+    git:
+      url: git@github.com:rabble/nostr_sdk.git
   
   # Embedded Nostr Relay - Local embedded relay replacing external relay infrastructure
   flutter_embedded_nostr_relay:
-    path: ../flutter_embedded_nostr_relay/flutter_embedded_nostr_relay
-  
+    git:
+      url: git@github.com:rabble/flutter_embedded_nostr_relay.git
+      path: flutter_embedded_nostr_relay
   # Logging
   logging: ^1.2.0
   
