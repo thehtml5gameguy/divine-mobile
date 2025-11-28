@@ -37,7 +37,10 @@ jobs:
       run: |
         cd mobile
         dart format --output=none .
-    
+    - name: Fix code 
+      run: |
+        cd mobile
+        dart fix --apply
     - name: Analyze code
       run: |
         cd mobile
