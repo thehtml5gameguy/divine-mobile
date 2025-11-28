@@ -27,9 +27,6 @@ jobs:
         rm -rf nostr_sdk
         git clone --recursive https://github.com/rabble/nostr_sdk.git
         ls -la nostr_sdk/
-    - name: Fix flutter
-      run: |
-        flutter upgrade dart
     
     - name: Install dependencies
       run: |
