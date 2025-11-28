@@ -96,12 +96,12 @@ dependencies:
   blurhash_dart: ^1.2.1  # Generate blurhash for progressive image loading
   nostr_sdk:
     git:
-      url: git@github.com:rabble/nostr_sdk.git
+      url: https://github.com/rabble/nostr_sdk.git
   
   # Embedded Nostr Relay - Local embedded relay replacing external relay infrastructure
   flutter_embedded_nostr_relay:
     git:
-      url: git@github.com:rabble/flutter_embedded_nostr_relay.git
+      url: https://github.com/rabble/flutter_embedded_nostr_relay.git
       path: flutter_embedded_nostr_relay
   # Logging
   logging: ^1.2.0
