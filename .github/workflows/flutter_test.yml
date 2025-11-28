@@ -24,6 +24,7 @@ jobs:
       run: |
         # The nostr_sdk directory is now included in the repository
         echo "✅ nostr_sdk dependency found at $(pwd)/nostr_sdk"
+        git clone --recursive https://github.com/rabble/nostr_sdk.git
         ls -la nostr_sdk/
     
     - name: Install dependencies
