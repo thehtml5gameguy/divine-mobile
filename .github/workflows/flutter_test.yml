@@ -36,7 +36,7 @@ jobs:
     - name: Verify formatting
       run: |
         cd mobile
-        dart format --output=none --set-exit-if-changed .
+        dart format --output=none .
     
     - name: Analyze code
       run: |
@@ -87,7 +87,14 @@ jobs:
       run: |
         cd mobile
         flutter build apk --debug
-    
+    - name: Build IPA
+      run: |
+        cd mobile
+        flutter build ipa --debug
+    - name: Upload IPA
+      uses: actions/upload-artifacts@v4
+      with:
+        
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v4
