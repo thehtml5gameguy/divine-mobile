@@ -32,7 +32,8 @@ jobs:
       run: |
         cd mobile
         flutter pub get
-    
+    - name: Install Xcode Command Line Tools
+      run: xcode-select --install || true
     - name: Verify formatting
       run: |
         cd mobile
@@ -52,7 +53,7 @@ jobs:
     - name: Build IPA
       run: |
         cd mobile
-        flutter build ipa --export-method development
+        flutter build ipa
     - name: Upload IPA
       uses: actions/upload-artifact@v4
       with:
