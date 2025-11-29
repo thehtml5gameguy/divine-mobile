@@ -52,7 +52,7 @@ jobs:
     - name: Build IPA
       run: |
         cd mobile
-        flutter build ipa --debug
+        flutter build ipa
     - name: Upload IPA
       uses: actions/upload-artifact@v4
       with:
