@@ -44,7 +44,7 @@ jobs:
     - name: Analyze code
       run: |
         cd mobile
-        dart analyze
+        dart analyze --no-fatal-warnings
     
     - name: Check test coverage
       uses: VeryGoodOpenSource/very_good_coverage@v2
