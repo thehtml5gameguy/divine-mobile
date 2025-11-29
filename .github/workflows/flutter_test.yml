@@ -52,12 +52,12 @@ jobs:
     - name: Build IPA
       run: |
         cd mobile
-        flutter build ipa
+        flutter build ios
     - name: Upload IPA
       uses: actions/upload-artifact@v4
       with:
         name: divine.ipa
-        path: build/ios/ipa/Runner.ipa
+        path: build/ios/ipa/*.ipa
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v4
