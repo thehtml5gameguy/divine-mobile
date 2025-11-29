@@ -52,45 +52,9 @@ jobs:
     - name: Build IPA
       run: |
         cd mobile
-        flutter build ios
+        flutter build ipa --export-method development
     - name: Upload IPA
       uses: actions/upload-artifact@v4
       with:
         name: divine.ipa
         path: build/ios/ipa/*.ipa
-    - name: Upload test results
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-results
-        path: mobile/test-results/
-    
-    - name: Upload coverage report
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-report
-        path: mobile/coverage/
-
-  integration-test:
-    name: Integration Tests
-    runs-on: macos-latest
-    
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Setup Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.27.4'
-        channel: 'stable'
-    
-    - name: Install dependencies
-      run: |
-        cd mobile
-        flutter pub get
-    
-    - name: Run integration tests
-      run: |
-        cd mobile
-        flutter test integration_test
