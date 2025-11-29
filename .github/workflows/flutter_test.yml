@@ -46,10 +46,6 @@ jobs:
       run: |
         cd mobile
         dart analyze --no-fatal-warnings
-    - name: Build APK
-      run: |
-        cd mobile
-        flutter build apk --debug
     - name: Build IPA
       run: |
         cd mobile
