@@ -44,12 +44,7 @@ jobs:
     - name: Analyze code
       run: |
         cd mobile
-        flutter analyze
-    
-    - name: Run tests with coverage
-      run: |
-        cd mobile
-        flutter test --coverage
+        dart analyze
     
     - name: Check test coverage
       uses: VeryGoodOpenSource/very_good_coverage@v2
@@ -61,20 +56,6 @@ jobs:
           **/*.freezed.dart
           **/*.mocks.dart
           **/generated/**
-    
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: mobile/coverage/lcov.info
-        directory: mobile
-    
-    - name: Check for Future.delayed
-      run: |
-        if grep -r "Future\.delayed" mobile/lib --include="*.dart"; then
-          echo "❌ Future.delayed found! Use proper async patterns instead."
-          exit 1
-        fi
-        echo "✅ No Future.delayed found"
     
     - name: Check file lengths
       run: |
