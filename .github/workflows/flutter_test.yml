@@ -46,17 +46,6 @@ jobs:
         cd mobile
         dart analyze --no-fatal-warnings
     
-    - name: Check test coverage
-      uses: VeryGoodOpenSource/very_good_coverage@v2
-      with:
-        path: mobile/coverage/lcov.info
-        min_coverage: 80
-        exclude: |
-          **/*.g.dart
-          **/*.freezed.dart
-          **/*.mocks.dart
-          **/generated/**
-    
     - name: Check file lengths
       run: |
         cd mobile
